@@ -1,0 +1,10 @@
+{
+  "name": "JokerCards",
+  "uuid": "228e5832-f253-49b6-83d0-f8a724568165",
+  "creator": {
+    "version": "3.8.5"
+  },
+  "dependencies": {
+    "oops-game-kit": "^1.0.0"
+  }
+}
