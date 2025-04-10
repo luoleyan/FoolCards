@@ -49,11 +49,11 @@ export enum SceneEffectType {
 
 @ccclass('SceneEffect')
 export class SceneEffect extends Component {
-    @property(Sprite)
-    public effectSprite: Sprite = null;
-
     @property(Node)
     public publicCardContainer: Node = null;
+
+    @property(Node)
+    public playArea: Node = null;  // 关联的场地节点
 
     @property(SpriteFrame)
     public hiddenEffectSprite: SpriteFrame = null;
@@ -70,8 +70,10 @@ export class SceneEffect extends Component {
     private _effectType: SceneEffectType = SceneEffectType.None;
     private _isRevealed: boolean = false;
     private _publicCards: Card[] = [];
-    private _cardWidth: number = 100;
-    private _cardSpacing: number = 20;
+    private _cardWidth: number = 120;  // 增加卡牌宽度
+    private _cardSpacing: number = 30;  // 增加卡牌间距
+    private _effectOffsetY: number = 150;  // 效果文本与场地的垂直偏移
+    private _publicCardOffsetY: number = -180;  // 增加公共牌与场地的垂直偏移
 
     public get effectType(): SceneEffectType {
         return this._effectType;
@@ -88,13 +90,35 @@ export class SceneEffect extends Component {
     start() {
         // 初始化时隐藏效果
         this.hideEffect();
+        // 设置效果文本和公共牌的位置
+        this.updatePositions();
+    }
+
+    // 更新效果文本和公共牌的位置
+    private updatePositions() {
+        if (this.playArea) {
+            const playAreaTransform = this.playArea.getComponent(UITransform);
+            if (playAreaTransform) {
+                const playAreaSize = playAreaTransform.contentSize;
+                
+                // 设置效果文本位置（场地内部上方）
+                const effectPos = new Vec3(0, playAreaSize.height / 2 - 30, 0);
+                this.effectName.node.position = effectPos;
+                this.effectDescription.node.position = effectPos;
+
+                // 设置公共牌位置（场地内部下方）
+                const publicCardPos = new Vec3(0, -playAreaSize.height / 2 + 30, 0);
+                this.publicCardContainer.position = publicCardPos;
+            }
+        }
     }
 
     // 初始化场景效果
-    public init(effectType: SceneEffectType) {
+    public init(effectType: SceneEffectType, playArea: Node) {
         this._effectType = effectType;
         this._isRevealed = false;
         this._publicCards = [];
+        this.playArea = playArea;
 
         // 隐藏效果信息
         this.effectName.node.active = false;
@@ -104,6 +128,7 @@ export class SceneEffect extends Component {
         this.cardBack.node.active = true;
         this.hideEffect();
         this.generatePublicCards();
+        this.updatePositions();
     }
 
     // 生成公共牌
@@ -272,7 +297,7 @@ export class SceneEffect extends Component {
 
     // 隐藏场景效果
     public hideEffect() {
-        this.effectSprite.spriteFrame = this.hiddenEffectSprite;
+        this.cardBack.spriteFrame = this.hiddenEffectSprite;
     }
 
     // 获取随机花色
@@ -307,7 +332,7 @@ export class SceneEffect extends Component {
     }
 
     // 应用场景效果
-    public applyEffect(gameManager: GameManager) {
+    public applyEffect(gameManager: GameManager, areaIndex: number) {
         if (!this._isRevealed) return;
 
         switch (this._effectType) {
@@ -315,7 +340,7 @@ export class SceneEffect extends Component {
                 // J、Q、K额外加15分
                 this._publicCards.forEach(card => {
                     if ([CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, 'JQK奖励');
                     }
                 });
                 break;
@@ -344,7 +369,7 @@ export class SceneEffect extends Component {
                 // 4种不同花色额外加50分
                 const suits = new Set(this._publicCards.map(card => card.suit));
                 if (suits.size === 4) {
-                    gameManager.addScore(50);
+                    gameManager.addScoreToArea(areaIndex, 50, '四色奖励');
                 }
                 break;
 
@@ -352,7 +377,7 @@ export class SceneEffect extends Component {
                 // A、2、3、5、8额外加15分
                 this._publicCards.forEach(card => {
                     if ([CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Five, CardRank.Eight].indexOf(card.rank) !== -1) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, 'A2358奖励');
                     }
                 });
                 break;
@@ -361,7 +386,7 @@ export class SceneEffect extends Component {
                 // K额外加25分
                 this._publicCards.forEach(card => {
                     if (card.rank === CardRank.King) {
-                        gameManager.addScore(25);
+                        gameManager.addScoreToArea(areaIndex, 25, 'K奖励');
                     }
                 });
                 break;
@@ -370,14 +395,14 @@ export class SceneEffect extends Component {
                 // 包含偶星额外加15分
                 if (this._publicCards.some(card => card.rank === CardRank.Two || card.rank === CardRank.Four ||
                     card.rank === CardRank.Six || card.rank === CardRank.Eight || card.rank === CardRank.Ten)) {
-                    gameManager.addScore(15);
+                    gameManager.addScoreToArea(areaIndex, 15, '偶星奖励');
                 }
                 break;
 
             case SceneEffectType.NoTypeBonus:
                 // 无牌型时每张牌加15分
                 if (!gameManager.hasValidType(this._publicCards)) {
-                    this._publicCards.forEach(() => gameManager.addScore(15));
+                    this._publicCards.forEach(() => gameManager.addScoreToArea(areaIndex, 15, '无型奖励'));
                 }
                 break;
 
@@ -385,7 +410,7 @@ export class SceneEffect extends Component {
                 // 每张梅花加15分
                 this._publicCards.forEach(card => {
                     if (card.suit === CardSuit.Club) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '梅花奖励');
                     }
                 });
                 break;
@@ -394,7 +419,7 @@ export class SceneEffect extends Component {
                 // 每张黑桃加15分
                 this._publicCards.forEach(card => {
                     if (card.suit === CardSuit.Spade) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '黑桃奖励');
                     }
                 });
                 break;
@@ -403,7 +428,7 @@ export class SceneEffect extends Component {
                 // 每张方块加15分
                 this._publicCards.forEach(card => {
                     if (card.suit === CardSuit.Diamond) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '方块奖励');
                     }
                 });
                 break;
@@ -412,7 +437,7 @@ export class SceneEffect extends Component {
                 // 每张红桃加15分
                 this._publicCards.forEach(card => {
                     if (card.suit === CardSuit.Heart) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '红桃奖励');
                     }
                 });
                 break;
@@ -421,7 +446,7 @@ export class SceneEffect extends Component {
                 // 每张偶数牌加15分
                 this._publicCards.forEach(card => {
                     if ([CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '偶数奖励');
                     }
                 });
                 break;
@@ -430,7 +455,7 @@ export class SceneEffect extends Component {
                 // 每张奇数牌加15分
                 this._publicCards.forEach(card => {
                     if ([CardRank.Ace, CardRank.Three, CardRank.Five, CardRank.Seven, CardRank.Nine].indexOf(card.rank) !== -1) {
-                        gameManager.addScore(15);
+                        gameManager.addScoreToArea(areaIndex, 15, '奇数奖励');
                     }
                 });
                 break;
@@ -438,14 +463,22 @@ export class SceneEffect extends Component {
             case SceneEffectType.SequenceChain:
                 // 有序列时其他区域各加30分
                 if (gameManager.isSequence(this._publicCards)) {
-                    gameManager.addScoreToOtherAreas(30);
+                    for (let i = 0; i < 3; i++) {
+                        if (i !== areaIndex) {
+                            gameManager.addScoreToArea(i, 30, '顺子连锁');
+                        }
+                    }
                 }
                 break;
 
             case SceneEffectType.SameColorChain:
                 // 有同色时其他区域各加30分
                 if (gameManager.isSameColor(this._publicCards)) {
-                    gameManager.addScoreToOtherAreas(30);
+                    for (let i = 0; i < 3; i++) {
+                        if (i !== areaIndex) {
+                            gameManager.addScoreToArea(i, 30, '同色连锁');
+                        }
+                    }
                 }
                 break;
 
@@ -453,7 +486,11 @@ export class SceneEffect extends Component {
                 // 有四骑士时其他区域各加30分
                 if (this._publicCards.filter(card =>
                     [CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1).length >= 4) {
-                    gameManager.addScoreToOtherAreas(30);
+                    for (let i = 0; i < 3; i++) {
+                        if (i !== areaIndex) {
+                            gameManager.addScoreToArea(i, 30, '四骑士连锁');
+                        }
+                    }
                 }
                 break;
 
@@ -464,7 +501,7 @@ export class SceneEffect extends Component {
                     return total + value;
                 }, 0);
                 if (sum === 21) {
-                    gameManager.addScore(50);
+                    gameManager.addScoreToArea(areaIndex, 50, '21点奖励');
                 }
                 break;
 
@@ -500,7 +537,8 @@ export class SceneEffect extends Component {
                 const handCards = gameManager.getPlayerHandCards();
                 if (handCards.length > 0) {
                     const randomIndex = Math.floor(Math.random() * handCards.length);
-                    gameManager.playCard(handCards[randomIndex]);
+                    const randomAreaIndex = Math.floor(Math.random() * 3);
+                    gameManager.playCard(handCards[randomIndex], randomAreaIndex);
                 }
                 break;
 

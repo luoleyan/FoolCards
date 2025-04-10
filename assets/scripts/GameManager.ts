@@ -23,17 +23,17 @@ export class GameManager extends Component {
     @property(Sprite)
     private background: Sprite = null;  // 游戏背景
 
+    @property(Prefab)
+    private sceneEffectPrefab: Prefab = null;  // 场景效果预制体
+
     @property([SceneEffect])
     public sceneEffects: SceneEffect[] = [];
 
-    @property(Label)
-    private scoreLabel: Label = null;
+    @property([Label])
+    private areaScoreLabels: Label[] = [];  // 每个场地的分数标签
 
     @property(Label)
-    private exchangeCountLabel: Label = null;
-
-    @property(Label)
-    private playCountLabel: Label = null;
+    private exchangeCountLabel: Label = null;  // 换牌次数标签
 
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
@@ -45,6 +45,8 @@ export class GameManager extends Component {
     private specialHandsManager: SpecialHandsManager;
     private playerScore: number = 0;
     private opponentScore: number = 0;
+    private areaScores: number[] = [0, 0, 0];  // 每个场地的分数
+    private areaScoreDetails: string[] = ['', '', ''];  // 每个场地的分数详情
 
     private sameColorRequirement: number = 0;
     private sequenceRequirement: number = 0;
@@ -66,6 +68,10 @@ export class GameManager extends Component {
             console.error("Some required nodes are not set. Please check all required nodes in the inspector.");
             return;
         }
+
+        // 确保手牌区域可见
+        this.playerHand.active = true;
+        this.opponentHand.active = true;
 
         // 设置场地区域位置
         this.setupPlayAreasPosition();
@@ -228,9 +234,40 @@ export class GameManager extends Component {
         console.log(`Card positions: topY: ${topY}, bottomY: ${bottomY}`);
 
         // 设置对手手牌区域位置（顶部居中）
-        this.opponentHand.setPosition(0, topY, 0);
+        if (this.opponentHand) {
+            // 设置对手手牌区域的位置
+            this.opponentHand.setPosition(0, topY, 0);
+            
+            // 确保对手手牌区域可见
+            this.opponentHand.active = true;
+            
+            // 设置对手手牌区域的大小
+            const opponentHandTransform = this.opponentHand.getComponent(UITransform);
+            if (opponentHandTransform) {
+                // 设置足够的宽度来容纳所有卡牌
+                const totalWidth = cardSpacing * 4 + cardWidth; // 5张牌的总宽度
+                opponentHandTransform.setContentSize(totalWidth, cardHeight);
+                console.log(`Opponent hand area size set to: ${totalWidth} x ${cardHeight}`);
+            }
+            
+            console.log(`Opponent hand area positioned at: (0, ${topY}, 0)`);
+        }
+
         // 设置玩家手牌区域位置（底部居中）
-        this.playerHand.setPosition(0, bottomY, 0);
+        if (this.playerHand) {
+            this.playerHand.setPosition(0, bottomY, 0);
+            // 确保玩家手牌区域可见
+            this.playerHand.active = true;
+            
+            // 设置玩家手牌区域的大小
+            const playerHandTransform = this.playerHand.getComponent(UITransform);
+            if (playerHandTransform) {
+                // 设置足够的宽度来容纳所有卡牌
+                const totalWidth = cardSpacing * 4 + cardWidth; // 5张牌的总宽度
+                playerHandTransform.setContentSize(totalWidth, cardHeight);
+                console.log(`Player hand area size set to: ${totalWidth} x ${cardHeight}`);
+            }
+        }
 
         // 牌桌中心位置（假设为坐标原点）
         const deckPosition = new Vec3(0, 0, 0);
@@ -270,7 +307,7 @@ export class GameManager extends Component {
                     playerCardCount++;
                 } else {
                     // 给对手发牌，自上而下动画，确保只显示背面
-                    this.animateCardToOpponent(card, opponentCardCount, cardSpacing);
+                    this.animateCardToOpponent(card, opponentCardCount);
                     opponentCardCount++;
                 }
             }
@@ -307,37 +344,70 @@ export class GameManager extends Component {
         tween(card.node)
             .to(0.3, { position: finalPosition }, { easing: 'cubicOut' })
             .call(() => {
-                console.log(`Player card ${index} dealt`);
+                // 确保显示卡牌正面
+                card.showCardFace();
+                
+                // 添加触摸事件监听器，确保点击时也显示正面
+                card.node.on(Node.EventType.TOUCH_START, () => {
+                    card.showCardFace();
+                });
             })
             .start();
     }
 
     // 给对手发牌的动画（自上而下）
-    private animateCardToOpponent(card: Card, index: number, cardSpacing: number) {
-        // 再次确保显示卡牌背面（使用同步方法）
+    private animateCardToOpponent(card: Card, index: number) {
+        console.log(`Animating card to opponent, index: ${index}`);
+        
+        // 确保显示卡牌背面
         card.showCardBackSync();
+        console.log('Card back shown');
 
-        // 设置卡牌父节点为对手手牌区
+        // 设置父节点为对手手牌区域
         card.node.setParent(this.opponentHand);
-
-        // 计算相对于对手手牌区域中心的偏移位置
-        const totalWidth = (this.opponentHand.children.length - 1) * cardSpacing;
-        const startX = -totalWidth / 2 + index * cardSpacing;
-
-        // 最终位置
-        const finalPosition = new Vec3(startX, 0, 0);
-
-        // 动画起始位置（在对手区域上方）
-        const startPosition = new Vec3(startX, 200, 0);
-        card.node.setPosition(startPosition);
-
-        // 创建并执行动画
+        console.log('Card parent set to opponent hand');
+        
+        // 计算最终位置
+        const cardWidth = 120 * 0.25;
+        const spacing = cardWidth * 2.3;
+        const totalWidth = (this.opponentHand.children.length - 1) * spacing;
+        const startX = -totalWidth / 2;
+        const finalX = startX + index * spacing;
+        
+        console.log(`Card position calculated: startX=${startX}, finalX=${finalX}, totalWidth=${totalWidth}`);
+        
+        // 设置初始位置（从牌堆位置开始）
+        const deckPosition = new Vec3(0, 0, 0);
+        card.node.setPosition(deckPosition);
+        
+        // 确保卡牌节点可见
+        card.node.active = true;
+        console.log('Card node activated');
+        
+        // 确保对手手牌区域可见
+        this.opponentHand.active = true;
+        console.log('Opponent hand area activated');
+        
+        // 创建移动动画
         tween(card.node)
-            .to(0.3, { position: finalPosition }, { easing: 'cubicOut' })
+            .to(0.3, { position: new Vec3(finalX, 0, 0) }, {
+                easing: 'cubicOut'
+            })
             .call(() => {
-                console.log(`Opponent card ${index} dealt`);
-                // 确保动画结束后再次显示背面（双重保险，使用同步方法）
+                console.log('Card animation completed');
+                // 确保卡牌可见
+                card.node.active = true;
+                
+                // 再次确保显示卡牌背面
                 card.showCardBackSync();
+                
+                // 添加触摸事件监听器，确保点击时也显示背面
+                card.node.on(Node.EventType.TOUCH_START, () => {
+                    card.showCardBackSync();
+                });
+                
+                // 打印最终位置
+                console.log(`Card final position: ${card.node.position.toString()}`);
             })
             .start();
     }
@@ -506,7 +576,7 @@ export class GameManager extends Component {
                 } else {
                     // 给对手发牌，自上而下动画
                     const index = opponentStartIndex + Math.floor(dealIndex / 2);
-                    this.animateCardToOpponent(card, index, cardSpacing);
+                    this.animateCardToOpponent(card, index);
                 }
             }
 
@@ -636,12 +706,29 @@ export class GameManager extends Component {
             selectedEffects.push(allEffects[effectIndex]);
         }
 
-        // 初始化每个场景效果
-        this.sceneEffects.forEach((effect, index) => {
-            if (index < selectedEffects.length) {
-                effect.init(selectedEffects[index]);
+        // 清空现有的场景效果
+        this.sceneEffects.forEach(effect => {
+            if (effect && effect.node) {
+                effect.node.destroy();
             }
         });
+        this.sceneEffects = [];
+
+        // 为每个场地区域创建场景效果
+        for (let i = 0; i < this.playAreas.length; i++) {
+            if (i < selectedEffects.length) {
+                const effectNode = instantiate(this.sceneEffectPrefab);
+                const effect = effectNode.getComponent(SceneEffect);
+                
+                // 设置场景效果的父节点为对应的场地区域
+                effectNode.setParent(this.playAreas[i]);
+                effectNode.setPosition(Vec3.ZERO);
+                
+                // 初始化场景效果
+                effect.init(selectedEffects[i], this.playAreas[i]);
+                this.sceneEffects.push(effect);
+            }
+        }
     }
 
     // 揭示下一个场景效果
@@ -652,24 +739,13 @@ export class GameManager extends Component {
             this._revealedEffects++;
 
             // 应用场景效果
-            effect.applyEffect(this);
+            effect.applyEffect(this, this._revealedEffects - 1);
         }
     }
 
     // 获取当前生效的场景效果
     public getActiveSceneEffects(): SceneEffect[] {
         return this.sceneEffects.filter(effect => effect.isRevealed);
-    }
-
-    // 分数相关方法
-    public addScore(score: number) {
-        this.playerScore += score;
-        this.updateScoreLabel();
-    }
-
-    public addScoreToOtherAreas(score: number) {
-        this.opponentScore += score;
-        this.updateScoreLabel();
     }
 
     // 牌型相关方法
@@ -756,7 +832,6 @@ export class GameManager extends Component {
 
     public addExtraPlayCount(count: number) {
         this.extraPlayCount += count;
-        this.updatePlayCountLabel();
     }
 
     public drawCard() {
@@ -767,37 +842,43 @@ export class GameManager extends Component {
         }
     }
 
-    private updateScoreLabel() {
-        // 更新分数显示
-        if (this.scoreLabel) {
-            this.scoreLabel.string = `Player: ${this.playerScore} | Opponent: ${this.opponentScore}`;
-        }
-    }
-
     private updateExchangeCountLabel() {
         if (this.exchangeCountLabel) {
             this.exchangeCountLabel.string = `换牌次数: ${this.exchangeCount}`;
         }
     }
 
-    private updatePlayCountLabel() {
-        // 更新出牌次数显示
-        if (this.playCountLabel) {
-            this.playCountLabel.string = `Play Count: ${1 + this.extraPlayCount}`;
-        }
-    }
-
     private arrangePlayerHand() {
         const cards = this.playerHand.children;
-        const cardWidth = 120; // 卡牌宽度
-        const spacing = 20; // 卡牌间距
-        const totalWidth = (cards.length - 1) * (cardWidth + spacing);
+        if (!cards || cards.length === 0) return;
+
+        // 卡牌宽度（考虑缩放）
+        const cardWidth = 120 * 0.25;
+        // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
+        const spacing = cardWidth * 2.3;
+        
+        // 计算总宽度
+        const totalWidth = (cards.length - 1) * spacing;
+        // 起始X坐标（居中）
         const startX = -totalWidth / 2;
 
+        // 设置每张卡牌的位置
         cards.forEach((card, index) => {
-            const x = startX + index * (cardWidth + spacing);
+            const x = startX + index * spacing;
             card.setPosition(x, 0, 0);
+            
+            // 确保卡牌可见
+            card.active = true;
+            
+            // 确保显示卡牌正面
+            const cardComponent = card.getComponent(Card);
+            if (cardComponent) {
+                cardComponent.showCardFace();
+            }
         });
+
+        // 确保玩家手牌区域可见
+        this.playerHand.active = true;
     }
 
     private arrangePlayArea(playArea: Node) {
@@ -902,5 +983,105 @@ export class GameManager extends Component {
             const x = startX + index * (areaWidth + spacing);
             area.setPosition(new Vec3(x, 0, 0));
         });
+
+        // 设置对手手牌区域位置到场景顶部
+        if (this.opponentHand) {
+            // 获取场景高度
+            const sceneHeight = 1080; // 假设场景高度为1080
+            const topY = sceneHeight / 2 - 100; // 距离顶部100单位
+            
+            // 确保对手手牌区域可见
+            this.opponentHand.active = true;
+            
+            // 设置位置
+            this.opponentHand.setPosition(new Vec3(0, topY, 0));
+            
+            // 设置缩放以确保可见
+            this.opponentHand.setScale(1, 1, 1);
+            
+            // 确保所有子节点可见
+            this.opponentHand.children.forEach(child => {
+                child.active = true;
+            });
+            
+            console.log(`Opponent hand area positioned at (0, ${topY}, 0)`);
+        } else {
+            console.error("Opponent hand area is null");
+        }
+    }
+
+    // 更新指定场地的分数显示
+    private updateAreaScoreLabel(areaIndex: number) {
+        if (areaIndex >= 0 && areaIndex < this.areaScoreLabels.length) {
+            const label = this.areaScoreLabels[areaIndex];
+            if (label) {
+                label.string = `分数: ${this.areaScores[areaIndex]}\n${this.areaScoreDetails[areaIndex]}`;
+            }
+        }
+    }
+
+    // 添加分数到指定场地
+    public addScoreToArea(areaIndex: number, score: number, reason: string) {
+        if (areaIndex >= 0 && areaIndex < this.areaScores.length) {
+            this.areaScores[areaIndex] += score;
+            this.areaScoreDetails[areaIndex] += `${reason}: +${score}\n`;
+            this.updateAreaScoreLabel(areaIndex);
+        }
+    }
+
+    // 计算并更新指定场地的分数
+    public calculateAreaScore(areaIndex: number, cards: Card[]) {
+        if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
+
+        // 清空分数详情
+        this.areaScoreDetails[areaIndex] = '';
+        
+        // 计算点数分数
+        let pointScore = 0;
+        cards.forEach(card => {
+            const value = this.getCardValue(card.rank);
+            pointScore += value;
+        });
+        this.addScoreToArea(areaIndex, pointScore, '点数');
+
+        // 计算牌型分数
+        if (this.isSequence(cards)) {
+            this.addScoreToArea(areaIndex, 30, '顺子');
+        }
+        if (this.isSameColor(cards)) {
+            this.addScoreToArea(areaIndex, 20, '同色');
+        }
+
+        // 应用场景效果
+        this.sceneEffects[areaIndex]?.applyEffect(this, areaIndex);
+    }
+
+    // 获取卡牌点数
+    private getCardValue(rank: CardRank): number {
+        switch (rank) {
+            case CardRank.Ace: return 1;
+            case CardRank.Two: return 2;
+            case CardRank.Three: return 3;
+            case CardRank.Four: return 4;
+            case CardRank.Five: return 5;
+            case CardRank.Six: return 6;
+            case CardRank.Seven: return 7;
+            case CardRank.Eight: return 8;
+            case CardRank.Nine: return 9;
+            case CardRank.Ten: return 10;
+            case CardRank.Jack: return 11;
+            case CardRank.Queen: return 12;
+            case CardRank.King: return 13;
+            default: return 0;
+        }
+    }
+
+    // 分数相关方法
+    public addScore(score: number) {
+        this.playerScore += score;
+    }
+
+    public addScoreToOtherAreas(score: number) {
+        this.opponentScore += score;
     }
 } 

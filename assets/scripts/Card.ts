@@ -4,16 +4,16 @@ const { ccclass, property } = _decorator;
 
 // 定义花色枚举
 export enum CardSuit {
-    Spade = 'spade',
-    Heart = 'heart',
-    Club = 'club',
-    Diamond = 'diamond',
-    Joker = 'joker'
+    Spade = 'Spade',
+    Heart = 'Heart',
+    Club = 'Club',
+    Diamond = 'Diamond',
+    Joker = 'Joker'
 }
 
 // 定义点数枚举
 export enum CardRank {
-    Ace = 'ace',
+    Ace = 'A',
     Two = '2',
     Three = '3',
     Four = '4',
@@ -23,11 +23,11 @@ export enum CardRank {
     Eight = '8',
     Nine = '9',
     Ten = '10',
-    Jack = 'jack',
-    Queen = 'queen',
-    King = 'king',
-    JokerA = 'joker_a',
-    JokerB = 'joker_b'
+    Jack = 'J',
+    Queen = 'Q',
+    King = 'K',
+    JokerA = 'A',
+    JokerB = 'B'
 }
 
 @ccclass('Card')
@@ -51,7 +51,7 @@ export class Card extends Component {
     // 预加载卡牌背面图像
     public static preloadCardBack() {
         if (!Card.cardBackSprite) {
-            resources.load('card/card_back/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+            resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
                 if (err) {
                     console.error('Failed to preload card back sprite:', err);
                     return;
@@ -124,7 +124,12 @@ export class Card extends Component {
     private updateCardSprite() {
         if (this._isFaceUp) {
             // 加载正面图片
-            const path = `card/${this._suit}_${this._rank}/spriteFrame`;
+            let path = '';
+            if (this._suit === CardSuit.Joker) {
+                path = `cards/JOKER-${this._rank === CardRank.JokerA ? 'A' : 'B'}/spriteFrame`;
+            } else {
+                path = `cards/${this._suit}${this._rank}/spriteFrame`;
+            }
             resources.load(path, SpriteFrame, (err, spriteFrame) => {
                 if (err) {
                     console.error('Failed to load card sprite:', err);
@@ -134,7 +139,11 @@ export class Card extends Component {
             });
         } else {
             // 显示背面
-            this.cardSprite.spriteFrame = this.cardBack;
+            if (Card.cardBackSprite) {
+                this.cardSprite.spriteFrame = Card.cardBackSprite;
+            } else {
+                this.cardSprite.spriteFrame = this.cardBack;
+            }
         }
     }
 
