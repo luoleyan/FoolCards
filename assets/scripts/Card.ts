@@ -51,14 +51,26 @@ export class Card extends Component {
     // 预加载卡牌背面图像
     public static preloadCardBack() {
         if (!Card.cardBackSprite) {
+            console.log('Starting to preload card back sprite');
             resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
                 if (err) {
-                    console.error('Failed to preload card back sprite:', err);
+                    console.error('Failed to preload card back sprite from primary path:', err);
+                    // 尝试备用路径
+                    resources.load('cards/cardBack/spriteFrame', SpriteFrame, (err2, spriteFrame2) => {
+                        if (err2) {
+                            console.error('Failed to preload card back sprite from backup path:', err2);
+                            return;
+                        }
+                        console.log('Card back sprite preloaded successfully from backup path');
+                        Card.cardBackSprite = spriteFrame2;
+                    });
                     return;
                 }
+                console.log('Card back sprite preloaded successfully from primary path');
                 Card.cardBackSprite = spriteFrame;
-                console.log('Card back sprite preloaded successfully');
             });
+        } else {
+            console.log('Card back sprite already preloaded');
         }
     }
 
@@ -161,8 +173,55 @@ export class Card extends Component {
 
     // 同步显示卡牌背面
     public showCardBackSync() {
+        console.log('Attempting to show card back');
         this._isFaceUp = false;
-        this.cardSprite.spriteFrame = this.cardBack;
+        
+        // 确保卡牌节点已设置正确的缩放
+        if (this.node) {
+            // 设置卡牌缩放为0.25，与玩家卡牌一致
+            this.node.setScale(0.25, 0.25, 1);
+            
+            // 确保UITransform组件设置正确
+            const uiTransform = this.node.getComponent(UITransform);
+            if (uiTransform) {
+                // 设置内容尺寸为120x180，与玩家卡牌一致
+                uiTransform.setContentSize(120, 180);
+            }
+        }
+        
+        // 首先尝试使用预加载的卡牌背面
+        if (Card.cardBackSprite) {
+            console.log('Using preloaded card back sprite');
+            this.cardSprite.spriteFrame = Card.cardBackSprite;
+            return;
+        }
+        
+        // 如果预加载的不可用，尝试使用属性中的卡牌背面
+        if (this.cardBack) {
+            console.log('Using card back from property');
+            this.cardSprite.spriteFrame = this.cardBack;
+            return;
+        }
+        
+        // 如果都不可用，尝试立即加载
+        console.log('Attempting to load card back sprite');
+        resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+            if (err) {
+                console.error('Failed to load card back sprite:', err);
+                // 尝试备用路径
+                resources.load('cards/cardBack/spriteFrame', SpriteFrame, (err2, spriteFrame2) => {
+                    if (err2) {
+                        console.error('Failed to load card back sprite from backup path:', err2);
+                        return;
+                    }
+                    console.log('Successfully loaded card back from backup path');
+                    this.cardSprite.spriteFrame = spriteFrame2;
+                });
+                return;
+            }
+            console.log('Successfully loaded card back sprite');
+            this.cardSprite.spriteFrame = spriteFrame;
+        });
     }
 
     // 触摸开始事件

@@ -70,10 +70,10 @@ export class SceneEffect extends Component {
     private _effectType: SceneEffectType = SceneEffectType.None;
     private _isRevealed: boolean = false;
     private _publicCards: Card[] = [];
-    private _cardWidth: number = 120;  // 增加卡牌宽度
-    private _cardSpacing: number = 30;  // 增加卡牌间距
+    private _cardWidth: number = 120;  // 卡牌宽度
+    private _cardSpacing: number = 20;  // 减小卡牌间距
     private _effectOffsetY: number = 150;  // 效果文本与场地的垂直偏移
-    private _publicCardOffsetY: number = -180;  // 增加公共牌与场地的垂直偏移
+    private _publicCardOffsetY: number = 0;  // 将公共牌位置调整到场地区域中央
 
     public get effectType(): SceneEffectType {
         return this._effectType;
@@ -106,10 +106,65 @@ export class SceneEffect extends Component {
                 this.effectName.node.position = effectPos;
                 this.effectDescription.node.position = effectPos;
 
-                // 设置公共牌位置（场地内部下方）
-                const publicCardPos = new Vec3(0, -playAreaSize.height / 2 + 30, 0);
+                // 设置公共牌位置（场地内部中央）
+                const publicCardPos = new Vec3(0, 0, 0);  // 将公共牌位置设置在场地中央
                 this.publicCardContainer.position = publicCardPos;
             }
+        }
+    }
+
+    // 揭示效果
+    public reveal() {
+        if (this._isRevealed) return;
+        
+        this._isRevealed = true;
+        
+        // 确保公共牌容器可见
+        if (this.publicCardContainer) {
+            this.publicCardContainer.active = true;
+            // 确保所有公共牌可见并显示正面
+            this.publicCardContainer.children.forEach(cardNode => {
+                cardNode.active = true;
+                const card = cardNode.getComponent(Card);
+                if (card) {
+                    card.showCardFace();
+                }
+            });
+        }
+        
+        // 隐藏卡牌背面
+        if (this.cardBack && this.cardBack.node) {
+            this.cardBack.node.active = false;
+        }
+        
+        // 显示效果文本
+        if (this.effectDescription) {
+            this.effectDescription.node.active = true;
+            this.effectDescription.string = this.effectDescription.string;
+        }
+        
+        // 更新位置
+        this.updatePositions();
+        
+        // 播放揭示动画
+        this.playRevealAnimation();
+    }
+
+    // 隐藏效果
+    public hideEffect() {
+        // 隐藏效果文本
+        if (this.effectDescription) {
+            this.effectDescription.node.active = false;
+        }
+        
+        // 隐藏公共牌容器
+        if (this.publicCardContainer) {
+            this.publicCardContainer.active = false;
+        }
+        
+        // 显示卡牌背面
+        if (this.cardBack && this.cardBack.node) {
+            this.cardBack.node.active = true;
         }
     }
 
@@ -127,15 +182,28 @@ export class SceneEffect extends Component {
         // 显示卡牌背面
         this.cardBack.node.active = true;
         this.hideEffect();
+        
+        // 生成公共牌并确保它们可见
         this.generatePublicCards();
+        if (this.publicCardContainer) {
+            this.publicCardContainer.children.forEach(child => {
+                child.active = true;
+            });
+        }
+        
         this.updatePositions();
     }
 
     // 生成公共牌
     private generatePublicCards() {
-        // 清空现有公共牌
+        // 清空现有公共牌和容器中的所有内容
         this._publicCards.forEach(card => card.node.destroy());
         this._publicCards = [];
+        
+        // 清空公共牌容器中的所有子节点
+        while (this.publicCardContainer.children.length > 0) {
+            this.publicCardContainer.removeChild(this.publicCardContainer.children[0]);
+        }
 
         // 生成两张随机公共牌
         for (let i = 0; i < 2; i++) {
@@ -150,12 +218,15 @@ export class SceneEffect extends Component {
             card.init(suit, rank);
             card.showCardBackSync();
 
+            // 设置卡牌缩放为0.15，使图片更小
+            cardNode.setScale(0.15, 0.15, 1);
+
             // 设置卡牌位置
             const transform = cardNode.addComponent(UITransform);
-            transform.setContentSize(this._cardWidth, this._cardWidth * 1.4);
+            transform.setContentSize(120, 180); // 设置内容尺寸为120x180
 
-            // 计算卡牌位置
-            const x = (i - 0.5) * (this._cardWidth + this._cardSpacing);
+            // 计算卡牌位置，横向排布，增加间距
+            const x = (i - 0.5) * (this._cardWidth * 0.15 + this._cardSpacing * 0.15 + 50); // 增加50的额外间距
             cardNode.setPosition(new Vec3(x, 0, 0));
 
             // 添加到容器
@@ -172,22 +243,18 @@ export class SceneEffect extends Component {
             joker.init(CardSuit.Joker, CardRank.JokerB);
             joker.showCardBackSync();
 
-            const transform = jokerNode.addComponent(UITransform);
-            transform.setContentSize(this._cardWidth, this._cardWidth * 1.4);
+            // 设置卡牌缩放为0.15，使图片更小
+            jokerNode.setScale(0.15, 0.15, 1);
 
-            jokerNode.setPosition(new Vec3(0, 0, 0));
+            const transform = jokerNode.addComponent(UITransform);
+            transform.setContentSize(120, 180); // 设置内容尺寸为120x180
+
+            // 将大王牌放在最右侧，保持相同的间距
+            const x = (this._publicCards.length - 0.5) * (this._cardWidth * 0.15 + this._cardSpacing * 0.15 + 50); // 增加50的额外间距
+            jokerNode.setPosition(new Vec3(x, 0, 0));
             this.publicCardContainer.addChild(jokerNode);
             this._publicCards.push(joker);
         }
-    }
-
-    // 揭示场景效果
-    public reveal() {
-        if (this._isRevealed) return;
-        this._isRevealed = true;
-
-        // 播放揭示动画
-        this.playRevealAnimation();
     }
 
     // 播放揭示动画
@@ -293,11 +360,6 @@ export class SceneEffect extends Component {
             default:
                 return { name: '未知效果', description: '未知效果' };
         }
-    }
-
-    // 隐藏场景效果
-    public hideEffect() {
-        this.cardBack.spriteFrame = this.hiddenEffectSprite;
     }
 
     // 获取随机花色

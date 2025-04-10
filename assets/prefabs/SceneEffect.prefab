@@ -147,7 +147,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -24,
+      "y": 8.056,
       "z": 0
     },
     "_lrot": {
@@ -759,12 +759,14 @@
     "__prefab": {
       "__id__": 31
     },
-    "effectSprite": null,
     "publicCardContainer": {
       "__id__": 2
     },
     "playArea": null,
-    "hiddenEffectSprite": null,
+    "hiddenEffectSprite": {
+      "__uuid__": "1e074341-c19d-4e8c-a9a9-9b1cf522b2f0@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "cardBack": {
       "__id__": 15
     },
@@ -788,7 +790,7 @@
     "node": {
       "__id__": 1
     },
-    "_enabled": false,
+    "_enabled": true,
     "__prefab": {
       "__id__": 33
     },

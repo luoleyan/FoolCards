@@ -129,6 +129,9 @@ export class GameManager extends Component {
         this.dealInitialCards();
         // 设置当前回合为1
         this._currentRound = 1;
+        
+        // 揭示第一个场景效果
+        this.revealNextSceneEffect();
     }
 
     // 创建牌堆
@@ -250,7 +253,19 @@ export class GameManager extends Component {
                 console.log(`Opponent hand area size set to: ${totalWidth} x ${cardHeight}`);
             }
             
+            // 设置对手手牌区域的缩放
+            this.opponentHand.setScale(1, 1, 1);
+            
+            // 确保所有子节点可见
+            this.opponentHand.children.forEach(child => {
+                child.active = true;
+                // 设置子节点的缩放
+                child.setScale(0.25, 0.25, 1);
+            });
+            
             console.log(`Opponent hand area positioned at: (0, ${topY}, 0)`);
+        } else {
+            console.error("Opponent hand area is null");
         }
 
         // 设置玩家手牌区域位置（底部居中）
@@ -267,6 +282,16 @@ export class GameManager extends Component {
                 playerHandTransform.setContentSize(totalWidth, cardHeight);
                 console.log(`Player hand area size set to: ${totalWidth} x ${cardHeight}`);
             }
+            
+            // 设置玩家手牌区域的缩放
+            this.playerHand.setScale(1, 1, 1);
+            
+            // 确保所有子节点可见
+            this.playerHand.children.forEach(child => {
+                child.active = true;
+                // 设置子节点的缩放
+                child.setScale(0.25, 0.25, 1);
+            });
         }
 
         // 牌桌中心位置（假设为坐标原点）
@@ -292,14 +317,19 @@ export class GameManager extends Component {
             const card = this.deck.pop();
 
             if (card) {
-                // 对手的牌立即显示背面，在设置任何属性前处理
-                if (!isPlayerTurn) {
-                    card.showCardBackSync(); // 使用同步方法
-                }
-
                 // 设置卡牌初始位置为牌堆位置
                 card.node.setPosition(deckPosition);
                 card.node.active = true;
+                
+                // 确保卡牌缩放为0.25，与玩家卡牌一致
+                card.node.setScale(0.25, 0.25, 1);
+                
+                // 确保UITransform组件设置正确
+                const uiTransform = card.node.getComponent(UITransform);
+                if (uiTransform) {
+                    // 设置内容尺寸为120x180，与玩家卡牌一致
+                    uiTransform.setContentSize(120, 180);
+                }
 
                 if (isPlayerTurn) {
                     // 给玩家发牌，自下而上动画
@@ -359,13 +389,19 @@ export class GameManager extends Component {
     private animateCardToOpponent(card: Card, index: number) {
         console.log(`Animating card to opponent, index: ${index}`);
         
-        // 确保显示卡牌背面
-        card.showCardBackSync();
-        console.log('Card back shown');
-
         // 设置父节点为对手手牌区域
         card.node.setParent(this.opponentHand);
         console.log('Card parent set to opponent hand');
+        
+        // 设置卡牌缩放为0.25，与玩家卡牌一致
+        card.node.setScale(0.25, 0.25, 1);
+        
+        // 确保UITransform组件设置正确
+        const uiTransform = card.node.getComponent(UITransform);
+        if (uiTransform) {
+            // 设置内容尺寸为120x180，与玩家卡牌一致
+            uiTransform.setContentSize(120, 180);
+        }
         
         // 计算最终位置
         const cardWidth = 120 * 0.25;
@@ -398,7 +434,7 @@ export class GameManager extends Component {
                 // 确保卡牌可见
                 card.node.active = true;
                 
-                // 再次确保显示卡牌背面
+                // 确保显示卡牌背面
                 card.showCardBackSync();
                 
                 // 添加触摸事件监听器，确保点击时也显示背面
@@ -408,6 +444,9 @@ export class GameManager extends Component {
                 
                 // 打印最终位置
                 console.log(`Card final position: ${card.node.position.toString()}`);
+                
+                // 确保卡牌在正确的层级
+                card.node.setSiblingIndex(index);
             })
             .start();
     }
@@ -972,9 +1011,13 @@ export class GameManager extends Component {
             return;
         }
 
+        // 获取屏幕宽度
+        const screenWidth = 1920; // 标准屏幕宽度
+        const screenScale = screenWidth / 1920; // 计算缩放比例
+
         // 计算场地区域之间的间距
-        const areaWidth = 600; // 每个场地区域的宽度
-        const spacing = 50; // 场地区域之间的间距
+        const areaWidth = 400 * screenScale; // 每个场地区域的宽度，考虑屏幕缩放
+        const spacing = 30 * screenScale; // 场地区域之间的间距，考虑屏幕缩放
         const totalWidth = (areaWidth * 3) + (spacing * 2);
         const startX = -totalWidth / 2 + areaWidth / 2;
 
@@ -982,6 +1025,12 @@ export class GameManager extends Component {
         this.playAreas.forEach((area, index) => {
             const x = startX + index * (areaWidth + spacing);
             area.setPosition(new Vec3(x, 0, 0));
+            
+            // 确保场地可见
+            area.active = true;
+            
+            // 设置场地的缩放
+            area.setScale(screenScale, screenScale, 1);
         });
 
         // 设置对手手牌区域位置到场景顶部
@@ -997,7 +1046,7 @@ export class GameManager extends Component {
             this.opponentHand.setPosition(new Vec3(0, topY, 0));
             
             // 设置缩放以确保可见
-            this.opponentHand.setScale(1, 1, 1);
+            this.opponentHand.setScale(screenScale, screenScale, 1);
             
             // 确保所有子节点可见
             this.opponentHand.children.forEach(child => {
