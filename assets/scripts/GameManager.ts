@@ -14,8 +14,8 @@ export class GameManager extends Component {
     @property(Node)
     private opponentHand: Node = null;  // 对手手牌区域
 
-    @property(Node)
-    private playArea: Node = null;  // 出牌区域
+    @property([Node])
+    private playAreas: Node[] = [];  // 三个场地区域
 
     @property(Node)
     private exchangeArea: Node = null;  // 换牌区域
@@ -62,15 +62,24 @@ export class GameManager extends Component {
         this.setupBackground();
 
         // 检查必要的节点
-        if (!this.playerHand || !this.opponentHand || !this.playArea || !this.exchangeArea) {
-            console.error("Some required nodes are not set. Please check playerHand, opponentHand, playArea, and exchangeArea in the inspector.");
+        if (!this.playerHand || !this.opponentHand || this.playAreas.length !== 3 || !this.exchangeArea) {
+            console.error("Some required nodes are not set. Please check all required nodes in the inspector.");
             return;
         }
+
+        // 设置场地区域位置
+        this.setupPlayAreasPosition();
+
+        // 设置换牌区域位置
+        this.setupExchangeAreaPosition();
+
+        // 初始化换牌次数显示
+        this.updateExchangeCountLabel();
 
         // 延迟两帧初始化游戏，确保所有组件都已加载
         this.scheduleOnce(() => {
             this.initGame();
-        }, 0.1); // 使用0.1秒延迟而不是0帧
+        }, 0.1);
 
         // 初始化场景效果
         this.initSceneEffects();
@@ -451,6 +460,9 @@ export class GameManager extends Component {
         this.exchangeCount = Math.min(this.exchangeCount + 2, this.maxExchangeCount);
         console.log(`新回合开始，当前换牌次数：${this.exchangeCount}`);
 
+        // 更新换牌次数显示
+        this.updateExchangeCountLabel();
+
         // 卡牌宽度（实际宽度乘以缩放比例）
         const cardWidth = 120 * 0.25;
         // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
@@ -523,6 +535,9 @@ export class GameManager extends Component {
         // 减少换牌次数
         this.exchangeCount--;
         console.log(`剩余换牌次数：${this.exchangeCount}`);
+
+        // 更新换牌次数显示
+        this.updateExchangeCountLabel();
 
         // 从牌堆中随机抽取一张新牌
         if (this.deck.length > 0) {
@@ -725,11 +740,17 @@ export class GameManager extends Component {
         return this.playerHand.children.map(node => node.getComponent(Card));
     }
 
-    public playCard(card: Card) {
-        if (this.playArea.children.length < 5) {
+    public playCard(card: Card, areaIndex: number) {
+        if (areaIndex < 0 || areaIndex >= this.playAreas.length) {
+            console.error("Invalid play area index");
+            return;
+        }
+
+        const playArea = this.playAreas[areaIndex];
+        if (playArea.children.length < 5) {
             card.node.removeFromParent();
-            this.playArea.addChild(card.node);
-            this.arrangePlayArea();
+            playArea.addChild(card.node);
+            this.arrangePlayArea(playArea);
         }
     }
 
@@ -754,9 +775,8 @@ export class GameManager extends Component {
     }
 
     private updateExchangeCountLabel() {
-        // 更新换牌次数显示
         if (this.exchangeCountLabel) {
-            this.exchangeCountLabel.string = `Exchange Count: ${this.exchangeCount}`;
+            this.exchangeCountLabel.string = `换牌次数: ${this.exchangeCount}`;
         }
     }
 
@@ -780,8 +800,8 @@ export class GameManager extends Component {
         });
     }
 
-    private arrangePlayArea() {
-        const cards = this.playArea.children;
+    private arrangePlayArea(playArea: Node) {
+        const cards = playArea.children;
         const cardWidth = 120; // 卡牌宽度
         const spacing = 20; // 卡牌间距
         const totalWidth = (cards.length - 1) * (cardWidth + spacing);
@@ -817,8 +837,8 @@ export class GameManager extends Component {
             }
 
             // 调整出牌区域
-            if (this.playArea) {
-                const playAreaTransform = this.playArea.getComponent(UITransform);
+            if (this.playAreas.length > 0) {
+                const playAreaTransform = this.playAreas[0].getComponent(UITransform);
                 if (playAreaTransform) {
                     const originalSize = playAreaTransform.contentSize;
                     playAreaTransform.setContentSize(
@@ -840,5 +860,47 @@ export class GameManager extends Component {
                 }
             }
         }
+    }
+
+    // 设置换牌区域位置
+    private setupExchangeAreaPosition() {
+        if (!this.playerHand || !this.exchangeArea) {
+            console.error("PlayerHand or ExchangeArea not found");
+            return;
+        }
+
+        // 获取玩家手牌区域的位置和大小
+        const playerHandPos = this.playerHand.getPosition();
+        const playerHandTransform = this.playerHand.getComponent(UITransform);
+        const playerHandWidth = playerHandTransform.contentSize.width;
+
+        // 设置换牌区域的位置（在玩家手牌区域的右侧）
+        const exchangeAreaPos = new Vec3(
+            playerHandPos.x + playerHandWidth / 2 + 100, // 在玩家手牌区域右侧100单位
+            playerHandPos.y,
+            0
+        );
+
+        this.exchangeArea.setPosition(exchangeAreaPos);
+    }
+
+    // 设置场地区域位置
+    private setupPlayAreasPosition() {
+        if (this.playAreas.length !== 3) {
+            console.error("Need exactly 3 play areas");
+            return;
+        }
+
+        // 计算场地区域之间的间距
+        const areaWidth = 600; // 每个场地区域的宽度
+        const spacing = 50; // 场地区域之间的间距
+        const totalWidth = (areaWidth * 3) + (spacing * 2);
+        const startX = -totalWidth / 2 + areaWidth / 2;
+
+        // 设置每个场地区域的位置
+        this.playAreas.forEach((area, index) => {
+            const x = startX + index * (areaWidth + spacing);
+            area.setPosition(new Vec3(x, 0, 0));
+        });
     }
 } 
