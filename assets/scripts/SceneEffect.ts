@@ -101,10 +101,13 @@ export class SceneEffect extends Component {
             if (playAreaTransform) {
                 const playAreaSize = playAreaTransform.contentSize;
                 
-                // 设置效果文本位置（场地内部上方）
-                const effectPos = new Vec3(0, playAreaSize.height / 2 - 30, 0);
-                this.effectName.node.position = effectPos;
-                this.effectDescription.node.position = effectPos;
+                // 设置效果名称位置（场地内部上方）
+                const effectNamePos = new Vec3(0, playAreaSize.height / 2 - 30, 0);
+                this.effectName.node.position = effectNamePos;
+
+                // 设置效果描述位置（在效果名称下方）
+                const effectDescPos = new Vec3(0, playAreaSize.height / 2 - 80, 0);
+                this.effectDescription.node.position = effectDescPos;
 
                 // 设置公共牌位置（场地内部中央）
                 const publicCardPos = new Vec3(0, 0, 0);  // 将公共牌位置设置在场地中央
