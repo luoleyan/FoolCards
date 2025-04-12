@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, input, Input, director, resources } from 'cc';
+import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, input, Input, director, resources, Camera } from 'cc';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
@@ -89,18 +89,20 @@ export class Card extends Component {
 
     start() {
         // 添加触摸事件监听
-        this.node.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
-        this.node.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
-        this.node.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
-        this.node.on(Input.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+        this.node.on(Node.EventType.TOUCH_START, this.onTouchStart, this);
+        this.node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
+        this.node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
+        this.node.on(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+
+        console.log('Card touch events registered');
     }
 
     onDestroy() {
         // 移除触摸事件监听
-        this.node.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
-        this.node.off(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
-        this.node.off(Input.EventType.TOUCH_END, this.onTouchEnd, this);
-        this.node.off(Input.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+        this.node.off(Node.EventType.TOUCH_START, this.onTouchStart, this);
+        this.node.off(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
+        this.node.off(Node.EventType.TOUCH_END, this.onTouchEnd, this);
+        this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     }
 
     // 初始化卡牌
@@ -227,8 +229,11 @@ export class Card extends Component {
 
     // 触摸开始事件
     private onTouchStart(event: EventTouch) {
+        console.log('Touch start event triggered');
+        
         // 获取父节点名称
         const parentName = this.node.parent ? this.node.parent.name : '';
+        console.log('Parent node name:', parentName);
         
         // 如果是对手的卡牌，只显示背面
         if (parentName === 'OpponentHand') {
@@ -238,6 +243,7 @@ export class Card extends Component {
         
         // 如果是玩家手牌，允许拖动
         if (parentName === 'PlayerHand') {
+            console.log('Starting drag on player card');
             this._isDragging = true;
             this._originalPosition = this.node.position.clone();
             this._originalIndex = this.node.getSiblingIndex();
@@ -250,9 +256,6 @@ export class Card extends Component {
                 nodePos.y - touchPos.y,
                 0
             );
-
-            // 不再将卡牌提升到最上层
-            // this.node.setSiblingIndex(this.node.parent.children.length - 1);
         }
     }
 
@@ -262,6 +265,7 @@ export class Card extends Component {
             return;
         }
 
+        console.log('Touch move event triggered');
         const touchPos = event.getLocation();
         this.node.setPosition(
             touchPos.x + this._dragOffset.x,
@@ -276,6 +280,7 @@ export class Card extends Component {
             return;
         }
 
+        console.log('Touch end event triggered');
         this._isDragging = false;
 
         // 获取游戏管理器
@@ -286,37 +291,62 @@ export class Card extends Component {
         }
 
         // 检查是否拖入换牌区域
-        const touchPos = event.getLocation();
-        const exchangeArea = gameManager['exchangeArea'];
+        const exchangeArea = gameManager.exchangeArea;
         if (exchangeArea) {
-            const exchangeTransform = exchangeArea.getComponent(UITransform);
-            const worldPos = exchangeArea.getWorldPosition();
-            const localPos = new Vec3(
-                touchPos.x - worldPos.x,
-                touchPos.y - worldPos.y,
-                0
-            );
+            console.log('Checking exchange area collision');
+            
+            // 获取卡牌的UITransform组件
+            const cardTransform = this.node.getComponent(UITransform);
+            if (!cardTransform) {
+                console.error('Card UITransform not found');
+                return;
+            }
 
-            if (Math.abs(localPos.x) <= exchangeTransform.contentSize.width / 2 &&
-                Math.abs(localPos.y) <= exchangeTransform.contentSize.height / 2) {
+            // 获取换牌区域的UITransform组件
+            const exchangeTransform = exchangeArea.getComponent(UITransform);
+            if (!exchangeTransform) {
+                console.error('Exchange area UITransform not found');
+                return;
+            }
+
+            // 获取卡牌和换牌区域的世界坐标
+            const cardWorldPos = this.node.parent.getComponent(UITransform)
+                .convertToWorldSpaceAR(this.node.position);
+            const exchangeWorldPos = exchangeArea.parent.getComponent(UITransform)
+                .convertToWorldSpaceAR(exchangeArea.position);
+
+            // 计算卡牌和换牌区域的边界
+            const cardHalfWidth = cardTransform.width * this.node.scale.x / 2;
+            const cardHalfHeight = cardTransform.height * this.node.scale.y / 2;
+            const exchangeHalfWidth = exchangeTransform.width * exchangeArea.scale.x / 2;
+            const exchangeHalfHeight = exchangeTransform.height * exchangeArea.scale.y / 2;
+
+            // 检查卡牌是否与换牌区域重叠
+            const isOverlapping = 
+                cardWorldPos.x + cardHalfWidth >= exchangeWorldPos.x - exchangeHalfWidth &&
+                cardWorldPos.x - cardHalfWidth <= exchangeWorldPos.x + exchangeHalfWidth &&
+                cardWorldPos.y + cardHalfHeight >= exchangeWorldPos.y - exchangeHalfHeight &&
+                cardWorldPos.y - cardHalfHeight <= exchangeWorldPos.y + exchangeHalfHeight;
+
+            if (isOverlapping) {
+                console.log('Card overlaps with exchange area, triggering exchange');
                 // 触发换牌
                 gameManager.exchangeCard(this);
                 return;
             }
         }
 
-        // 如果没有拖入换牌区域，返回到原来的位置和顺序
+        // 如果没有拖入换牌区域，返回到原来的位置
         if (this.node.parent && this.node.parent.name === 'PlayerHand') {
+            console.log('Card returning to original position');
             // 返回到原始位置
             this.node.setPosition(this._originalPosition);
-            
             // 恢复原始顺序
             this.node.setSiblingIndex(this._originalIndex);
-            
             // 确保卡牌显示正面
             this.showCardFace();
             
-            // 重新排列手牌
+            // 重新排列所有手牌
             gameManager.arrangePlayerHand();
         }
     }

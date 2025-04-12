@@ -18,7 +18,7 @@ export class GameManager extends Component {
     private playAreas: Node[] = [];  // 三个场地区域
 
     @property(Node)
-    private exchangeArea: Node = null;  // 换牌区域
+    public exchangeArea: Node = null;  // 换牌区域
 
     @property(Sprite)
     private background: Sprite = null;  // 游戏背景
@@ -666,11 +666,17 @@ export class GameManager extends Component {
             newCard.node.setParent(this.playerHand);
             newCard.node.setSiblingIndex(cardIndex);
 
+            // 确保新卡牌显示正面
+            newCard.showCardFace();
+
             // 移除旧卡牌
             card.node.removeFromParent();
 
             // 播放换牌动画
             this.playExchangeAnimation(newCard, cardIndex);
+
+            // 重新排列手牌
+            this.arrangePlayerHand();
         } else {
             console.log("牌堆已空，无法换牌");
         }
