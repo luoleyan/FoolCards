@@ -196,15 +196,9 @@ export class SceneEffect extends Component {
 
     // 生成公共牌
     private generatePublicCards() {
-        // 清空现有公共牌和容器中的所有内容
-        this._publicCards.forEach(card => card.node.destroy());
+        // 清空现有公共牌
         this._publicCards = [];
         
-        // 清空公共牌容器中的所有子节点
-        while (this.publicCardContainer.children.length > 0) {
-            this.publicCardContainer.removeChild(this.publicCardContainer.children[0]);
-        }
-
         // 生成两张随机公共牌
         for (let i = 0; i < 2; i++) {
             const cardNode = new Node('PublicCard');
@@ -283,6 +277,20 @@ export class SceneEffect extends Component {
                 tween(this.effectDescription.node)
                     .delay(0.2)
                     .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: 'backOut' })
+                    .call(() => {
+                        // 3. 显示公共牌
+                        if (this.publicCardContainer) {
+                            this.publicCardContainer.active = true;
+                            // 确保所有公共牌可见并显示正面
+                            this.publicCardContainer.children.forEach(cardNode => {
+                                cardNode.active = true;
+                                const card = cardNode.getComponent(Card);
+                                if (card) {
+                                    card.showCardFace();
+                                }
+                            });
+                        }
+                    })
                     .start();
             })
             .start();

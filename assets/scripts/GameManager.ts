@@ -73,24 +73,26 @@ export class GameManager extends Component {
         this.playerHand.active = true;
         this.opponentHand.active = true;
 
-        // 设置场地区域位置
-        this.setupPlayAreasPosition();
-
-        // 设置换牌区域位置
-        this.setupExchangeAreaPosition();
-
-        // 初始化换牌次数显示
-        this.updateExchangeCountLabel();
-
-        // 延迟两帧初始化游戏，确保所有组件都已加载
+        // 延迟一帧初始化游戏，确保所有组件都已加载
         this.scheduleOnce(() => {
+            // 设置场地区域位置
+            this.setupPlayAreasPosition();
+
+            // 设置换牌区域位置
+            this.setupExchangeAreaPosition();
+
+            // 初始化换牌次数显示
+            this.updateExchangeCountLabel();
+
+            // 初始化场景效果
+            this.initSceneEffects();
+
+            // 初始化游戏
             this.initGame();
-        }, 0.1);
 
-        // 初始化场景效果
-        this.initSceneEffects();
-
-        this.adaptToPlatform();
+            // 适配平台
+            this.adaptToPlatform();
+        }, 0);
     }
 
     // 设置游戏背景
@@ -887,37 +889,35 @@ export class GameManager extends Component {
         }
     }
 
-    private arrangePlayerHand() {
-        const cards = this.playerHand.children;
-        if (!cards || cards.length === 0) return;
+    // 重新排列玩家手牌
+    public arrangePlayerHand() {
+        const playerHand = this.playerHand;
+        if (!playerHand) return;
 
-        // 卡牌宽度（考虑缩放）
-        const cardWidth = 120 * 0.25;
-        // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
-        const spacing = cardWidth * 2.3;
+        // 获取所有卡牌并保持原有顺序
+        const cards = [...playerHand.children];
         
-        // 计算总宽度
+        // 计算卡牌间距
+        const cardWidth = 120 * 0.25; // 卡牌宽度（考虑缩放）
+        const spacing = cardWidth * 2.3; // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
         const totalWidth = (cards.length - 1) * spacing;
-        // 起始X坐标（居中）
         const startX = -totalWidth / 2;
 
-        // 设置每张卡牌的位置
-        cards.forEach((card, index) => {
-            const x = startX + index * spacing;
-            card.setPosition(x, 0, 0);
-            
-            // 确保卡牌可见
-            card.active = true;
-            
-            // 确保显示卡牌正面
-            const cardComponent = card.getComponent(Card);
-            if (cardComponent) {
-                cardComponent.showCardFace();
+        // 按照原有顺序排列卡牌
+        cards.forEach((cardNode, index) => {
+            const card = cardNode.getComponent(Card);
+            if (card) {
+                // 设置卡牌位置
+                const x = startX + index * spacing;
+                cardNode.setPosition(x, 0, 0);
+                
+                // 确保卡牌显示正面
+                card.showCardFace();
             }
         });
 
         // 确保玩家手牌区域可见
-        this.playerHand.active = true;
+        playerHand.active = true;
     }
 
     private arrangePlayArea(playArea: Node) {
@@ -935,30 +935,35 @@ export class GameManager extends Component {
 
     private adaptToPlatform() {
         const platformAdapter = PlatformAdapter.getInstance();
-        if (platformAdapter) {
-            const scale = platformAdapter.getScreenScale();
-            
-            // 调整卡牌大小
-            if (this.playerHand && this.opponentHand) {
-                const cardWidth = 100 * scale;
-                const cardHeight = 140 * scale;
-                
-                // 调整玩家手牌位置
-                const playerHandTransform = this.playerHand.getComponent(UITransform);
-                if (playerHandTransform) {
-                    playerHandTransform.setContentSize(cardWidth * 5, cardHeight);
-                }
-                
-                // 调整对手手牌位置
-                const opponentHandTransform = this.opponentHand.getComponent(UITransform);
-                if (opponentHandTransform) {
-                    opponentHandTransform.setContentSize(cardWidth * 5, cardHeight);
-                }
-            }
+        if (!platformAdapter) {
+            console.warn("PlatformAdapter instance not ready yet");
+            return;
+        }
 
-            // 调整出牌区域
-            if (this.playAreas.length > 0) {
-                const playAreaTransform = this.playAreas[0].getComponent(UITransform);
+        const scale = platformAdapter.getScreenScale();
+        
+        // 调整卡牌大小
+        if (this.playerHand && this.opponentHand) {
+            const cardWidth = 120 * scale;  // 使用与玩家手牌相同的宽度
+            const cardHeight = 180 * scale; // 使用与玩家手牌相同的高度
+            
+            // 调整玩家手牌位置
+            const playerHandTransform = this.playerHand.getComponent(UITransform);
+            if (playerHandTransform) {
+                playerHandTransform.setContentSize(cardWidth * 5, cardHeight);
+            }
+            
+            // 调整对手手牌位置，使用与玩家手牌相同的尺寸
+            const opponentHandTransform = this.opponentHand.getComponent(UITransform);
+            if (opponentHandTransform) {
+                opponentHandTransform.setContentSize(cardWidth * 5, cardHeight);
+            }
+        }
+
+        // 调整出牌区域
+        if (this.playAreas.length > 0) {
+            this.playAreas.forEach(area => {
+                const playAreaTransform = area.getComponent(UITransform);
                 if (playAreaTransform) {
                     const originalSize = playAreaTransform.contentSize;
                     playAreaTransform.setContentSize(
@@ -966,97 +971,100 @@ export class GameManager extends Component {
                         originalSize.height * scale
                     );
                 }
-            }
-
-            // 调整交换区域
-            if (this.exchangeArea) {
-                const exchangeAreaTransform = this.exchangeArea.getComponent(UITransform);
-                if (exchangeAreaTransform) {
-                    const originalSize = exchangeAreaTransform.contentSize;
-                    exchangeAreaTransform.setContentSize(
-                        originalSize.width * scale,
-                        originalSize.height * scale
-                    );
-                }
-            }
+                // 设置缩放以确保可见
+                area.setScale(scale, scale, 1);
+            });
         }
+
+        // 调整交换区域
+        if (this.exchangeArea) {
+            const exchangeAreaTransform = this.exchangeArea.getComponent(UITransform);
+            if (exchangeAreaTransform) {
+                // 设置交换区域的大小为卡牌大小的1.5倍
+                const exchangeAreaWidth = 120 * scale * 1.5;
+                const exchangeAreaHeight = 180 * scale * 1.5;
+                exchangeAreaTransform.setContentSize(exchangeAreaWidth, exchangeAreaHeight);
+            }
+            // 设置缩放以确保可见
+            this.exchangeArea.setScale(scale, scale, 1);
+            // 确保节点可见
+            this.exchangeArea.active = true;
+        }
+
+        // 重新设置换牌区域位置
+        this.setupExchangeAreaPosition();
     }
 
     // 设置换牌区域位置
     private setupExchangeAreaPosition() {
-        if (!this.playerHand || !this.exchangeArea) {
-            console.error("PlayerHand or ExchangeArea not found");
+        if (!this.playerHand || !this.exchangeArea || !this.background) {
+            console.error("PlayerHand, ExchangeArea or Background not found");
             return;
         }
 
-        // 获取玩家手牌区域的位置和大小
-        const playerHandPos = this.playerHand.getPosition();
-        const playerHandTransform = this.playerHand.getComponent(UITransform);
-        const playerHandWidth = playerHandTransform.contentSize.width;
+        // 获取背景节点的UITransform组件
+        const backgroundTransform = this.background.node.getComponent(UITransform);
+        const exchangeAreaTransform = this.exchangeArea.getComponent(UITransform);
+        
+        if (!backgroundTransform || !exchangeAreaTransform) {
+            console.error("Required UITransform components not found");
+            return;
+        }
 
-        // 设置换牌区域的位置（在玩家手牌区域的右侧）
-        const exchangeAreaPos = new Vec3(
-            playerHandPos.x + playerHandWidth / 2 + 100, // 在玩家手牌区域右侧100单位
-            playerHandPos.y,
+        // 计算右下角的位置（考虑背景尺寸和换牌区域尺寸）
+        const targetPos = new Vec3(
+            400, // 固定在右侧位置
+            -500, // 固定在下方位置，调整为更低的位置
             0
         );
+        
+        // 设置换牌区域的位置
+        this.exchangeArea.setPosition(targetPos);
+        
+        // 确保换牌区域可见
+        this.exchangeArea.active = true;
 
-        this.exchangeArea.setPosition(exchangeAreaPos);
+        // 打印位置信息以便调试
+        console.log('Exchange area position set to:', targetPos.toString());
+        console.log('Exchange area size:', exchangeAreaTransform.width, exchangeAreaTransform.height);
+        console.log('Exchange area active:', this.exchangeArea.active);
     }
 
     // 设置场地区域位置
     private setupPlayAreasPosition() {
         if (this.playAreas.length !== 3) {
-            console.error("Need exactly 3 play areas");
+            console.error("需要设置3个出牌区域");
             return;
         }
 
-        // 获取屏幕宽度
-        const screenWidth = 1920; // 标准屏幕宽度
-        const screenScale = screenWidth / 1920; // 计算缩放比例
+        const platformAdapter = PlatformAdapter.getInstance();
+        if (!platformAdapter) {
+            console.warn("PlatformAdapter instance not ready yet");
+            return;
+        }
 
-        // 计算场地区域之间的间距
-        const areaWidth = 400 * screenScale; // 每个场地区域的宽度，考虑屏幕缩放
-        const spacing = 30 * screenScale; // 场地区域之间的间距，考虑屏幕缩放
-        const totalWidth = (areaWidth * 3) + (spacing * 2);
-        const startX = -totalWidth / 2 + areaWidth / 2;
+        // 获取屏幕缩放比例
+        const screenScale = platformAdapter.getScreenScale();
 
-        // 设置每个场地区域的位置
+        // 设置出牌区域位置，根据屏幕缩放调整间距
+        const baseSpacing = 200; // 基础间距
+        const playAreaSpacing = baseSpacing * screenScale; // 根据屏幕缩放调整间距
+        const startX = -playAreaSpacing; // 从左侧开始
+
         this.playAreas.forEach((area, index) => {
-            const x = startX + index * (areaWidth + spacing);
-            area.setPosition(new Vec3(x, 0, 0));
-            
-            // 确保场地可见
+            // 确保出牌区域可见
             area.active = true;
             
-            // 设置场地的缩放
-            area.setScale(screenScale, screenScale, 1);
-        });
-
-        // 设置对手手牌区域位置到场景顶部
-        if (this.opponentHand) {
-            // 获取场景高度
-            const sceneHeight = 1080; // 假设场景高度为1080
-            const topY = sceneHeight / 2 - 100; // 距离顶部100单位
-            
-            // 确保对手手牌区域可见
-            this.opponentHand.active = true;
-            
             // 设置位置
-            this.opponentHand.setPosition(new Vec3(0, topY, 0));
-            
-            // 设置缩放以确保可见
-            this.opponentHand.setScale(screenScale, screenScale, 1);
+            area.setPosition(new Vec3(startX + index * playAreaSpacing, 0, 0));
             
             // 确保所有子节点可见
-            this.opponentHand.children.forEach(child => {
+            area.children.forEach(child => {
                 child.active = true;
             });
             
-            console.log(`Opponent hand area positioned at (0, ${topY}, 0)`);
-        } else {
-            console.error("Opponent hand area is null");
-        }
+            console.log(`Play area ${index} positioned at (${startX + index * playAreaSpacing}, 0, 0) with scale ${screenScale}`);
+        });
     }
 
     // 更新指定场地的分数显示

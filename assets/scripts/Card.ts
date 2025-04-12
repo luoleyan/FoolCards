@@ -44,6 +44,7 @@ export class Card extends Component {
     private _originalPosition: Vec3 = new Vec3();
     private _isDragging: boolean = false;
     private _dragOffset: Vec3 = new Vec3();
+    private _originalIndex: number;
 
     // 静态变量，存储预加载的卡牌背面图像
     private static cardBackSprite: SpriteFrame = null;
@@ -226,25 +227,33 @@ export class Card extends Component {
 
     // 触摸开始事件
     private onTouchStart(event: EventTouch) {
-        // 只允许玩家手牌被拖动
-        if (this.node.parent.name !== 'PlayerHand') {
+        // 获取父节点名称
+        const parentName = this.node.parent ? this.node.parent.name : '';
+        
+        // 如果是对手的卡牌，只显示背面
+        if (parentName === 'OpponentHand') {
+            this.showCardBackSync();
             return;
         }
+        
+        // 如果是玩家手牌，允许拖动
+        if (parentName === 'PlayerHand') {
+            this._isDragging = true;
+            this._originalPosition = this.node.position.clone();
+            this._originalIndex = this.node.getSiblingIndex();
 
-        this._isDragging = true;
-        this._originalPosition = this.node.position.clone();
+            // 计算拖拽偏移量
+            const touchPos = event.getLocation();
+            const nodePos = this.node.getPosition();
+            this._dragOffset = new Vec3(
+                nodePos.x - touchPos.x,
+                nodePos.y - touchPos.y,
+                0
+            );
 
-        // 计算拖拽偏移量
-        const touchPos = event.getLocation();
-        const nodePos = this.node.getPosition();
-        this._dragOffset = new Vec3(
-            nodePos.x - touchPos.x,
-            nodePos.y - touchPos.y,
-            0
-        );
-
-        // 将卡牌提升到最上层
-        this.node.setSiblingIndex(this.node.parent.children.length - 1);
+            // 不再将卡牌提升到最上层
+            // this.node.setSiblingIndex(this.node.parent.children.length - 1);
+        }
     }
 
     // 触摸移动事件
@@ -296,8 +305,20 @@ export class Card extends Component {
             }
         }
 
-        // 如果没有拖入换牌区域，返回原位
-        this.node.setPosition(this._originalPosition);
+        // 如果没有拖入换牌区域，返回到原来的位置和顺序
+        if (this.node.parent && this.node.parent.name === 'PlayerHand') {
+            // 返回到原始位置
+            this.node.setPosition(this._originalPosition);
+            
+            // 恢复原始顺序
+            this.node.setSiblingIndex(this._originalIndex);
+            
+            // 确保卡牌显示正面
+            this.showCardFace();
+            
+            // 重新排列手牌
+            gameManager.arrangePlayerHand();
+        }
     }
 
     // 触摸取消事件
