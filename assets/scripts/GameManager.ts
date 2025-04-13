@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label } from 'cc';
+import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label, Button } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { tween } from 'cc';
 import { SpecialHandsManager, SpecialHand } from './SpecialHands';
@@ -34,6 +34,9 @@ export class GameManager extends Component {
 
     @property(Label)
     private exchangeCountLabel: Label = null;  // 换牌次数标签
+
+    @property(Button)
+    private backButton: Button = null;  // 返回主界面按钮
 
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
@@ -72,6 +75,11 @@ export class GameManager extends Component {
         // 确保手牌区域可见
         this.playerHand.active = true;
         this.opponentHand.active = true;
+
+        // 设置返回按钮点击事件
+        if (this.backButton) {
+            this.backButton.node.on(Button.EventType.CLICK, this.onBackButtonClicked, this);
+        }
 
         // 延迟一帧初始化游戏，确保所有组件都已加载
         this.scheduleOnce(() => {
@@ -1146,5 +1154,11 @@ export class GameManager extends Component {
 
     public addScoreToOtherAreas(score: number) {
         this.opponentScore += score;
+    }
+
+    // 返回主界面按钮点击事件处理
+    private onBackButtonClicked() {
+        // 切换到主菜单场景
+        director.loadScene('MainMenu');
     }
 } 

@@ -294,8 +294,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 11.503000000000043,
-      "y": 234.666,
+      "x": 12,
+      "y": 234,
       "z": 0
     },
     "_lrot": {
@@ -333,8 +333,8 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 85.1943359375,
-      "height": 50.4
+      "width": 300,
+      "height": 50
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -354,15 +354,15 @@
     "_enabled": true,
     "__prefab": null,
     "_lineHeight": 40,
-    "_string": "Title",
+    "_string": "FOOL CARDS",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_fontSize": 46,
     "_fontColor": {
       "__type__": "cc.Color",
-      "r": 12,
-      "g": 10,
-      "b": 10,
+      "r": 102,
+      "g": 204,
+      "b": 255,
       "a": 255
     },
     "_maxWidth": 0,
