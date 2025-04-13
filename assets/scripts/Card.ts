@@ -55,19 +55,10 @@ export class Card extends Component {
             console.log('Starting to preload card back sprite');
             resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
                 if (err) {
-                    console.error('Failed to preload card back sprite from primary path:', err);
-                    // 尝试备用路径
-                    resources.load('cards/cardBack/spriteFrame', SpriteFrame, (err2, spriteFrame2) => {
-                        if (err2) {
-                            console.error('Failed to preload card back sprite from backup path:', err2);
-                            return;
-                        }
-                        console.log('Card back sprite preloaded successfully from backup path');
-                        Card.cardBackSprite = spriteFrame2;
-                    });
+                    console.error('Failed to preload card back sprite:', err);
                     return;
                 }
-                console.log('Card back sprite preloaded successfully from primary path');
+                console.log('Card back sprite preloaded successfully');
                 Card.cardBackSprite = spriteFrame;
             });
         } else {
@@ -88,6 +79,9 @@ export class Card extends Component {
     }
 
     start() {
+        // 在组件启动时就预加载背面图片
+        Card.preloadCardBack();
+        
         // 添加触摸事件监听
         this.node.on(Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
@@ -244,19 +238,12 @@ export class Card extends Component {
         resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
             if (err) {
                 console.error('Failed to load card back sprite:', err);
-                // 尝试备用路径
-                resources.load('cards/cardBack/spriteFrame', SpriteFrame, (err2, spriteFrame2) => {
-                    if (err2) {
-                        console.error('Failed to load card back sprite from backup path:', err2);
-                        return;
-                    }
-                    console.log('Successfully loaded card back from backup path');
-                    this.cardSprite.spriteFrame = spriteFrame2;
-                });
                 return;
             }
-            console.log('Successfully loaded card back sprite');
-            this.cardSprite.spriteFrame = spriteFrame;
+            if (this.cardSprite) {
+                this.cardSprite.spriteFrame = spriteFrame;
+                Card.cardBackSprite = spriteFrame; // 保存以供后续使用
+            }
         });
     }
 
