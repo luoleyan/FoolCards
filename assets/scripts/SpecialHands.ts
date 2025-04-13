@@ -20,6 +20,7 @@ export enum SpecialHandType {
 // 特殊牌型类
 export class SpecialHand {
     public type: SpecialHandType;
+    public name: string;
     public cards: Card[];
     public bonusPoints: number;
     public description: string;
@@ -29,6 +30,7 @@ export class SpecialHand {
         this.cards = cards;
         this.bonusPoints = bonusPoints;
         this.description = description;
+        this.name = SpecialHandType[type];  // 使用枚举值作为名称
     }
 }
 
@@ -47,6 +49,11 @@ export class SpecialHandsManager {
             SpecialHandsManager.instance = new SpecialHandsManager();
         }
         return SpecialHandsManager.instance;
+    }
+
+    // 获取所有特殊牌型
+    public getSpecialHands(): SpecialHand[] {
+        return Array.from(this.specialHands.values());
     }
 
     // 初始化所有特殊牌型及其得分

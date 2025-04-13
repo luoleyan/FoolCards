@@ -4,6 +4,7 @@ import { tween } from 'cc';
 import { SpecialHandsManager, SpecialHand } from './SpecialHands';
 import { SceneEffect, SceneEffectType } from './SceneEffect';
 import { PlatformAdapter } from './PlatformAdapter';
+import { SpecialHandsPopup } from './SpecialHandsPopup';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
@@ -37,6 +38,12 @@ export class GameManager extends Component {
 
     @property(Button)
     private backButton: Button = null;  // 返回主界面按钮
+
+    @property(Node)
+    private specialHandsPopup: Node = null;
+
+    @property(Button)
+    private specialHandsButton: Button = null;
 
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
@@ -79,6 +86,11 @@ export class GameManager extends Component {
         // 设置返回按钮点击事件
         if (this.backButton) {
             this.backButton.node.on(Button.EventType.CLICK, this.onBackButtonClicked, this);
+        }
+
+        // 设置特殊牌型说明按钮点击事件
+        if (this.specialHandsButton) {
+            this.specialHandsButton.node.on(Button.EventType.CLICK, this.showSpecialHandsPopup, this);
         }
 
         // 延迟一帧初始化游戏，确保所有组件都已加载
@@ -1160,5 +1172,14 @@ export class GameManager extends Component {
     private onBackButtonClicked() {
         // 切换到主菜单场景
         director.loadScene('MainMenu');
+    }
+
+    private showSpecialHandsPopup() {
+        if (this.specialHandsPopup) {
+            const popup = this.specialHandsPopup.getComponent(SpecialHandsPopup);
+            if (popup) {
+                popup.showPopup();
+            }
+        }
     }
 } 

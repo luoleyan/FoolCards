@@ -137,6 +137,12 @@ export class Card extends Component {
 
     // 更新卡牌图片
     private updateCardSprite() {
+        // 检查 cardSprite 是否存在
+        if (!this.cardSprite) {
+            console.error('Card sprite component is missing!');
+            return;
+        }
+
         if (this._isFaceUp) {
             // 加载正面图片
             let path = '';
@@ -150,32 +156,59 @@ export class Card extends Component {
                     console.error('Failed to load card sprite:', err);
                     return;
                 }
-                this.cardSprite.spriteFrame = spriteFrame;
+                // 再次检查 cardSprite 是否存在
+                if (this.cardSprite) {
+                    this.cardSprite.spriteFrame = spriteFrame;
+                } else {
+                    console.error('Card sprite component is missing after loading sprite frame!');
+                }
             });
         } else {
             // 显示背面
+            if (!this.cardSprite) {
+                console.error('Card sprite component is missing when showing back!');
+                return;
+            }
+            
             if (Card.cardBackSprite) {
                 this.cardSprite.spriteFrame = Card.cardBackSprite;
-            } else {
+            } else if (this.cardBack) {
                 this.cardSprite.spriteFrame = this.cardBack;
+            } else {
+                console.error('No card back sprite available!');
             }
         }
     }
 
     // 显示卡牌正面
     public showCardFace() {
+        // 检查组件是否存在
+        if (!this.cardSprite) {
+            console.error('Cannot show card face: sprite component is missing!');
+            return;
+        }
         this._isFaceUp = true;
         this.updateCardSprite();
     }
 
     // 显示卡牌背面
     public showCardBack() {
+        // 检查组件是否存在
+        if (!this.cardSprite) {
+            console.error('Cannot show card back: sprite component is missing!');
+            return;
+        }
         this._isFaceUp = false;
         this.updateCardSprite();
     }
 
     // 同步显示卡牌背面
     public showCardBackSync() {
+        // 检查组件是否存在
+        if (!this.cardSprite) {
+            console.error('Cannot show card back sync: sprite component is missing!');
+            return;
+        }
         console.log('Attempting to show card back');
         this._isFaceUp = false;
         
