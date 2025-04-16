@@ -16,7 +16,7 @@ export class GameManager extends Component {
     private opponentHand: Node = null;  // 对手手牌区域
 
     @property([Node])
-    private playAreas: Node[] = [];  // 三个场地区域
+    public playAreas: Node[] = [];  // 三个场地区域
 
     @property(Node)
     public exchangeArea: Node = null;  // 换牌区域
@@ -66,7 +66,13 @@ export class GameManager extends Component {
 
     private extraPlayCount: number = 0;
 
+    // 记录已翻开的场地区域
+    private revealedAreas: boolean[] = [];
+
     start() {
+        // 初始化已翻开的场地区域数组
+        this.revealedAreas = new Array(this.playAreas.length).fill(false);
+        
         // 初始化特殊牌型管理器
         this.specialHandsManager = SpecialHandsManager.getInstance();
 
@@ -946,7 +952,8 @@ export class GameManager extends Component {
         playerHand.active = true;
     }
 
-    private arrangePlayArea(playArea: Node) {
+    // 重新排列场地区域的卡牌
+    public arrangePlayArea(playArea: Node) {
         const cards = playArea.children;
         const cardWidth = 120; // 卡牌宽度
         const spacing = 20; // 卡牌间距
@@ -1181,5 +1188,39 @@ export class GameManager extends Component {
                 popup.showPopup();
             }
         }
+    }
+
+    // 检查场地区域是否已经翻开
+    public isPlayAreaRevealed(areaIndex: number): boolean {
+        return this.revealedAreas[areaIndex] === true;
+    }
+
+    // 标记场地区域为已翻开
+    public markPlayAreaRevealed(areaIndex: number): void {
+        if (areaIndex >= 0 && areaIndex < this.revealedAreas.length) {
+            this.revealedAreas[areaIndex] = true;
+            
+            // 更新UI显示
+            if (this.playAreas[areaIndex]) {
+                // 可以添加一些视觉效果，比如高亮或动画
+                console.log(`Play area ${areaIndex} has been revealed`);
+                
+                // 如果有特殊效果，可以在这里添加
+                // 暂时注释掉，等待SceneEffect类实现playRevealEffect方法
+                // if (this.sceneEffects[areaIndex]) {
+                //     if (typeof this.sceneEffects[areaIndex].playRevealEffect === 'function') {
+                //         this.sceneEffects[areaIndex].playRevealEffect(this.playAreas[areaIndex]);
+                //     }
+                // }
+            }
+        }
+    }
+
+    // 检查是否可以放置卡牌到未翻开的区域
+    public canPlayToUnrevealedArea(): boolean {
+        // 这里可以实现游戏规则，比如：
+        // 1. 第一张卡牌可以放在任何区域
+        // 2. 或者特定条件下允许放在未翻开区域
+        return true; // 默认允许
     }
 } 

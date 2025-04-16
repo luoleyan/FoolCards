@@ -1,5 +1,6 @@
-import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, input, Input, director, resources, Camera } from 'cc';
+import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, input, Input, director, resources, Camera, Rect } from 'cc';
 import { GameManager } from './GameManager';
+import { SceneEffect } from './SceneEffect';
 const { ccclass, property } = _decorator;
 
 // 定义花色枚举
@@ -270,12 +271,28 @@ export class Card extends Component {
 
             // 计算拖拽偏移量
             const touchPos = event.getLocation();
-            const nodePos = this.node.getPosition();
-            this._dragOffset = new Vec3(
-                nodePos.x - touchPos.x,
-                nodePos.y - touchPos.y,
-                0
-            );
+            const camera = director.getScene().getComponentInChildren(Camera);
+            
+            if (camera) {
+                // 将触摸位置转换为世界坐标
+                const worldPos = camera.screenToWorld(new Vec3(touchPos.x, touchPos.y, 0));
+                // 将世界坐标转换为节点本地坐标
+                const localPos = this.node.parent.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
+                
+                // 计算偏移量（节点位置减去触摸位置）
+                this._dragOffset = new Vec3(
+                    this.node.position.x - localPos.x,
+                    this.node.position.y - localPos.y,
+                    0
+                );
+            } else {
+                // 如果没有找到相机，使用简单的位置计算
+                this._dragOffset = new Vec3(
+                    this.node.position.x - touchPos.x,
+                    this.node.position.y - touchPos.y,
+                    0
+                );
+            }
         }
     }
 
@@ -287,88 +304,204 @@ export class Card extends Component {
 
         console.log('Touch move event triggered');
         const touchPos = event.getLocation();
-        this.node.setPosition(
-            touchPos.x + this._dragOffset.x,
-            touchPos.y + this._dragOffset.y,
-            0
-        );
+        
+        // 将触摸位置转换为节点本地坐标
+        const camera = director.getScene().getComponentInChildren(Camera);
+        if (camera) {
+            const worldPos = camera.screenToWorld(new Vec3(touchPos.x, touchPos.y, 0));
+            const localPos = this.node.parent.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
+            
+            // 应用拖拽偏移量
+            this.node.setPosition(
+                localPos.x + this._dragOffset.x,
+                localPos.y + this._dragOffset.y,
+                0
+            );
+        } else {
+            // 如果没有找到相机，使用简单的位置计算
+            this.node.setPosition(
+                touchPos.x + this._dragOffset.x,
+                touchPos.y + this._dragOffset.y,
+                0
+            );
+        }
     }
 
     // 触摸结束事件
     private onTouchEnd(event: EventTouch) {
+        console.log('Touch ended');
+        
         if (!this._isDragging) {
             return;
         }
-
-        console.log('Touch end event triggered');
+        
         this._isDragging = false;
-
+        
         // 获取游戏管理器
         const gameManager = director.getScene().getComponentInChildren(GameManager);
         if (!gameManager) {
             console.error('GameManager not found');
             return;
         }
-
-        // 检查是否拖入换牌区域
-        const exchangeArea = gameManager.exchangeArea;
-        if (exchangeArea) {
-            console.log('Checking exchange area collision');
+        
+        // 检查是否与任何场地区域重叠
+        const playAreas = gameManager.playAreas;
+        console.log(`Found ${playAreas.length} play areas`);
+        
+        for (let i = 0; i < playAreas.length; i++) {
+            const playArea = playAreas[i];
+            if (!playArea) {
+                console.log(`Play area ${i} is null`);
+                continue;
+            }
+            
+            // 获取场地区域的UITransform组件
+            const areaTransform = playArea.getComponent(UITransform);
+            if (!areaTransform) {
+                console.log(`Play area ${i} has no UITransform component`);
+                continue;
+            }
             
             // 获取卡牌的UITransform组件
             const cardTransform = this.node.getComponent(UITransform);
             if (!cardTransform) {
-                console.error('Card UITransform not found');
-                return;
+                console.log('Card has no UITransform component');
+                continue;
             }
-
-            // 获取换牌区域的UITransform组件
-            const exchangeTransform = exchangeArea.getComponent(UITransform);
-            if (!exchangeTransform) {
-                console.error('Exchange area UITransform not found');
-                return;
-            }
-
-            // 获取卡牌和换牌区域的世界坐标
-            const cardWorldPos = this.node.parent.getComponent(UITransform)
-                .convertToWorldSpaceAR(this.node.position);
-            const exchangeWorldPos = exchangeArea.parent.getComponent(UITransform)
-                .convertToWorldSpaceAR(exchangeArea.position);
-
-            // 计算卡牌和换牌区域的边界
-            const cardHalfWidth = cardTransform.width * this.node.scale.x / 2;
-            const cardHalfHeight = cardTransform.height * this.node.scale.y / 2;
-            const exchangeHalfWidth = exchangeTransform.width * exchangeArea.scale.x / 2;
-            const exchangeHalfHeight = exchangeTransform.height * exchangeArea.scale.y / 2;
-
-            // 检查卡牌是否与换牌区域重叠
-            const isOverlapping = 
-                cardWorldPos.x + cardHalfWidth >= exchangeWorldPos.x - exchangeHalfWidth &&
-                cardWorldPos.x - cardHalfWidth <= exchangeWorldPos.x + exchangeHalfWidth &&
-                cardWorldPos.y + cardHalfHeight >= exchangeWorldPos.y - exchangeHalfHeight &&
-                cardWorldPos.y - cardHalfHeight <= exchangeWorldPos.y + exchangeHalfHeight;
-
-            if (isOverlapping) {
-                console.log('Card overlaps with exchange area, triggering exchange');
-                // 触发换牌
-                gameManager.exchangeCard(this);
-                return;
-            }
-        }
-
-        // 如果没有拖入换牌区域，返回到原来的位置
-        if (this.node.parent && this.node.parent.name === 'PlayerHand') {
-            console.log('Card returning to original position');
-            // 返回到原始位置
-            this.node.setPosition(this._originalPosition);
-            // 恢复原始顺序
-            this.node.setSiblingIndex(this._originalIndex);
-            // 确保卡牌显示正面
-            this.showCardFace();
             
-            // 重新排列所有手牌
-            gameManager.arrangePlayerHand();
+            // 计算重叠
+            const cardRect = cardTransform.getBoundingBoxToWorld();
+            const areaRect = areaTransform.getBoundingBoxToWorld();
+            
+            console.log(`Checking overlap with play area ${i}:`);
+            console.log(`Card rect: ${JSON.stringify(cardRect)}`);
+            console.log(`Area rect: ${JSON.stringify(areaRect)}`);
+            
+            if (this.isOverlapping(cardRect, areaRect)) {
+                console.log(`Card overlaps with play area ${i}`);
+                
+                // 检查场地区域是否已经翻开
+                if (gameManager.isPlayAreaRevealed(i)) {
+                    console.log(`Play area ${i} is revealed, playing card`);
+                    this.playCardToArea(playArea, i, gameManager);
+                    return;
+                } else {
+                    console.log(`Play area ${i} is not revealed yet`);
+                    // 检查是否允许放置到未翻开区域
+                    if (gameManager.canPlayToUnrevealedArea()) {
+                        console.log(`Playing card to unrevealed area ${i}`);
+                        // 先标记区域为已翻开
+                        gameManager.markPlayAreaRevealed(i);
+                        // 然后放置卡牌
+                        this.playCardToArea(playArea, i, gameManager);
+                        return;
+                    }
+                }
+            }
         }
+        
+        // 如果没有与任何场地区域重叠，返回原位
+        console.log('No overlap with any play area, returning to original position');
+        this.node.setPosition(this._originalPosition);
+        this.node.setSiblingIndex(this._originalIndex);
+        this.showCardFace();
+    }
+
+    // 将卡牌放置到场地区域
+    private playCardToArea(playArea: Node, areaIndex: number, gameManager: GameManager) {
+        console.log('Starting playCardToArea');
+        
+        // 从玩家手牌中移除卡牌
+        if (this.node.parent && this.node.parent.name === 'PlayerHand') {
+            console.log('Removing card from player hand');
+            this.node.removeFromParent();
+        } else {
+            console.error('Card is not in player hand');
+            return;
+        }
+        
+        // 获取场地区域的尺寸
+        const areaTransform = playArea.getComponent(UITransform);
+        if (!areaTransform) {
+            console.error('Play area has no UITransform component');
+            return;
+        }
+
+        // 计算卡牌在场地区域下方的位置
+        const cardHeight = 180;  // 卡牌原始高度
+        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 增加向下的偏移量
+
+        // 将卡牌添加到场地区域并设置位置
+        console.log('Adding card to play area');
+        playArea.addChild(this.node);
+        this.node.setPosition(new Vec3(0, bottomY, 0));  // 放在场地正下方中心位置
+        
+        // 设置卡牌大小和缩放
+        this.node.setScale(0.5, 0.5, 1);  // 缩小卡牌尺寸
+        const cardTransform = this.node.getComponent(UITransform);
+        if (cardTransform) {
+            cardTransform.setContentSize(120, 180);  // 设置原始大小
+        }
+        
+        // 确保卡牌显示正面
+        console.log('Showing card face');
+        this.showCardFace();
+        
+        // 获取场地区域中的所有卡牌
+        console.log('Getting all cards in play area');
+        const cards: Card[] = [];
+        playArea.children.forEach(child => {
+            const card = child.getComponent(Card);
+            if (card) {
+                cards.push(card);
+            }
+        });
+        
+        console.log(`Found ${cards.length} cards in play area`);
+        
+        // 计算并更新场地区域的分数
+        console.log('Calculating area score');
+        gameManager.calculateAreaScore(areaIndex, cards);
+        
+        // 重新排列玩家手牌
+        console.log('Arranging player hand');
+        gameManager.arrangePlayerHand();
+        
+        console.log('playCardToArea completed');
+    }
+
+    // 重新排列场地区域中的卡牌
+    private arrangeCardsInPlayArea(playArea: Node) {
+        const cards = playArea.children;
+        const cardWidth = 120;  // 卡牌原始宽度
+        const spacing = 20;     // 卡牌间距
+        const totalWidth = (cards.length - 1) * (cardWidth + spacing);
+        const startX = -totalWidth / 2;
+
+        // 获取场地区域的尺寸
+        const areaTransform = playArea.getComponent(UITransform);
+        if (!areaTransform) {
+            console.error('Play area has no UITransform component');
+            return;
+        }
+
+        // 计算场地区域外部的底部位置
+        const cardHeight = 180;  // 卡牌原始高度
+        // 将卡牌放在场地区域下方 20 像素的位置
+        const bottomY = -(areaTransform.height / 2) - cardHeight - 20;
+
+        cards.forEach((cardNode, index) => {
+            // 设置卡牌位置（x轴居中，y轴在场地区域下方）
+            const x = startX + index * (cardWidth + spacing);
+            cardNode.setPosition(new Vec3(x, bottomY, 0));
+            
+            // 确保卡牌大小和缩放正确
+            cardNode.setScale(0.5, 0.5, 1);  // 缩小卡牌尺寸
+            const cardTransform = cardNode.getComponent(UITransform);
+            if (cardTransform) {
+                cardTransform.setContentSize(120, 180);
+            }
+        });
     }
 
     // 触摸取消事件
@@ -395,5 +528,12 @@ export class Card extends Component {
 
     public getRank(): CardRank {
         return this.rank;
+    }
+
+    private isOverlapping(rect1: Rect, rect2: Rect): boolean {
+        return !(rect1.x + rect1.width < rect2.x ||
+                rect2.x + rect2.width < rect1.x ||
+                rect1.y + rect1.height < rect2.y ||
+                rect2.y + rect2.height < rect1.y);
     }
 } 
