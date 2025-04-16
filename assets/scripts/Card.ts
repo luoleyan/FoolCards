@@ -343,6 +343,15 @@ export class Card extends Component {
             console.error('GameManager not found');
             return;
         }
+
+        // 检查是否还能出牌
+        if (!gameManager.canPlayCard()) {
+            console.log('Cannot play more cards this turn');
+            // 返回原位
+            this.node.setPosition(this._originalPosition);
+            this.node.setSiblingIndex(this._originalIndex);
+            return;
+        }
         
         // 检查是否与任何场地区域重叠
         const playAreas = gameManager.playAreas;
@@ -384,6 +393,8 @@ export class Card extends Component {
                 if (gameManager.isPlayAreaRevealed(i)) {
                     console.log(`Play area ${i} is revealed, playing card`);
                     this.playCardToArea(playArea, i, gameManager);
+                    // 记录出牌次数
+                    gameManager.recordCardPlayed();
                     return;
                 } else {
                     console.log(`Play area ${i} is not revealed yet`);
@@ -394,6 +405,8 @@ export class Card extends Component {
                         gameManager.markPlayAreaRevealed(i);
                         // 然后放置卡牌
                         this.playCardToArea(playArea, i, gameManager);
+                        // 记录出牌次数
+                        gameManager.recordCardPlayed();
                         return;
                     }
                 }
@@ -404,7 +417,6 @@ export class Card extends Component {
         console.log('No overlap with any play area, returning to original position');
         this.node.setPosition(this._originalPosition);
         this.node.setSiblingIndex(this._originalIndex);
-        this.showCardFace();
     }
 
     // 将卡牌放置到场地区域
@@ -419,25 +431,43 @@ export class Card extends Component {
             console.error('Card is not in player hand');
             return;
         }
-        
-        // 获取场地区域的尺寸
+
+        // 创建一个新的节点作为卡牌容器
+        const cardContainer = new Node('CardContainer');
+        playArea.addChild(cardContainer);
+
+        // 设置容器位置在场地区域下方
         const areaTransform = playArea.getComponent(UITransform);
         if (!areaTransform) {
             console.error('Play area has no UITransform component');
             return;
         }
 
-        // 计算卡牌在场地区域下方的位置
+        // 计算容器位置
         const cardHeight = 180;  // 卡牌原始高度
-        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 增加向下的偏移量
+        const cardWidth = 120;   // 卡牌原始宽度
+        const spacing = 80;      // 增加卡牌之间的间距到80
+        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 垂直位置
 
-        // 将卡牌添加到场地区域并设置位置
-        console.log('Adding card to play area');
-        playArea.addChild(this.node);
-        this.node.setPosition(new Vec3(0, bottomY, 0));  // 放在场地正下方中心位置
+        // 计算水平位置（基于已有的卡牌数量）
+        const existingContainers = playArea.children.filter(child => child.name === 'CardContainer');
+        const cardIndex = existingContainers.length - 1;  // 减1是因为我们刚刚添加了新的容器
         
-        // 设置卡牌大小和缩放
-        this.node.setScale(0.5, 0.5, 1);  // 缩小卡牌尺寸
+        // 计算水平偏移
+        const totalWidth = cardIndex * (cardWidth * 0.5 + spacing);  // 考虑缩放后的卡牌宽度
+        const startX = -(totalWidth / 2);  // 居中起始位置
+        const newX = startX + (cardIndex * (cardWidth * 0.5 + spacing));  // 考虑缩放后的间距
+
+        // 设置容器位置
+        cardContainer.setPosition(new Vec3(newX, bottomY, 0));
+
+        // 将卡牌添加到容器中
+        cardContainer.addChild(this.node);
+        
+        // 设置卡牌在容器中的位置和大小
+        this.node.setPosition(Vec3.ZERO);  // 相对于容器的位置为原点
+        this.node.setScale(0.5, 0.5, 1);   // 缩小卡牌尺寸
+        
         const cardTransform = this.node.getComponent(UITransform);
         if (cardTransform) {
             cardTransform.setContentSize(120, 180);  // 设置原始大小
@@ -451,7 +481,7 @@ export class Card extends Component {
         console.log('Getting all cards in play area');
         const cards: Card[] = [];
         playArea.children.forEach(child => {
-            const card = child.getComponent(Card);
+            const card = child.getComponentInChildren(Card);
             if (card) {
                 cards.push(card);
             }

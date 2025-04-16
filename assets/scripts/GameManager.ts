@@ -69,6 +69,10 @@ export class GameManager extends Component {
     // 记录已翻开的场地区域
     private revealedAreas: boolean[] = [];
 
+    // 每回合出牌次数限制
+    private maxCardsPerTurn: number = 2;
+    private cardsPlayedThisTurn: number = 0;
+
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
@@ -98,6 +102,9 @@ export class GameManager extends Component {
         if (this.specialHandsButton) {
             this.specialHandsButton.node.on(Button.EventType.CLICK, this.showSpecialHandsPopup, this);
         }
+
+        // 初始化出牌次数
+        this.cardsPlayedThisTurn = 0;
 
         // 延迟一帧初始化游戏，确保所有组件都已加载
         this.scheduleOnce(() => {
@@ -1222,5 +1229,31 @@ export class GameManager extends Component {
         // 1. 第一张卡牌可以放在任何区域
         // 2. 或者特定条件下允许放在未翻开区域
         return true; // 默认允许
+    }
+
+    // 检查是否还能出牌
+    public canPlayCard(): boolean {
+        // 如果有额外出牌次数，返回true
+        if (this.extraPlayCount > 0) {
+            return true;
+        }
+        // 否则检查是否达到每回合出牌限制
+        return this.cardsPlayedThisTurn < this.maxCardsPerTurn;
+    }
+
+    // 记录出牌次数
+    public recordCardPlayed(): void {
+        // 如果有额外出牌次数，优先使用
+        if (this.extraPlayCount > 0) {
+            this.extraPlayCount--;
+        } else {
+            this.cardsPlayedThisTurn++;
+        }
+    }
+
+    // 重置出牌次数（在回合开始时调用）
+    public resetCardPlayCount(): void {
+        this.cardsPlayedThisTurn = 0;
+        this.extraPlayCount = 0;
     }
 } 
