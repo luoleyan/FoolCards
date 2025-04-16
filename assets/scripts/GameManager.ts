@@ -73,6 +73,14 @@ export class GameManager extends Component {
     private maxCardsPerTurn: number = 2;
     private cardsPlayedThisTurn: number = 0;
 
+    // 回合计时相关
+    private turnTimeLimit: number = 60;  // 每回合60秒
+    private remainingTime: number = 60;  // 剩余时间
+    private isTimerRunning: boolean = false;
+    
+    @property(Label)
+    private timerLabel: Label = null;    // 显示倒计时的标签
+
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
@@ -105,6 +113,11 @@ export class GameManager extends Component {
 
         // 初始化出牌次数
         this.cardsPlayedThisTurn = 0;
+
+        // 初始化计时器
+        this.remainingTime = this.turnTimeLimit;
+        this.updateTimerDisplay();
+        this.startTurnTimer();
 
         // 延迟一帧初始化游戏，确保所有组件都已加载
         this.scheduleOnce(() => {
@@ -1255,5 +1268,67 @@ export class GameManager extends Component {
     public resetCardPlayCount(): void {
         this.cardsPlayedThisTurn = 0;
         this.extraPlayCount = 0;
+    }
+
+    // 更新计时器显示
+    private updateTimerDisplay() {
+        if (this.timerLabel) {
+            const minutes = Math.floor(this.remainingTime / 60);
+            const seconds = this.remainingTime % 60;
+            // 使用三元运算符来添加前导零
+            const secondsStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+            this.timerLabel.string = `${minutes}:${secondsStr}`;
+        }
+    }
+
+    // 开始回合计时器
+    private startTurnTimer() {
+        this.isTimerRunning = true;
+        this.schedule(this.updateTimer, 1);
+    }
+
+    // 停止回合计时器
+    private stopTurnTimer() {
+        this.isTimerRunning = false;
+        this.unschedule(this.updateTimer);
+    }
+
+    // 更新计时器
+    private updateTimer() {
+        if (!this.isTimerRunning) return;
+
+        this.remainingTime--;
+        this.updateTimerDisplay();
+
+        if (this.remainingTime <= 0) {
+            this.endTurn();
+        }
+    }
+
+    // 结束当前回合
+    private endTurn() {
+        this.stopTurnTimer();
+        
+        // 重置回合状态
+        this.resetCardPlayCount();
+        
+        // TODO: 在这里添加回合结束时的其他逻辑
+        // 例如：切换玩家、计算分数等
+        
+        // 开始新回合
+        this.startNewTurn();
+    }
+
+    // 开始新回合
+    private startNewTurn() {
+        // 重置计时器
+        this.remainingTime = this.turnTimeLimit;
+        this.updateTimerDisplay();
+        
+        // 重置回合状态
+        this.resetCardPlayCount();
+        
+        // 开始计时
+        this.startTurnTimer();
     }
 } 
