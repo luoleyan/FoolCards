@@ -859,15 +859,27 @@ export class GameManager extends Component {
     public isSequence(cards: Card[]): boolean {
         if (cards.length < this.sequenceRequirement) return false;
 
+        // 将牌按点数排序
         const sortedCards = [...cards].sort((a, b) => Number(a.rank) - Number(b.rank));
-        const maxGap = this.skipSequenceEnabled ? 2 : 1;
-
-        for (let i = 1; i < sortedCards.length; i++) {
-            const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
-            if (gap > maxGap) return false;
+        
+        // 如果允许跳顺（间隔为2）
+        if (this.skipSequenceEnabled) {
+            let totalGap = 0;
+            for (let i = 1; i < sortedCards.length; i++) {
+                const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
+                if (gap > 2) return false;  // 如果任何间隔大于2，不是顺子
+                totalGap += gap - 1;  // 累计额外间隔
+            }
+            // 总的额外间隔不能超过1，确保最多只能跳过一个数
+            return totalGap <= 1;
+        } else {
+            // 普通顺子：必须完全连续
+            for (let i = 1; i < sortedCards.length; i++) {
+                const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
+                if (gap !== 1) return false;
+            }
+            return true;
         }
-
-        return true;
     }
 
     public isSameColor(cards: Card[]): boolean {
@@ -927,7 +939,7 @@ export class GameManager extends Component {
 
         const playArea = this.playAreas[areaIndex];
         
-        // 从场地的SceneEffect组件中获取公共牌
+        // 从场地的SceneEffect组件中获取公共牌和场地效果信息
         const sceneEffect = this.sceneEffects[areaIndex];
         const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
 
@@ -938,8 +950,39 @@ export class GameManager extends Component {
             isSceneEffectRevealed: sceneEffect ? sceneEffect.isRevealed : false
         });
 
+        // 记录场地效果信息
+        console.log(`场地效果信息：`);
+        if (sceneEffect) {
+            console.log(`- 场地效果是否已揭示：${sceneEffect.isRevealed}`);
+            if (sceneEffect.isRevealed) {
+                const effectInfo = this.getEffectInfo(sceneEffect.effectType);
+                console.log(`- 场地效果类型：${SceneEffectType[sceneEffect.effectType]}`);
+                console.log(`- 场地效果名称：${effectInfo.name}`);
+                console.log(`- 场地效果描述：${effectInfo.description}`);
+            } else {
+                console.log('- 场地效果尚未揭示');
+            }
+        } else {
+            console.log('- 该场地没有场地效果');
+        }
+
+        // 记录玩家在该场地已出的卡牌信息
+        const playerCards = playArea.children
+            .filter(child => child.name === 'PlayerCard')
+            .map(container => container.getComponentInChildren(Card))
+            .filter(card => card !== null);
+
+        console.log('\n玩家在该场地已出卡牌：');
+        if (playerCards.length > 0) {
+            playerCards.forEach((card, index) => {
+                console.log(`${index + 1}. ${card.getRank()} ${card.getSuit()}`);
+            });
+        } else {
+            console.log('- 暂无已出卡牌');
+        }
+
         // 记录现有的公共牌信息
-        console.log('当前场地公共牌信息：');
+        console.log('\n当前场地公共牌信息：');
         console.log(`- 现有公共牌数量：${publicCards.length}`);
         publicCards.forEach((publicCard, index) => {
             if (publicCard) {
@@ -1014,8 +1057,8 @@ export class GameManager extends Component {
             // 记录出牌
             this.recordCardPlayed(card, areaIndex);
 
-            // 重新计算场地区域的分数和牌型
-            this.recalculateAreaScoreAndHandType(areaIndex);
+            // 重新计算场地区域的分数
+            this.calculateAreaScore(areaIndex);
             
             // 重新排列场地区域的卡牌
             this.arrangePlayArea(playArea);
@@ -1247,12 +1290,78 @@ export class GameManager extends Component {
         });
     }
 
+    // 计算并更新指定场地的分数
+    public calculateAreaScore(areaIndex: number) {
+        if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
+
+        const playArea = this.playAreas[areaIndex];
+        if (!playArea) return;
+
+        // 重置该区域的分数和详情
+        this.areaScores[areaIndex] = 0;
+        this.areaScoreDetails[areaIndex] = '';
+
+        // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+        const sceneEffect = this.sceneEffects[areaIndex];
+        const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+        const playerCards = playArea.children
+            .filter(child => child.name === 'PlayerCard')
+            .map(container => container.getComponentInChildren(Card))
+            .filter(card => card !== null);
+
+        const allCards = [...publicCards, ...playerCards];
+
+        // 如果没有卡牌，直接返回
+        if (allCards.length === 0) return;
+
+        // 1. 计算基础点数分数
+        let pointScore = 0;
+        allCards.forEach(card => {
+            const value = this.getCardValue(card.rank);
+            pointScore += value;
+        });
+        this.addScoreToArea(areaIndex, pointScore, '点数');
+
+        // 2. 计算牌型分数
+        if (this.isSequence(allCards)) {
+            this.addScoreToArea(areaIndex, 30, '顺子');
+        }
+        if (this.isSameColor(allCards)) {
+            this.addScoreToArea(areaIndex, 20, '同色');
+        }
+
+        // 3. 应用场景效果加分
+        if (sceneEffect && sceneEffect.isRevealed) {
+            sceneEffect.applyEffect(this, areaIndex);
+        }
+
+        // 4. 更新分数显示
+        this.updateAreaScoreLabel(areaIndex);
+
+        // 打印分数计算日志
+        console.log(`场地${areaIndex + 1}分数计算结果：`);
+        console.log(`- 总分：${this.areaScores[areaIndex]}`);
+        console.log(`- 详情：\n${this.areaScoreDetails[areaIndex]}`);
+    }
+
+    // 重新计算场地区域的分数和牌型
+    private recalculateAreaScoreAndHandType(areaIndex: number) {
+        // 直接调用calculateAreaScore方法进行完整的分数计算
+        this.calculateAreaScore(areaIndex);
+    }
+
     // 更新指定场地的分数显示
     private updateAreaScoreLabel(areaIndex: number) {
         if (areaIndex >= 0 && areaIndex < this.areaScoreLabels.length) {
             const label = this.areaScoreLabels[areaIndex];
             if (label) {
-                label.string = `分数: ${this.areaScores[areaIndex]}\n${this.areaScoreDetails[areaIndex]}`;
+                // 格式化分数详情，确保每行都有适当的缩进和换行
+                const formattedDetails = this.areaScoreDetails[areaIndex]
+                    .split('\n')
+                    .filter(line => line.trim() !== '')
+                    .join('\n');
+                
+                label.string = `分数: ${this.areaScores[areaIndex]}\n${formattedDetails}`;
             }
         }
     }
@@ -1261,36 +1370,9 @@ export class GameManager extends Component {
     public addScoreToArea(areaIndex: number, score: number, reason: string) {
         if (areaIndex >= 0 && areaIndex < this.areaScores.length) {
             this.areaScores[areaIndex] += score;
+            // 添加换行确保每个原因单独一行
             this.areaScoreDetails[areaIndex] += `${reason}: +${score}\n`;
-            this.updateAreaScoreLabel(areaIndex);
         }
-    }
-
-    // 计算并更新指定场地的分数
-    public calculateAreaScore(areaIndex: number, cards: Card[]) {
-        if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
-
-        // 清空分数详情
-        this.areaScoreDetails[areaIndex] = '';
-        
-        // 计算点数分数
-        let pointScore = 0;
-        cards.forEach(card => {
-            const value = this.getCardValue(card.rank);
-            pointScore += value;
-        });
-        this.addScoreToArea(areaIndex, pointScore, '点数');
-
-        // 计算牌型分数
-        if (this.isSequence(cards)) {
-            this.addScoreToArea(areaIndex, 30, '顺子');
-        }
-        if (this.isSameColor(cards)) {
-            this.addScoreToArea(areaIndex, 20, '同色');
-        }
-
-        // 应用场景效果
-        this.sceneEffects[areaIndex]?.applyEffect(this, areaIndex);
     }
 
     // 获取卡牌点数
@@ -1447,53 +1529,14 @@ export class GameManager extends Component {
         // 重新排列玩家手牌
         this.arrangePlayerHand();
         
+        // 重新计算场地区域的分数
+        this.calculateAreaScore(areaIndex);
+        
         // 重新排列场地区域的卡牌
         this.arrangePlayArea(this.playAreas[areaIndex]);
         
         // 减少出牌次数
         this.cardsPlayedThisTurn--;
-
-        // 重新计算场地区域的分数和牌型
-        this.recalculateAreaScoreAndHandType(areaIndex);
-    }
-
-    // 重新计算场地区域的分数和牌型
-    private recalculateAreaScoreAndHandType(areaIndex: number) {
-        if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
-
-        const playArea = this.playAreas[areaIndex];
-        if (!playArea) return;
-
-        // 获取场地区域中的所有卡牌
-        const cards: Card[] = [];
-        playArea.children.forEach(child => {
-            if (child.name === 'CardContainer') {
-                const card = child.getComponentInChildren(Card);
-                if (card && card.node && card.node.isValid) {  // 添加有效性检查
-                    cards.push(card);
-                }
-            }
-        });
-
-        // 只有在有卡牌时才重新计算分数
-        if (cards.length > 0) {
-            // 重新计算分数
-            this.calculateAreaScore(areaIndex, cards);
-
-            // 检查并处理特殊牌型
-            if (this.specialHandsManager) {  // 添加特殊牌型管理器检查
-                const specialHand = this.specialHandsManager.checkSpecialHand(cards);
-                if (specialHand) {
-                    // 如果发现特殊牌型，更新分数
-                    this.addScoreToArea(areaIndex, specialHand.bonusPoints, specialHand.description);
-                }
-            }
-        } else {
-            // 如果没有卡牌，重置该区域的分数
-            this.areaScores[areaIndex] = 0;
-            this.areaScoreDetails[areaIndex] = '';
-            this.updateAreaScoreLabel(areaIndex);
-        }
     }
 
     // 重置回合状态
@@ -1563,5 +1606,71 @@ export class GameManager extends Component {
         
         // 开始计时
         this.startTurnTimer();
+    }
+
+    // 获取场地效果信息
+    private getEffectInfo(effectType: SceneEffectType): { name: string, description: string } {
+        switch (effectType) {
+            case SceneEffectType.JQKBonus:
+                return { name: 'JQK奖励', description: 'J、Q、K额外加15分' };
+            case SceneEffectType.FourCardSameColor:
+                return { name: '四色同花', description: '同色可由4张牌组成' };
+            case SceneEffectType.ThreeCardSequence:
+                return { name: '三张顺子', description: '序列可由3张牌组成' };
+            case SceneEffectType.FourCardSequence:
+                return { name: '四张顺子', description: '序列可由4张牌组成' };
+            case SceneEffectType.SkipOneSequence:
+                return { name: '跳点顺子', description: '序列可以相隔1个点数组成' };
+            case SceneEffectType.FourSuitsBonus:
+                return { name: '四色奖励', description: '4种不同花色额外加50分' };
+            case SceneEffectType.A2358Bonus:
+                return { name: 'A2358奖励', description: 'A、2、3、5、8额外加15分' };
+            case SceneEffectType.KBonus:
+                return { name: 'K奖励', description: 'K额外加25分' };
+            case SceneEffectType.EvenStarBonus:
+                return { name: '偶星奖励', description: '包含偶星额外加15分' };
+            case SceneEffectType.NoTypeBonus:
+                return { name: '无型奖励', description: '无牌型时每张牌加15分' };
+            case SceneEffectType.ClubBonus:
+                return { name: '梅花奖励', description: '每张梅花加15分' };
+            case SceneEffectType.SpadeBonus:
+                return { name: '黑桃奖励', description: '每张黑桃加15分' };
+            case SceneEffectType.DiamondBonus:
+                return { name: '方块奖励', description: '每张方块加15分' };
+            case SceneEffectType.HeartBonus:
+                return { name: '红桃奖励', description: '每张红桃加15分' };
+            case SceneEffectType.EvenBonus:
+                return { name: '偶数奖励', description: '每张偶数牌加15分' };
+            case SceneEffectType.OddBonus:
+                return { name: '奇数奖励', description: '每张奇数牌加15分' };
+            case SceneEffectType.SequenceChain:
+                return { name: '顺子连锁', description: '有序列时其他区域各加30分' };
+            case SceneEffectType.SameColorChain:
+                return { name: '同色连锁', description: '有同色时其他区域各加30分' };
+            case SceneEffectType.FourKnightsChain:
+                return { name: '四骑士连锁', description: '有四骑士时其他区域各加30分' };
+            case SceneEffectType.TwentyOneBonus:
+                return { name: '21点奖励', description: '点数和为21点额外加50分' };
+            case SceneEffectType.DestroyPublicCard:
+                return { name: '摧毁公共牌', description: '摧毁1张公共牌' };
+            case SceneEffectType.ExtraPublicCard:
+                return { name: '额外公共牌', description: '额外补充1张公共牌' };
+            case SceneEffectType.LeadingDraw:
+                return { name: '领先抽牌', description: '领先玩家多抽1张牌' };
+            case SceneEffectType.ExtraExchange:
+                return { name: '额外换牌', description: '补充2次换牌次数' };
+            case SceneEffectType.RandomPlay:
+                return { name: '随机出牌', description: '随机出1张牌' };
+            case SceneEffectType.ExtraPlay:
+                return { name: '额外出牌', description: '获得1次额外出牌次数' };
+            case SceneEffectType.DrawCard:
+                return { name: '抽牌', description: '立即抽1张牌' };
+            case SceneEffectType.SequenceExchange:
+                return { name: '顺子换牌', description: '首次序列获得5次换牌机会' };
+            case SceneEffectType.SameColorExchange:
+                return { name: '同色换牌', description: '首次同色获得5次换牌机会' };
+            default:
+                return { name: '未知效果', description: '未知效果' };
+        }
     }
 } 
