@@ -392,9 +392,8 @@ export class Card extends Component {
                 // 检查场地区域是否已经翻开
                 if (gameManager.isPlayAreaRevealed(i)) {
                     console.log(`Play area ${i} is revealed, playing card`);
-                    this.playCardToArea(playArea, i, gameManager);
-                    // 记录出牌次数
-                    gameManager.recordCardPlayed(this, i);
+                    // 使用 GameManager 的 playCard 方法
+                    gameManager.playCard(this, i);
                     return;
                 } else {
                     console.log(`Play area ${i} is not revealed yet`);
@@ -403,10 +402,8 @@ export class Card extends Component {
                         console.log(`Playing card to unrevealed area ${i}`);
                         // 先标记区域为已翻开
                         gameManager.markPlayAreaRevealed(i);
-                        // 然后放置卡牌
-                        this.playCardToArea(playArea, i, gameManager);
-                        // 记录出牌次数
-                        gameManager.recordCardPlayed(this, i);
+                        // 使用 GameManager 的 playCard 方法
+                        gameManager.playCard(this, i);
                         return;
                     }
                 }
@@ -553,11 +550,11 @@ export class Card extends Component {
     }
 
     public getSuit(): CardSuit {
-        return this.suit;
+        return this._suit;
     }
 
     public getRank(): CardRank {
-        return this.rank;
+        return this._rank;
     }
 
     private isOverlapping(rect1: Rect, rect2: Rect): boolean {

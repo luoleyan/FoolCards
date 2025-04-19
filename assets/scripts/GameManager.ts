@@ -916,23 +916,115 @@ export class GameManager extends Component {
     }
 
     public playCard(card: Card, areaIndex: number) {
+        console.log('=================== 出牌日志开始 ===================');
+        console.log('playCard 方法被调用');
+        console.log('参数检查：', { areaIndex, card: card ? '有效' : '无效' });
+        
         if (areaIndex < 0 || areaIndex >= this.playAreas.length) {
             console.error("Invalid play area index");
             return;
         }
 
         const playArea = this.playAreas[areaIndex];
-        if (playArea.children.length < 5) {
+        
+        // 从场地的SceneEffect组件中获取公共牌
+        const sceneEffect = this.sceneEffects[areaIndex];
+        const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+
+        console.log('场地检查：', { 
+            playArea: playArea ? '有效' : '无效',
+            totalChildren: playArea ? playArea.children.length : 0,
+            publicCardsCount: publicCards.length,
+            isSceneEffectRevealed: sceneEffect ? sceneEffect.isRevealed : false
+        });
+
+        // 记录现有的公共牌信息
+        console.log('当前场地公共牌信息：');
+        console.log(`- 现有公共牌数量：${publicCards.length}`);
+        publicCards.forEach((publicCard, index) => {
+            if (publicCard) {
+                console.log(`  ${index + 1}. ${publicCard.getRank()} ${publicCard.getSuit()}`);
+            }
+        });
+
+        // 获取玩家打出的牌容器数量
+        const playerCardContainers = playArea.children.filter(child => child.name === 'PlayerCard');
+        
+        if (playerCardContainers.length < 5) {
+            console.log('开始处理出牌');
+            
+            // 从原位置移除卡牌
             card.node.removeFromParent();
-            playArea.addChild(card.node);
-            this.arrangePlayArea(playArea);
+
+            // 创建卡牌容器，使用PlayerCard作为名称以区分
+            const cardContainer = new Node('PlayerCard');
+            playArea.addChild(cardContainer);
+
+            // 设置容器位置在场地区域下方
+            const areaTransform = playArea.getComponent(UITransform);
+            if (!areaTransform) {
+                console.error('Play area has no UITransform component');
+                return;
+            }
+
+            // 计算容器位置
+            const cardHeight = 180;  // 卡牌原始高度
+            const cardWidth = 120;   // 卡牌原始宽度
+            const spacing = 80;      // 卡牌间距
+            const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 垂直位置
+
+            // 计算水平位置（基于已有的玩家卡牌数量）
+            const totalWidth = playerCardContainers.length * (cardWidth * 0.5 + spacing);
+            const startX = -(totalWidth / 2);
+            const newX = startX + (playerCardContainers.length * (cardWidth * 0.5 + spacing));
+
+            // 设置容器位置
+            cardContainer.setPosition(new Vec3(newX, bottomY, 0));
+
+            // 将卡牌添加到容器中
+            cardContainer.addChild(card.node);
+            
+            // 设置卡牌在容器中的位置和大小
+            card.node.setPosition(Vec3.ZERO);
+            card.node.setScale(0.5, 0.5, 1);
+            
+            const cardTransform = card.node.getComponent(UITransform);
+            if (cardTransform) {
+                cardTransform.setContentSize(120, 180);
+            }
+            
+            // 确保卡牌显示正面
+            card.showCardFace();
+            
+            // 记录出牌信息
+            console.log(`出牌信息：`);
+            console.log(`- 卡牌：${card.getRank()} ${card.getSuit()}`);
+            console.log(`- 场地：${areaIndex + 1}号场地`);
+            
+            // 获取更新后的公共牌信息（仍然从SceneEffect中获取）
+            const updatedPublicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+            console.log(`- 更新后场地公共牌数量：${updatedPublicCards.length}`);
+            console.log(`- 更新后场地公共牌：`);
+            updatedPublicCards.forEach((publicCard, index) => {
+                if (publicCard) {
+                    console.log(`  ${index + 1}. ${publicCard.getRank()} ${publicCard.getSuit()}`);
+                }
+            });
             
             // 记录出牌
             this.recordCardPlayed(card, areaIndex);
 
             // 重新计算场地区域的分数和牌型
             this.recalculateAreaScoreAndHandType(areaIndex);
+            
+            // 重新排列场地区域的卡牌
+            this.arrangePlayArea(playArea);
+            
+            console.log('出牌处理完成');
+        } else {
+            console.log('场地已满（已有5张卡牌），无法出牌');
         }
+        console.log('=================== 出牌日志结束 ===================');
     }
 
     public addExtraPlayCount(count: number) {
@@ -984,14 +1076,14 @@ export class GameManager extends Component {
         playerHand.active = true;
     }
 
-    // 重新排列场地区域的卡牌
+    // 修改arrangePlayArea方法以区分公共牌和玩家打出的牌
     public arrangePlayArea(playArea: Node) {
-        // 只获取CardContainer类型的子节点
-        const cardContainers = playArea.children.filter(child => child.name === 'CardContainer');
-        const cardWidth = 120 * 0.5; // 考虑卡牌在场地中的缩放(0.5)
-        const spacing = 80; // 保持与playCardToArea中相同的间距
-        const totalWidth = (cardContainers.length - 1) * (cardWidth + spacing);
-        const startX = -totalWidth / 2;
+        // 分别获取公共牌和玩家打出的牌
+        const publicCards = playArea.children.filter(child => child.name === 'PublicCard');
+        const playerCards = playArea.children.filter(child => child.name === 'PlayerCard');
+        
+        const cardWidth = 120 * 0.5;
+        const spacing = 80;
 
         // 获取场地区域的UITransform
         const areaTransform = playArea.getComponent(UITransform);
@@ -1001,12 +1093,23 @@ export class GameManager extends Component {
         }
 
         // 计算底部位置
-        const cardHeight = 180;  // 卡牌原始高度
-        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 与playCardToArea保持一致
+        const cardHeight = 180;
+        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);
 
-        cardContainers.forEach((container, index) => {
-            const x = startX + index * (cardWidth + spacing);
-            container.setPosition(new Vec3(x, bottomY, 0));
+        // 排列公共牌（如果有）
+        const publicTotalWidth = (publicCards.length - 1) * (cardWidth + spacing);
+        const publicStartX = -publicTotalWidth / 2;
+        publicCards.forEach((container, index) => {
+            const x = publicStartX + index * (cardWidth + spacing);
+            container.setPosition(new Vec3(x, 0, 0)); // 公共牌放在中间位置
+        });
+
+        // 排列玩家打出的牌
+        const playerTotalWidth = (playerCards.length - 1) * (cardWidth + spacing);
+        const playerStartX = -playerTotalWidth / 2;
+        playerCards.forEach((container, index) => {
+            const x = playerStartX + index * (cardWidth + spacing);
+            container.setPosition(new Vec3(x, bottomY, 0)); // 玩家牌放在底部
         });
     }
 
