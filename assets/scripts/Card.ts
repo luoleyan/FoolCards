@@ -344,12 +344,34 @@ export class Card extends Component {
             return;
         }
 
+        // 获取卡牌的UITransform组件
+        const cardTransform = this.node.getComponent(UITransform);
+        if (!cardTransform) {
+            console.log('Card has no UITransform component');
+            this.returnToOriginalPosition();
+            return;
+        }
+
+        // 首先检查是否与换牌区域重叠
+        if (gameManager.exchangeArea) {
+            const exchangeAreaTransform = gameManager.exchangeArea.getComponent(UITransform);
+            if (exchangeAreaTransform) {
+                const cardRect = cardTransform.getBoundingBoxToWorld();
+                const exchangeAreaRect = exchangeAreaTransform.getBoundingBoxToWorld();
+                
+                if (this.isOverlapping(cardRect, exchangeAreaRect)) {
+                    console.log('Card overlaps with exchange area');
+                    // 调用换牌方法
+                    gameManager.exchangeCard(this);
+                    return;
+                }
+            }
+        }
+
         // 检查是否还能出牌
         if (!gameManager.canPlayCard()) {
             console.log('Cannot play more cards this turn');
-            // 返回原位
-            this.node.setPosition(this._originalPosition);
-            this.node.setSiblingIndex(this._originalIndex);
+            this.returnToOriginalPosition();
             return;
         }
         
@@ -368,13 +390,6 @@ export class Card extends Component {
             const areaTransform = playArea.getComponent(UITransform);
             if (!areaTransform) {
                 console.log(`Play area ${i} has no UITransform component`);
-                continue;
-            }
-            
-            // 获取卡牌的UITransform组件
-            const cardTransform = this.node.getComponent(UITransform);
-            if (!cardTransform) {
-                console.log('Card has no UITransform component');
                 continue;
             }
             
@@ -410,8 +425,13 @@ export class Card extends Component {
             }
         }
         
-        // 如果没有与任何场地区域重叠，返回原位
-        console.log('No overlap with any play area, returning to original position');
+        // 如果没有与任何区域重叠，返回原位
+        console.log('No overlap with any area, returning to original position');
+        this.returnToOriginalPosition();
+    }
+
+    // 返回原始位置的辅助方法
+    private returnToOriginalPosition() {
         this.node.setPosition(this._originalPosition);
         this.node.setSiblingIndex(this._originalIndex);
     }
@@ -557,6 +577,7 @@ export class Card extends Component {
         return this._rank;
     }
 
+    // 检查两个矩形是否重叠
     private isOverlapping(rect1: Rect, rect2: Rect): boolean {
         return !(rect1.x + rect1.width < rect2.x ||
                 rect2.x + rect2.width < rect1.x ||
