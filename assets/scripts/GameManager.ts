@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label, Button } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { tween } from 'cc';
-import { SpecialHandsManager, SpecialHand } from './SpecialHands';
+import { SpecialHandsManager, SpecialHand, SpecialHandType } from './SpecialHands';
 import { SceneEffect, SceneEffectType } from './SceneEffect';
 import { PlatformAdapter } from './PlatformAdapter';
 import { SpecialHandsPopup } from './SpecialHandsPopup';
@@ -58,7 +58,7 @@ export class GameManager extends Component {
     private areaScores: number[] = [0, 0, 0];  // 每个场地的分数
     private areaScoreDetails: string[] = ['', '', ''];  // 每个场地的分数详情
 
-    private sameColorRequirement: number = 0;
+    private sameColorRequirement: number = 5;  // 默认需要5张同色牌
     private sequenceRequirement: number = 0;
     private skipSequenceEnabled: boolean = false;
     private hasSequenceBeenUsed: boolean = false;
@@ -1328,6 +1328,45 @@ export class GameManager extends Component {
         }
         if (this.isSameColor(allCards)) {
             this.addScoreToArea(areaIndex, 20, '同色');
+        }
+
+        // 检查特殊牌型
+        const specialHand = this.specialHandsManager.checkSpecialHand(allCards);
+        if (specialHand) {
+            console.log('检测到特殊牌型:', specialHand);
+            // 根据特殊牌型类型添加相应的分数
+            switch (specialHand.type) {
+                case SpecialHandType.ROYAL_FLUSH:
+                    this.addScoreToArea(areaIndex, 150, '完美同色序列');
+                    break;
+                case SpecialHandType.PERFECT_STRAIGHT:
+                    this.addScoreToArea(areaIndex, 135, '完美序列');
+                    break;
+                case SpecialHandType.STRAIGHT_FLUSH:
+                    this.addScoreToArea(areaIndex, 120, '同色序列');
+                    break;
+                case SpecialHandType.FOUR_OF_A_KIND:
+                    this.addScoreToArea(areaIndex, 80, '四骑士');
+                    break;
+                case SpecialHandType.FLUSH:
+                    this.addScoreToArea(areaIndex, 60, '同色');
+                    break;
+                case SpecialHandType.STRAIGHT:
+                    this.addScoreToArea(areaIndex, 60, '序列');
+                    break;
+                case SpecialHandType.FULL_HOUSE:
+                    this.addScoreToArea(areaIndex, 55, '满座');
+                    break;
+                case SpecialHandType.THREE_OF_A_KIND:
+                    this.addScoreToArea(areaIndex, 30, '三贤者');
+                    break;
+                case SpecialHandType.TWO_PAIRS:
+                    this.addScoreToArea(areaIndex, 30, '双偶星');
+                    break;
+                case SpecialHandType.PAIR:
+                    this.addScoreToArea(areaIndex, 15, '偶星');
+                    break;
+            }
         }
 
         // 3. 应用场景效果加分

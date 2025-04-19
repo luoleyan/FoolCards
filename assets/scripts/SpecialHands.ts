@@ -569,6 +569,8 @@ export class SpecialHandsManager {
 
     // 检查是否为满座
     private isFullHouse(cards: Card[]): boolean {
+        if (cards.length < 5) return false;  // 满座至少需要5张牌
+
         const rankCount = new Map<CardRank, number>();
         let hasThree = false;
         let hasTwo = false;

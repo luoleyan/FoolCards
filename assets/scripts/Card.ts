@@ -508,7 +508,7 @@ export class Card extends Component {
         
         // 计算并更新场地区域的分数
         console.log('Calculating area score');
-        gameManager.calculateAreaScore(areaIndex, cards);
+        gameManager.calculateAreaScore(areaIndex);
         
         // 重新排列玩家手牌
         console.log('Arranging player hand');
