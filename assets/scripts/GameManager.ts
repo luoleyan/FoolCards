@@ -871,10 +871,14 @@ export class GameManager extends Component {
     }
 
     public isSameColor(cards: Card[]): boolean {
-        if (cards.length < this.sameColorRequirement) return false;
+        if (!cards || cards.length === 0) return false;  // 添加空数组检查
+        
+        // 过滤掉无效的卡牌
+        const validCards = cards.filter(card => card && card.suit);
+        if (validCards.length < this.sameColorRequirement) return false;
 
-        const firstSuit = cards[0].suit;
-        return cards.every(card => card.suit === firstSuit);
+        const firstSuit = validCards[0].suit;
+        return validCards.every(card => card.suit === firstSuit);
     }
 
     public hasValidType(cards: Card[]): boolean {
@@ -925,6 +929,9 @@ export class GameManager extends Component {
             
             // 记录出牌
             this.recordCardPlayed(card, areaIndex);
+
+            // 重新计算场地区域的分数和牌型
+            this.recalculateAreaScoreAndHandType(areaIndex);
         }
     }
 
@@ -1342,6 +1349,48 @@ export class GameManager extends Component {
         
         // 减少出牌次数
         this.cardsPlayedThisTurn--;
+
+        // 重新计算场地区域的分数和牌型
+        this.recalculateAreaScoreAndHandType(areaIndex);
+    }
+
+    // 重新计算场地区域的分数和牌型
+    private recalculateAreaScoreAndHandType(areaIndex: number) {
+        if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
+
+        const playArea = this.playAreas[areaIndex];
+        if (!playArea) return;
+
+        // 获取场地区域中的所有卡牌
+        const cards: Card[] = [];
+        playArea.children.forEach(child => {
+            if (child.name === 'CardContainer') {
+                const card = child.getComponentInChildren(Card);
+                if (card && card.node && card.node.isValid) {  // 添加有效性检查
+                    cards.push(card);
+                }
+            }
+        });
+
+        // 只有在有卡牌时才重新计算分数
+        if (cards.length > 0) {
+            // 重新计算分数
+            this.calculateAreaScore(areaIndex, cards);
+
+            // 检查并处理特殊牌型
+            if (this.specialHandsManager) {  // 添加特殊牌型管理器检查
+                const specialHand = this.specialHandsManager.checkSpecialHand(cards);
+                if (specialHand) {
+                    // 如果发现特殊牌型，更新分数
+                    this.addScoreToArea(areaIndex, specialHand.bonusPoints, specialHand.description);
+                }
+            }
+        } else {
+            // 如果没有卡牌，重置该区域的分数
+            this.areaScores[areaIndex] = 0;
+            this.areaScoreDetails[areaIndex] = '';
+            this.updateAreaScoreLabel(areaIndex);
+        }
     }
 
     // 重置回合状态
