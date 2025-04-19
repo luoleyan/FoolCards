@@ -81,6 +81,8 @@ export class GameManager extends Component {
     @property(Label)
     private timerLabel: Label = null;    // 显示倒计时的标签
 
+    private currentTurnPlayedCards: Map<number, Card[]> = new Map(); // 记录每个场地区域当前回合打出的牌
+
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
@@ -920,6 +922,9 @@ export class GameManager extends Component {
             card.node.removeFromParent();
             playArea.addChild(card.node);
             this.arrangePlayArea(playArea);
+            
+            // 记录出牌
+            this.recordCardPlayed(card, areaIndex);
         }
     }
 
@@ -974,15 +979,27 @@ export class GameManager extends Component {
 
     // 重新排列场地区域的卡牌
     public arrangePlayArea(playArea: Node) {
-        const cards = playArea.children;
-        const cardWidth = 120; // 卡牌宽度
-        const spacing = 20; // 卡牌间距
-        const totalWidth = (cards.length - 1) * (cardWidth + spacing);
+        // 只获取CardContainer类型的子节点
+        const cardContainers = playArea.children.filter(child => child.name === 'CardContainer');
+        const cardWidth = 120 * 0.5; // 考虑卡牌在场地中的缩放(0.5)
+        const spacing = 80; // 保持与playCardToArea中相同的间距
+        const totalWidth = (cardContainers.length - 1) * (cardWidth + spacing);
         const startX = -totalWidth / 2;
 
-        cards.forEach((card, index) => {
+        // 获取场地区域的UITransform
+        const areaTransform = playArea.getComponent(UITransform);
+        if (!areaTransform) {
+            console.error('Play area has no UITransform component');
+            return;
+        }
+
+        // 计算底部位置
+        const cardHeight = 180;  // 卡牌原始高度
+        const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 与playCardToArea保持一致
+
+        cardContainers.forEach((container, index) => {
             const x = startX + index * (cardWidth + spacing);
-            card.setPosition(x, 0, 0);
+            container.setPosition(new Vec3(x, bottomY, 0));
         });
     }
 
@@ -1254,20 +1271,84 @@ export class GameManager extends Component {
         return this.cardsPlayedThisTurn < this.maxCardsPerTurn;
     }
 
-    // 记录出牌次数
-    public recordCardPlayed(): void {
+    // 记录出牌
+    public recordCardPlayed(card: Card, areaIndex: number): void {
         // 如果有额外出牌次数，优先使用
         if (this.extraPlayCount > 0) {
             this.extraPlayCount--;
         } else {
             this.cardsPlayedThisTurn++;
         }
+
+        // 记录当前回合打出的牌
+        if (!this.currentTurnPlayedCards.has(areaIndex)) {
+            this.currentTurnPlayedCards.set(areaIndex, []);
+        }
+        this.currentTurnPlayedCards.get(areaIndex)?.push(card);
+
+        // 添加点击事件监听器
+        card.node.on(Node.EventType.TOUCH_START, () => {
+            this.onCardClicked(card, areaIndex);
+        });
     }
 
-    // 重置出牌次数（在回合开始时调用）
+    // 处理卡牌点击事件
+    private onCardClicked(card: Card, areaIndex: number) {
+        // 检查是否是当前回合打出的牌
+        const playedCards = this.currentTurnPlayedCards.get(areaIndex);
+        if (playedCards && playedCards.includes(card)) {
+            this.retrieveCard(card, areaIndex);
+        }
+    }
+
+    // 回收卡牌
+    private retrieveCard(card: Card, areaIndex: number) {
+        // 获取卡牌的容器节点
+        const cardContainer = card.node.parent;
+        
+        // 从场地区域移除卡牌前，先重置其所有变换
+        card.node.setScale(1.45, 1.45, 1);  // 进一步增加回收卡牌的缩放
+        const cardTransform = card.node.getComponent(UITransform);
+        if (cardTransform) {
+            cardTransform.setContentSize(120, 180);  // 重置为原始尺寸
+        }
+        
+        // 从场地区域移除卡牌
+        card.node.removeFromParent();
+        
+        // 删除空的容器节点
+        if (cardContainer) {
+            cardContainer.destroy();
+        }
+        
+        // 从当前回合打出的牌列表中移除
+        const playedCards = this.currentTurnPlayedCards.get(areaIndex);
+        if (playedCards) {
+            const index = playedCards.indexOf(card);
+            if (index > -1) {
+                playedCards.splice(index, 1);
+            }
+        }
+
+        // 将卡牌添加回玩家手牌并设置正确的缩放
+        this.playerHand.addChild(card.node);
+        card.node.setScale(1.45, 1.45, 1);  // 进一步增加回收卡牌的缩放
+        
+        // 重新排列玩家手牌
+        this.arrangePlayerHand();
+        
+        // 重新排列场地区域的卡牌
+        this.arrangePlayArea(this.playAreas[areaIndex]);
+        
+        // 减少出牌次数
+        this.cardsPlayedThisTurn--;
+    }
+
+    // 重置回合状态
     public resetCardPlayCount(): void {
         this.cardsPlayedThisTurn = 0;
         this.extraPlayCount = 0;
+        this.currentTurnPlayedCards.clear(); // 清空当前回合打出的牌记录
     }
 
     // 更新计时器显示

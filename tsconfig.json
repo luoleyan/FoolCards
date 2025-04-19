@@ -4,6 +4,34 @@
 
   /* Add your custom configuration here. */
   "compilerOptions": {
-    "strict": false,
-  }
+    "target": "es2016",
+    "module": "commonjs",
+    "lib": ["es2016", "dom"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "inlineSourceMap": true,
+    "importHelpers": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "library",
+    "temp",
+    "build",
+    "settings"
+  ]
 }

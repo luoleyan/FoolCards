@@ -394,7 +394,7 @@ export class Card extends Component {
                     console.log(`Play area ${i} is revealed, playing card`);
                     this.playCardToArea(playArea, i, gameManager);
                     // 记录出牌次数
-                    gameManager.recordCardPlayed();
+                    gameManager.recordCardPlayed(this, i);
                     return;
                 } else {
                     console.log(`Play area ${i} is not revealed yet`);
@@ -406,7 +406,7 @@ export class Card extends Component {
                         // 然后放置卡牌
                         this.playCardToArea(playArea, i, gameManager);
                         // 记录出牌次数
-                        gameManager.recordCardPlayed();
+                        gameManager.recordCardPlayed(this, i);
                         return;
                     }
                 }

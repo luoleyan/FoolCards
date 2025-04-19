@@ -6,5 +6,8 @@
   },
   "dependencies": {
     "oops-game-kit": "^1.0.0"
+  },
+  "devDependencies": {
+    "tslib": "^2.8.1"
   }
 }
