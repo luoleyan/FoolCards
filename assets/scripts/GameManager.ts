@@ -61,7 +61,7 @@ export class GameManager extends Component {
     private areaScoreDetails: string[] = ['', '', ''];  // 每个场地的分数详情
 
     private sameColorRequirement: number = 5;  // 默认需要5张同色牌
-    private sequenceRequirement: number = 0;
+    private sequenceRequirement: number = 5;   // 默认需要5张牌组成序列
     private skipSequenceEnabled: boolean = false;
     private hasSequenceBeenUsed: boolean = false;
     private hasSameColorBeenUsed: boolean = false;
@@ -1007,7 +1007,7 @@ export class GameManager extends Component {
         // 获取玩家打出的牌容器数量
         const playerCardContainers = playArea.children.filter(child => child.name === 'PlayerCard');
         
-        if (playerCardContainers.length < 5) {
+        if (playerCardContainers.length < 4) {
             console.log('开始处理出牌');
             
             // 从原位置移除卡牌
@@ -1079,7 +1079,11 @@ export class GameManager extends Component {
             
             console.log('出牌处理完成');
         } else {
-            console.log('场地已满（已有5张卡牌），无法出牌');
+            console.log('场地已满（已有4张卡牌），无法出牌');
+            // 将卡牌返回到玩家手牌区域
+            this.playerHand.addChild(card.node);
+            // 重新排列玩家手牌
+            this.arrangePlayerHand();
         }
         console.log('=================== 出牌日志结束 ===================');
     }
