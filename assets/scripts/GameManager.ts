@@ -1027,13 +1027,13 @@ export class GameManager extends Component {
             // 计算容器位置
             const cardHeight = 180;  // 卡牌原始高度
             const cardWidth = 120;   // 卡牌原始宽度
-            const spacing = 80;      // 卡牌间距
+            const spacing = 5;      // 卡牌间距
             const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);  // 垂直位置
 
             // 计算水平位置（基于已有的玩家卡牌数量）
-            const totalWidth = playerCardContainers.length * (cardWidth * 0.5 + spacing);
+            const totalWidth = playerCardContainers.length * (cardWidth * 0.25 + spacing);  // 修改为0.25
             const startX = -(totalWidth / 2);
-            const newX = startX + (playerCardContainers.length * (cardWidth * 0.5 + spacing));
+            const newX = startX + (playerCardContainers.length * (cardWidth * 0.25 + spacing));  // 修改为0.25
 
             // 设置容器位置
             cardContainer.setPosition(new Vec3(newX, bottomY, 0));
@@ -1144,7 +1144,7 @@ export class GameManager extends Component {
         const playerCards = playArea.children.filter(child => child.name === 'PlayerCard');
         
         const cardWidth = 120 * 0.5;
-        const spacing = 80;
+        const spacing = 46;  // 修改为46
 
         // 获取场地区域的UITransform
         const areaTransform = playArea.getComponent(UITransform);
@@ -1158,18 +1158,18 @@ export class GameManager extends Component {
         const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);
 
         // 排列公共牌（如果有）
-        const publicTotalWidth = (publicCards.length - 1) * (cardWidth + spacing);
+        const publicTotalWidth = (publicCards.length - 1) * (cardWidth * 0.25 + spacing);  // 保持0.25
         const publicStartX = -publicTotalWidth / 2;
         publicCards.forEach((container, index) => {
-            const x = publicStartX + index * (cardWidth + spacing);
+            const x = publicStartX + index * (cardWidth * 0.25 + spacing);  // 保持0.25
             container.setPosition(new Vec3(x, 0, 0)); // 公共牌放在中间位置
         });
 
         // 排列玩家打出的牌
-        const playerTotalWidth = (playerCards.length - 1) * (cardWidth + spacing);
+        const playerTotalWidth = (playerCards.length - 1) * (cardWidth * 0.25 + spacing);  // 保持0.25
         const playerStartX = -playerTotalWidth / 2;
         playerCards.forEach((container, index) => {
-            const x = playerStartX + index * (cardWidth + spacing);
+            const x = playerStartX + index * (cardWidth * 0.25 + spacing);  // 保持0.25
             container.setPosition(new Vec3(x, bottomY, 0)); // 玩家牌放在底部
         });
     }
