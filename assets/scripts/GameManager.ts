@@ -51,7 +51,6 @@ export class GameManager extends Component {
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
     private maxRounds: number = 5;  // 最大回合数
-    private exchangeCount: number = 12;  // 换牌次数
     private maxExchangeCount: number = 12;  // 最大换牌次数
     private _revealedEffects: number = 0;
 
@@ -85,6 +84,8 @@ export class GameManager extends Component {
     private timerLabel: Label = null;    // 显示倒计时的标签
 
     private currentTurnPlayedCards: Map<number, Card[]> = new Map(); // 记录每个场地区域当前回合打出的牌
+
+    private _exchangeCount: number = 12;  // 换牌次数
 
     start() {
         // 初始化已翻开的场地区域数组
@@ -171,6 +172,10 @@ export class GameManager extends Component {
     }
 
     private initGame() {
+        // 重置换牌次数
+        this._exchangeCount = this.maxExchangeCount;
+        this.updateExchangeCountLabel();
+
         // 预加载卡牌背面图片
         Card.preloadCardBack();
 
@@ -619,8 +624,8 @@ export class GameManager extends Component {
         }
 
         // 补充换牌次数
-        this.exchangeCount = Math.min(this.exchangeCount + 2, this.maxExchangeCount);
-        console.log(`新回合开始，当前换牌次数：${this.exchangeCount}`);
+        this._exchangeCount = Math.min(this._exchangeCount + 2, this.maxExchangeCount);
+        console.log(`新回合开始，当前换牌次数：${this._exchangeCount}`);
 
         // 更新换牌次数显示
         this.updateExchangeCountLabel();
@@ -689,14 +694,14 @@ export class GameManager extends Component {
     // 换牌方法
     public exchangeCard(card: Card) {
         // 检查是否还有换牌次数
-        if (this.exchangeCount <= 0) {
+        if (this._exchangeCount <= 0) {
             console.log("没有换牌次数了");
             return;
         }
 
         // 减少换牌次数
-        this.exchangeCount--;
-        console.log(`剩余换牌次数：${this.exchangeCount}`);
+        this._exchangeCount--;
+        console.log(`剩余换牌次数：${this._exchangeCount}`);
 
         // 更新换牌次数显示
         this.updateExchangeCountLabel();
@@ -706,6 +711,12 @@ export class GameManager extends Component {
             const randomIndex = Math.floor(Math.random() * this.deck.length);
             const newCard = this.deck[randomIndex];
             this.deck.splice(randomIndex, 1);
+
+            // 记录换牌信息
+            console.log('=== 换牌详情 ===');
+            console.log(`换出: ${card.getFullName()}`);
+            console.log(`换入: ${newCard.getFullName()}`);
+            console.log('===============');
 
             // 将旧牌放回牌堆
             this.deck.push(card);
@@ -922,7 +933,7 @@ export class GameManager extends Component {
     }
 
     public addExchangeCount(count: number) {
-        this.exchangeCount += count;
+        this._exchangeCount = Math.min(this._exchangeCount + count, this.maxExchangeCount);
         this.updateExchangeCountLabel();
     }
 
@@ -1087,7 +1098,7 @@ export class GameManager extends Component {
 
     private updateExchangeCountLabel() {
         if (this.exchangeCountLabel) {
-            this.exchangeCountLabel.string = `换牌次数: ${this.exchangeCount}`;
+            this.exchangeCountLabel.string = `换牌次数: ${this._exchangeCount}`;
         }
     }
 
@@ -1847,5 +1858,10 @@ export class GameManager extends Component {
             default:
                 return { name: '未知效果', description: '未知效果' };
         }
+    }
+
+    // 获取剩余换牌次数
+    public getExchangeCount(): number {
+        return this._exchangeCount;
     }
 } 

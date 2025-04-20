@@ -100,7 +100,69 @@ export class Card extends Component {
         this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     }
 
-    // 初始化卡牌
+    // 添加新方法：更改卡牌的花色和点数（仅用于万能牌转换）
+    public changeCardInfo(suit: CardSuit, rank: CardRank) {
+        // 只允许万能牌进行转换
+        if (this._suit !== CardSuit.Joker) {
+            console.warn('Only Joker cards can be transformed');
+            return;
+        }
+        
+        // 记录原始的万能牌信息
+        const originalSuit = this._suit;
+        const originalRank = this._rank;
+        
+        // 更新卡牌信息
+        this._suit = suit;
+        this._rank = rank;
+        
+        // 详细的换牌日志
+        console.log('=== 万能牌转换详情 ===');
+        console.log(`原始牌: ${this.getJokerDescription(originalSuit, originalRank)}`);
+        console.log(`替换为: ${this.getCardDescription(suit, rank)}`);
+        console.log('==================');
+    }
+
+    // 获取万能牌描述
+    private getJokerDescription(suit: CardSuit, rank: CardRank): string {
+        return `${suit === CardSuit.Joker ? '小王' : '大王'} (${suit}-${rank})`;
+    }
+
+    // 获取普通牌描述
+    private getCardDescription(suit: CardSuit, rank: CardRank): string {
+        const suitNames = {
+            [CardSuit.Spade]: '黑桃',
+            [CardSuit.Heart]: '红心',
+            [CardSuit.Club]: '梅花',
+            [CardSuit.Diamond]: '方块',
+            [CardSuit.Joker]: '王牌'
+        };
+
+        const rankNames = {
+            [CardRank.Ace]: 'A',
+            [CardRank.Two]: '2',
+            [CardRank.Three]: '3',
+            [CardRank.Four]: '4',
+            [CardRank.Five]: '5',
+            [CardRank.Six]: '6',
+            [CardRank.Seven]: '7',
+            [CardRank.Eight]: '8',
+            [CardRank.Nine]: '9',
+            [CardRank.Ten]: '10',
+            [CardRank.Jack]: 'J',
+            [CardRank.Queen]: 'Q',
+            [CardRank.King]: 'K'
+        };
+
+        // 如果是王牌，返回特殊描述
+        if (suit === CardSuit.Joker) {
+            return rank === CardRank.JokerA ? '小王' : '大王';
+        }
+
+        return `${suitNames[suit]}${rankNames[rank]} (${suit}-${rank})`;
+    }
+
+    // 修改初始化方法
     public init(suit: CardSuit, rank: CardRank) {
         console.log(`Initializing card: ${suit} ${rank}`);
         if (!suit || !rank) {
@@ -113,13 +175,17 @@ export class Card extends Component {
 
         // 检查卡牌精灵是否存在
         if (!this.cardSprite) {
-            console.error(`Card sprite is null for ${suit} ${rank}`);
-            // 尝试获取或创建Sprite组件
+            console.log('Getting or creating Sprite component');
             this.cardSprite = this.getComponent(Sprite);
             if (!this.cardSprite) {
-                console.log("Adding Sprite component to Card");
                 this.cardSprite = this.addComponent(Sprite);
             }
+        }
+
+        // 如果是万能牌，不需要加载新资源
+        if (suit === CardSuit.Joker) {
+            console.log('Initializing Joker card without loading new resources');
+            return Promise.resolve();
         }
 
         // 确保预加载背面图片
@@ -127,125 +193,143 @@ export class Card extends Component {
             Card.preloadCardBack();
         }
 
-        this.updateCardSprite();
+        return new Promise<void>((resolve, reject) => {
+            this.updateCardSprite()
+                .then(() => {
+                    console.log(`Card ${suit} ${rank} initialized successfully`);
+                    resolve();
+                })
+                .catch((error) => {
+                    console.error(`Failed to initialize card ${suit} ${rank}:`, error);
+                    reject(error);
+                });
+        });
     }
 
-    // 更新卡牌图片
-    private updateCardSprite() {
-        // 检查 cardSprite 是否存在
-        if (!this.cardSprite) {
-            console.error('Card sprite component is missing!');
-            return;
-        }
-
-        if (this._isFaceUp) {
-            // 加载正面图片
-            let path = '';
-            if (this._suit === CardSuit.Joker) {
-                path = `cards/JOKER-${this._rank === CardRank.JokerA ? 'A' : 'B'}/spriteFrame`;
-            } else {
-                path = `cards/${this._suit}${this._rank}/spriteFrame`;
-            }
-            resources.load(path, SpriteFrame, (err, spriteFrame) => {
-                if (err) {
-                    console.error('Failed to load card sprite:', err);
-                    return;
-                }
-                // 再次检查 cardSprite 是否存在
-                if (this.cardSprite) {
-                    this.cardSprite.spriteFrame = spriteFrame;
-                } else {
-                    console.error('Card sprite component is missing after loading sprite frame!');
-                }
-            });
-        } else {
-            // 显示背面
+    // 修改更新卡牌图片方法
+    private updateCardSprite(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
             if (!this.cardSprite) {
-                console.error('Card sprite component is missing when showing back!');
+                reject(new Error('Card sprite component is missing!'));
                 return;
             }
-            
-            if (Card.cardBackSprite) {
-                this.cardSprite.spriteFrame = Card.cardBackSprite;
-            } else if (this.cardBack) {
-                this.cardSprite.spriteFrame = this.cardBack;
+
+            if (this._isFaceUp) {
+                // 如果是万能牌，加载对应的万能牌图像
+                if (this._suit === CardSuit.Joker) {
+                    const jokerPath = `cards/JOKER-${this._rank}/spriteFrame`;
+                    resources.load(jokerPath, SpriteFrame, (err, spriteFrame) => {
+                        if (err) {
+                            console.error('Failed to load joker sprite:', err);
+                            reject(err);
+                            return;
+                        }
+                        if (this.cardSprite) {
+                            this.cardSprite.spriteFrame = spriteFrame;
+                            resolve();
+                        } else {
+                            reject(new Error('Card sprite component is missing after loading sprite frame!'));
+                        }
+                    });
+                    return;
+                }
+
+                // 加载普通卡牌正面图片
+                let path = `cards/${this._suit}${this._rank}/spriteFrame`;
+                resources.load(path, SpriteFrame, (err, spriteFrame) => {
+                    if (err) {
+                        console.error('Failed to load card sprite:', err);
+                        reject(err);
+                        return;
+                    }
+                    if (this.cardSprite) {
+                        this.cardSprite.spriteFrame = spriteFrame;
+                        resolve();
+                    } else {
+                        reject(new Error('Card sprite component is missing after loading sprite frame!'));
+                    }
+                });
             } else {
-                console.error('No card back sprite available!');
+                // 显示背面
+                if (Card.cardBackSprite) {
+                    this.cardSprite.spriteFrame = Card.cardBackSprite;
+                    resolve();
+                } else if (this.cardBack) {
+                    this.cardSprite.spriteFrame = this.cardBack;
+                    resolve();
+                } else {
+                    resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                        if (err) {
+                            console.error('Failed to load card back sprite:', err);
+                            reject(err);
+                            return;
+                        }
+                        if (this.cardSprite) {
+                            this.cardSprite.spriteFrame = spriteFrame;
+                            Card.cardBackSprite = spriteFrame;
+                            resolve();
+                        } else {
+                            reject(new Error('Card sprite component is missing when showing back!'));
+                        }
+                    });
+                }
             }
-        }
+        });
     }
 
     // 显示卡牌正面
-    public showCardFace() {
-        // 检查组件是否存在
+    public showCardFace(): Promise<void> {
         if (!this.cardSprite) {
-            console.error('Cannot show card face: sprite component is missing!');
-            return;
+            return Promise.reject(new Error('Cannot show card face: sprite component is missing!'));
         }
         this._isFaceUp = true;
-        this.updateCardSprite();
+        return this.updateCardSprite();
     }
 
     // 显示卡牌背面
-    public showCardBack() {
-        // 检查组件是否存在
+    public showCardBack(): Promise<void> {
         if (!this.cardSprite) {
-            console.error('Cannot show card back: sprite component is missing!');
-            return;
+            return Promise.reject(new Error('Cannot show card back: sprite component is missing!'));
         }
         this._isFaceUp = false;
-        this.updateCardSprite();
+        return this.updateCardSprite();
     }
 
     // 同步显示卡牌背面
     public showCardBackSync() {
-        // 检查组件是否存在
         if (!this.cardSprite) {
             console.error('Cannot show card back sync: sprite component is missing!');
             return;
         }
-        console.log('Attempting to show card back');
+        
         this._isFaceUp = false;
         
-        // 确保卡牌节点已设置正确的缩放
+        // 设置卡牌缩放和尺寸
         if (this.node) {
-            // 设置卡牌缩放为0.25，与玩家卡牌一致
             this.node.setScale(0.25, 0.25, 1);
-            
-            // 确保UITransform组件设置正确
             const uiTransform = this.node.getComponent(UITransform);
             if (uiTransform) {
-                // 设置内容尺寸为120x180，与玩家卡牌一致
                 uiTransform.setContentSize(120, 180);
             }
         }
         
-        // 首先尝试使用预加载的卡牌背面
+        // 使用预加载的背面图片
         if (Card.cardBackSprite) {
-            console.log('Using preloaded card back sprite');
             this.cardSprite.spriteFrame = Card.cardBackSprite;
-            return;
-        }
-        
-        // 如果预加载的不可用，尝试使用属性中的卡牌背面
-        if (this.cardBack) {
-            console.log('Using card back from property');
+        } else if (this.cardBack) {
             this.cardSprite.spriteFrame = this.cardBack;
-            return;
+        } else {
+            resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                if (err) {
+                    console.error('Failed to load card back sprite:', err);
+                    return;
+                }
+                if (this.cardSprite) {
+                    this.cardSprite.spriteFrame = spriteFrame;
+                    Card.cardBackSprite = spriteFrame;
+                }
+            });
         }
-        
-        // 如果都不可用，尝试立即加载
-        console.log('Attempting to load card back sprite');
-        resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
-            if (err) {
-                console.error('Failed to load card back sprite:', err);
-                return;
-            }
-            if (this.cardSprite) {
-                this.cardSprite.spriteFrame = spriteFrame;
-                Card.cardBackSprite = spriteFrame; // 保存以供后续使用
-            }
-        });
     }
 
     // 触摸开始事件
@@ -361,8 +445,14 @@ export class Card extends Component {
                 
                 if (this.isOverlapping(cardRect, exchangeAreaRect)) {
                     console.log('Card overlaps with exchange area');
-                    // 调用换牌方法
-                    gameManager.exchangeCard(this);
+                    // 检查是否还有换牌次数
+                    if (gameManager.getExchangeCount() > 0) {
+                        // 调用换牌方法
+                        gameManager.exchangeCard(this);
+                    } else {
+                        console.log('No exchange count left, returning card to original position');
+                        this.returnToOriginalPosition();
+                    }
                     return;
                 }
             }

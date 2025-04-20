@@ -212,6 +212,13 @@ export class SpecialHandsManager {
         const normalRanks = sortedNormalCards.map(card => card.getRank());
         const normalSuits = sortedNormalCards.map(card => card.getSuit());
 
+        // 获取王牌
+        const joker = normalCards.find(card => card.getSuit() === CardSuit.Joker);
+        if (!joker) {
+            console.error('No Joker found in tryOneJokerCombinations');
+            return;
+        }
+
         for (const suitKey of suitKeys) {
             const suit = CardSuit[suitKey];
             if (suit === CardSuit.Joker) continue;
@@ -220,12 +227,11 @@ export class SpecialHandsManager {
                 const rank = CardRank[rankKey];
                 if (rank === CardRank.JokerA || rank === CardRank.JokerB) continue;
 
-                // 创建临时卡牌并检查牌型
-                const tempCards = [...sortedNormalCards];
-                const virtualCard = new Card();
-                virtualCard.init(suit, rank);
-                tempCards.push(virtualCard);
+                // 使用changeCardInfo方法转换王牌
+                joker.changeCardInfo(suit, rank);
 
+                // 检查牌型
+                const tempCards = [...sortedNormalCards];
                 this.checkAndAddPossibleHand(tempCards, possibleHands);
 
                 // 如果找到最高分牌型，立即返回
@@ -243,6 +249,13 @@ export class SpecialHandsManager {
         const normalRanks = sortedNormalCards.map(card => card.getRank());
         const normalSuits = sortedNormalCards.map(card => card.getSuit());
 
+        // 获取两张王牌
+        const jokers = normalCards.filter(card => card.getSuit() === CardSuit.Joker);
+        if (jokers.length !== 2) {
+            console.error('Expected 2 Jokers but found:', jokers.length);
+            return;
+        }
+
         // 按分数从高到低检查各种牌型
         const checkOrder = [
             { method: this.checkRoyalFlushWithTwoJokers, score: 150 },
@@ -254,6 +267,8 @@ export class SpecialHandsManager {
         // 先检查高分牌型
         for (const { method, score } of checkOrder) {
             if (method.call(this, sortedNormalCards, normalRanks, normalSuits)) {
+                // 根据牌型设置王牌的花色和点数
+                this.setJokersForHandType(jokers, sortedNormalCards, this.getHandTypeByScore(score));
                 const hand = this.specialHands.get(this.getHandTypeByScore(score));
                 hand.cards = sortedNormalCards;
                 possibleHands.push(hand);
@@ -263,27 +278,114 @@ export class SpecialHandsManager {
 
         // 检查低分牌型
         if (this.checkFlushWithTwoJokers(sortedNormalCards, normalSuits)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.FLUSH);
             possibleHands.push(this.specialHands.get(SpecialHandType.FLUSH));
             return;
         }
         if (this.checkStraightWithTwoJokers(sortedNormalCards, normalRanks)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.STRAIGHT);
             possibleHands.push(this.specialHands.get(SpecialHandType.STRAIGHT));
             return;
         }
         if (this.checkFullHouseWithTwoJokers(sortedNormalCards, normalRanks)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.FULL_HOUSE);
             possibleHands.push(this.specialHands.get(SpecialHandType.FULL_HOUSE));
             return;
         }
         if (this.checkThreeOfAKindWithTwoJokers(sortedNormalCards, normalRanks)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.THREE_OF_A_KIND);
             possibleHands.push(this.specialHands.get(SpecialHandType.THREE_OF_A_KIND));
             return;
         }
         if (this.checkTwoPairsWithTwoJokers(sortedNormalCards, normalRanks)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.TWO_PAIRS);
             possibleHands.push(this.specialHands.get(SpecialHandType.TWO_PAIRS));
             return;
         }
         if (this.checkPairWithTwoJokers(sortedNormalCards, normalRanks)) {
+            this.setJokersForHandType(jokers, sortedNormalCards, SpecialHandType.PAIR);
             possibleHands.push(this.specialHands.get(SpecialHandType.PAIR));
+        }
+    }
+
+    // 根据牌型设置王牌的花色和点数
+    private setJokersForHandType(jokers: Card[], normalCards: Card[], handType: SpecialHandType) {
+        const [joker1, joker2] = jokers;
+        const existingRanks = normalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getRank());
+        const existingSuits = normalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getSuit());
+        
+        switch (handType) {
+            case SpecialHandType.ROYAL_FLUSH:
+                // 找到缺失的皇家同花顺牌
+                const royalRanks = [CardRank.Ten, CardRank.Jack, CardRank.Queen, CardRank.King, CardRank.Ace];
+                const missingRanks = royalRanks.filter(rank => !existingRanks.includes(rank));
+                const suit = existingSuits[0];
+                joker1.changeCardInfo(suit, missingRanks[0]);
+                joker2.changeCardInfo(suit, missingRanks[1]);
+                break;
+
+            case SpecialHandType.PERFECT_STRAIGHT:
+                // 找到缺失的完美顺子牌
+                const perfectRanks = [CardRank.Ten, CardRank.Jack, CardRank.Queen, CardRank.King, CardRank.Ace];
+                const missingPerfectRanks = perfectRanks.filter(rank => !existingRanks.includes(rank));
+                joker1.changeCardInfo(CardSuit.Heart, missingPerfectRanks[0]);
+                joker2.changeCardInfo(CardSuit.Spade, missingPerfectRanks[1]);
+                break;
+
+            case SpecialHandType.STRAIGHT_FLUSH:
+                // 找到缺失的同花顺牌
+                const straightSuit = existingSuits[0];
+                const sortedRanks = existingRanks.map(r => Number(r)).sort((a, b) => a - b);
+                const missingRank1 = sortedRanks[0] - 1;
+                const missingRank2 = sortedRanks[sortedRanks.length - 1] + 1;
+                joker1.changeCardInfo(straightSuit, String(missingRank1) as CardRank);
+                joker2.changeCardInfo(straightSuit, String(missingRank2) as CardRank);
+                break;
+
+            case SpecialHandType.FOUR_OF_A_KIND:
+                // 补齐四张相同点数的牌
+                const targetRank = existingRanks[0];
+                joker1.changeCardInfo(CardSuit.Heart, targetRank);
+                joker2.changeCardInfo(CardSuit.Spade, targetRank);
+                break;
+
+            case SpecialHandType.FLUSH:
+                // 补齐同花
+                const flushSuit = existingSuits[0];
+                joker1.changeCardInfo(flushSuit, CardRank.Ace);
+                joker2.changeCardInfo(flushSuit, CardRank.King);
+                break;
+
+            case SpecialHandType.STRAIGHT:
+                // 补齐顺子
+                const straightRanks = existingRanks.map(r => Number(r)).sort((a, b) => a - b);
+                joker1.changeCardInfo(CardSuit.Heart, String(straightRanks[0] - 1) as CardRank);
+                joker2.changeCardInfo(CardSuit.Spade, String(straightRanks[straightRanks.length - 1] + 1) as CardRank);
+                break;
+
+            case SpecialHandType.FULL_HOUSE:
+                // 补齐葫芦
+                joker1.changeCardInfo(CardSuit.Heart, existingRanks[0]);
+                joker2.changeCardInfo(CardSuit.Spade, existingRanks[0]);
+                break;
+
+            case SpecialHandType.THREE_OF_A_KIND:
+                // 补齐三条
+                joker1.changeCardInfo(CardSuit.Heart, existingRanks[0]);
+                joker2.changeCardInfo(CardSuit.Spade, existingRanks[0]);
+                break;
+
+            case SpecialHandType.TWO_PAIRS:
+                // 补齐两对
+                joker1.changeCardInfo(CardSuit.Heart, existingRanks[0]);
+                joker2.changeCardInfo(CardSuit.Spade, existingRanks[0]);
+                break;
+
+            case SpecialHandType.PAIR:
+                // 补齐对子
+                joker1.changeCardInfo(CardSuit.Heart, existingRanks[0]);
+                joker2.changeCardInfo(CardSuit.Spade, existingRanks[0]);
+                break;
         }
     }
 
