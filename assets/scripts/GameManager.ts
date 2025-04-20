@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label, Button } from 'cc';
+import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label, Button, Layout, Color } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { tween } from 'cc';
 import { SpecialHandsManager, SpecialHand, SpecialHandType } from './SpecialHands';
@@ -32,6 +32,9 @@ export class GameManager extends Component {
 
     @property([Label])
     private areaScoreLabels: Label[] = [];  // 每个场地的分数标签
+
+    @property([Node])
+    private scoreItemPrefabs: Node[] = [];  // 分数项的预制体节点
 
     @property(Label)
     private exchangeCountLabel: Label = null;  // 换牌次数标签
@@ -861,12 +864,12 @@ export class GameManager extends Component {
 
         // 将牌按点数排序
         const sortedCards = [...cards].sort((a, b) => Number(a.rank) - Number(b.rank));
-        
+
         // 如果允许跳顺（间隔为2）
         if (this.skipSequenceEnabled) {
             let totalGap = 0;
-            for (let i = 1; i < sortedCards.length; i++) {
-                const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
+        for (let i = 1; i < sortedCards.length; i++) {
+            const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
                 if (gap > 2) return false;  // 如果任何间隔大于2，不是顺子
                 totalGap += gap - 1;  // 累计额外间隔
             }
@@ -878,7 +881,7 @@ export class GameManager extends Component {
                 const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
                 if (gap !== 1) return false;
             }
-            return true;
+        return true;
         }
     }
 
@@ -1281,6 +1284,12 @@ export class GameManager extends Component {
             // 设置位置
             area.setPosition(new Vec3(startX + index * playAreaSpacing, 0, 0));
             
+            // 移除旧的分数标签（如果存在）
+            const oldLabel = area.getChildByName('ScoreLabel');
+            if (oldLabel) {
+                oldLabel.destroy();
+            }
+            
             // 确保所有子节点可见
             area.children.forEach(child => {
                 child.active = true;
@@ -1392,16 +1401,143 @@ export class GameManager extends Component {
     // 更新指定场地的分数显示
     private updateAreaScoreLabel(areaIndex: number) {
         if (areaIndex >= 0 && areaIndex < this.areaScoreLabels.length) {
-            const label = this.areaScoreLabels[areaIndex];
-            if (label) {
-                // 格式化分数详情，确保每行都有适当的缩进和换行
-                const formattedDetails = this.areaScoreDetails[areaIndex]
-                    .split('\n')
-                    .filter(line => line.trim() !== '')
-                    .join('\n');
-                
-                label.string = `分数: ${this.areaScores[areaIndex]}\n${formattedDetails}`;
+            const playArea = this.playAreas[areaIndex];
+            if (!playArea) return;
+
+            // 确保场地区域可见
+            playArea.active = true;
+
+            // 获取或创建分数显示容器
+            let scoreContainer = playArea.getChildByName('ScoreContainer');
+            if (!scoreContainer) {
+                scoreContainer = new Node('ScoreContainer');
+                playArea.addChild(scoreContainer);
             }
+
+            // 确保容器有Layout组件
+            let layout = scoreContainer.getComponent(Layout);
+            if (!layout) {
+                layout = scoreContainer.addComponent(Layout);
+                layout.type = Layout.Type.HORIZONTAL;
+                layout.spacingX = 15;
+                layout.resizeMode = Layout.ResizeMode.NONE;
+                layout.paddingLeft = 5;
+                layout.paddingRight = 5;
+            }
+
+            // 设置容器大小和位置
+            const containerTransform = scoreContainer.getComponent(UITransform);
+            if (!containerTransform) {
+                scoreContainer.addComponent(UITransform);
+            }
+            containerTransform.setContentSize(180, 18);
+
+            // 获取场地区域的尺寸
+            const playAreaTransform = playArea.getComponent(UITransform);
+            if (playAreaTransform) {
+                // 将分数容器定位到场地区域底部，并向左偏移20个单位
+                scoreContainer.setPosition(-20, -playAreaTransform.height / 2 + 40, 0);
+            }
+
+            // 解析分数详情
+            const details = this.areaScoreDetails[areaIndex].split('\n');
+            let points = 0;
+            let handType = 0;
+            let special = 0;
+            let specialHandName = '牌型';  // 默认显示"牌型"
+
+            details.forEach(line => {
+                if (line.includes('点数')) {
+                    points = parseInt(line.split('+')[1]);
+                } else if (line.includes('完美同色序列')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '皇同序';
+                } else if (line.includes('完美序列')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '完美序';
+                } else if (line.includes('同色序列')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '同色序';
+                } else if (line.includes('四骑士')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '四骑士';
+                } else if (line.includes('满座')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '满座';
+                } else if (line.includes('三贤者')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '三贤者';
+                } else if (line.includes('双偶星')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '双偶星';
+                } else if (line.includes('偶星')) {
+                    handType += parseInt(line.split('+')[1]);
+                    specialHandName = '偶星';
+                } else if (line.includes('同色')) {
+                    handType += parseInt(line.split('+')[1]);
+                    if (specialHandName === '牌型') specialHandName = '同色';
+                } else if (line.includes('顺子')) {
+                    handType += parseInt(line.split('+')[1]);
+                    if (specialHandName === '牌型') specialHandName = '顺子';
+                } else if (line.includes('奖励') || line.includes('效果')) {
+                    special += parseInt(line.split('+')[1]);
+                }
+            });
+
+            const total = points + handType + special;
+
+            // 清除现有的分数显示节点
+            scoreContainer.removeAllChildren();
+
+            // 创建四个分数项
+            const scoreData = [
+                { label: '点数', value: points },
+                { label: specialHandName, value: handType },
+                { label: '特殊', value: special },
+                { label: '总分', value: total }
+            ];
+
+            scoreData.forEach(data => {
+                // 创建分数项容器
+                const itemNode = new Node('ScoreItem');
+                itemNode.parent = scoreContainer;
+
+                // 设置分数项容器大小
+                const itemTransform = itemNode.addComponent(UITransform);
+                itemTransform.setContentSize(40, 18);
+
+                // 创建垂直布局
+                const itemLayout = itemNode.addComponent(Layout);
+                itemLayout.type = Layout.Type.VERTICAL;
+                itemLayout.spacingY = -16;
+                itemLayout.resizeMode = Layout.ResizeMode.NONE;
+
+                // 创建标签节点
+                const labelNode = new Node('Label');
+                const labelComp = labelNode.addComponent(Label);
+                labelComp.string = data.label;
+                labelComp.horizontalAlign = Label.HorizontalAlign.CENTER;
+                labelComp.fontSize = 18;
+                labelComp.color = new Color(255, 255, 255, 255);
+                labelNode.parent = itemNode;
+
+                // 设置标签节点大小
+                const labelTransform = labelNode.addComponent(UITransform);
+                labelTransform.setContentSize(40, 9);
+
+                // 创建数值节点
+                const valueNode = new Node('Value');
+                const valueComp = valueNode.addComponent(Label);
+                valueComp.string = data.value.toString();
+                valueComp.horizontalAlign = Label.HorizontalAlign.CENTER;
+                valueComp.fontSize = 20;
+                valueComp.color = new Color(255, 255, 255, 255);
+                valueNode.parent = itemNode;
+
+                // 设置数值节点大小
+                const valueTransform = valueNode.addComponent(UITransform);
+                valueTransform.setContentSize(40, 9);
+            });
         }
     }
 
