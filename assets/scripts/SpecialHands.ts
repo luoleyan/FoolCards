@@ -132,9 +132,13 @@ export class SpecialHandsManager {
 
     // 检查一组牌是否构成特殊牌型
     public checkSpecialHand(cards: Card[]): SpecialHand | null {
+        // 过滤掉无效的卡牌
+        const validCards = cards.filter(card => card != null);
+        if (validCards.length === 0) return null;
+
         // 分离普通牌和王牌
-        const jokers = cards.filter(card => card.getSuit() === CardSuit.Joker);
-        const normalCards = cards.filter(card => card.getSuit() !== CardSuit.Joker);
+        const jokers = validCards.filter(card => card.getSuit() === CardSuit.Joker);
+        const normalCards = validCards.filter(card => card.getSuit() !== CardSuit.Joker);
 
         // 如果有王牌，尝试所有可能的牌型组合
         if (jokers.length > 0) {
@@ -142,7 +146,7 @@ export class SpecialHandsManager {
         }
 
         // 没有王牌，按正常逻辑检查牌型
-        const sortedCards = [...cards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
+        const sortedCards = [...normalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
         return this.checkNormalHand(sortedCards);
     }
 
@@ -161,17 +165,28 @@ export class SpecialHandsManager {
     private getBestHandWithJokers(normalCards: Card[], jokers: Card[]): SpecialHand {
         const possibleHands: SpecialHand[] = [];
 
+        // 过滤掉无效的卡牌
+        const validNormalCards = normalCards.filter(card => card != null);
+        const validJokers = jokers.filter(card => card != null);
+
+        if (validJokers.length === 0) {
+            // 如果没有有效的王牌，返回最低分的牌型
+            const hand = this.specialHands.get(SpecialHandType.PAIR);
+            hand.cards = validNormalCards;
+            return hand;
+        }
+
         // 根据王牌数量尝试不同的组合
-        if (jokers.length === 1) {
-            this.tryOneJokerCombinations(normalCards, possibleHands);
-        } else if (jokers.length === 2) {
-            this.tryTwoJokersCombinations(normalCards, possibleHands);
+        if (validJokers.length === 1) {
+            this.tryOneJokerCombinations(validNormalCards, possibleHands);
+        } else if (validJokers.length === 2) {
+            this.tryTwoJokersCombinations(validNormalCards, possibleHands);
         }
 
         // 如果没有找到任何牌型，返回最低分的牌型
         if (possibleHands.length === 0) {
             const hand = this.specialHands.get(SpecialHandType.PAIR);
-            hand.cards = [...normalCards, ...jokers];
+            hand.cards = [...validNormalCards, ...validJokers];
             return hand;
         }
 
@@ -180,40 +195,48 @@ export class SpecialHandsManager {
 
         // 返回得分最高的牌型，并设置实际的牌组
         const bestHand = possibleHands[0];
-        bestHand.cards = [...normalCards, ...jokers];
+        bestHand.cards = [...validNormalCards, ...validJokers];
 
         // 根据王牌类型添加额外分数
-        this.addJokerBonusPoints(bestHand, jokers);
+        this.addJokerBonusPoints(bestHand, validJokers);
 
         return bestHand;
     }
 
     // 添加王牌额外分数
     private addJokerBonusPoints(hand: SpecialHand, jokers: Card[]): void {
-        if (jokers.length === 1) {
-            if (jokers[0].getRank() === CardRank.JokerA) {
+        // 过滤掉无效的卡牌
+        const validJokers = jokers.filter(card => card != null);
+        if (validJokers.length === 0) return;
+
+        if (validJokers.length === 1) {
+            if (validJokers[0].getRank() === CardRank.JokerA) {
                 hand.bonusPoints += 10; // 只有小王，额外加10分
-            } else if (jokers[0].getRank() === CardRank.JokerB) {
+            } else if (validJokers[0].getRank() === CardRank.JokerB) {
                 hand.bonusPoints += 15; // 只有大王，额外加15分
             }
-        } else if (jokers.length === 2) {
+        } else if (validJokers.length === 2) {
             hand.bonusPoints += 30; // 两张王牌，额外加30分
         }
     }
 
     // 尝试用一张王牌组成各种牌型
     private tryOneJokerCombinations(normalCards: Card[], possibleHands: SpecialHand[]) {
+        // 过滤掉无效的卡牌
+        const validNormalCards = normalCards.filter(card => card != null);
+        if (validNormalCards.length === 0) return;
+
         // 尝试所有可能的花色和点数组合
         const suitKeys = Object.keys(CardSuit) as Array<keyof typeof CardSuit>;
         const rankKeys = Object.keys(CardRank) as Array<keyof typeof CardRank>;
 
         // 预计算一些常用值
-        const sortedNormalCards = [...normalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
+        const sortedNormalCards = [...validNormalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
         const normalRanks = sortedNormalCards.map(card => card.getRank());
         const normalSuits = sortedNormalCards.map(card => card.getSuit());
 
         // 获取王牌
-        const joker = normalCards.find(card => card.getSuit() === CardSuit.Joker);
+        const joker = validNormalCards.find(card => card.getSuit() === CardSuit.Joker);
         if (!joker) {
             console.error('No Joker found in tryOneJokerCombinations');
             return;
@@ -244,13 +267,17 @@ export class SpecialHandsManager {
 
     // 尝试用两张王牌组成各种牌型
     private tryTwoJokersCombinations(normalCards: Card[], possibleHands: SpecialHand[]) {
+        // 过滤掉无效的卡牌
+        const validNormalCards = normalCards.filter(card => card != null);
+        if (validNormalCards.length === 0) return;
+
         // 预计算一些常用值
-        const sortedNormalCards = [...normalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
+        const sortedNormalCards = [...validNormalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
         const normalRanks = sortedNormalCards.map(card => card.getRank());
         const normalSuits = sortedNormalCards.map(card => card.getSuit());
 
         // 获取两张王牌
-        const jokers = normalCards.filter(card => card.getSuit() === CardSuit.Joker);
+        const jokers = validNormalCards.filter(card => card.getSuit() === CardSuit.Joker);
         if (jokers.length !== 2) {
             console.error('Expected 2 Jokers but found:', jokers.length);
             return;
@@ -310,10 +337,19 @@ export class SpecialHandsManager {
 
     // 根据牌型设置王牌的花色和点数
     private setJokersForHandType(jokers: Card[], normalCards: Card[], handType: SpecialHandType) {
-        const [joker1, joker2] = jokers;
-        const existingRanks = normalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getRank());
-        const existingSuits = normalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getSuit());
-        
+        // 过滤掉无效的卡牌
+        const validJokers = jokers.filter(card => card != null);
+        const validNormalCards = normalCards.filter(card => card != null);
+
+        if (validJokers.length < 2) {
+            console.error('Expected 2 jokers but found:', validJokers.length);
+            return;
+        }
+
+        const [joker1, joker2] = validJokers;
+        const existingRanks = validNormalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getRank());
+        const existingSuits = validNormalCards.filter(card => card.getSuit() !== CardSuit.Joker).map(card => card.getSuit());
+
         switch (handType) {
             case SpecialHandType.ROYAL_FLUSH:
                 // 找到缺失的皇家同花顺牌
@@ -595,8 +631,12 @@ export class SpecialHandsManager {
 
     // 检查并添加可能的牌型到列表
     private checkAndAddPossibleHand(cards: Card[], possibleHands: SpecialHand[]) {
+        // 过滤掉无效的卡牌
+        const validCards = cards.filter(card => card != null);
+        if (validCards.length === 0) return;
+
         // 预计算一些常用值
-        const sortedCards = [...cards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
+        const sortedCards = [...validCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
         const ranks = sortedCards.map(card => card.getRank());
         const suits = sortedCards.map(card => card.getSuit());
 
@@ -761,4 +801,4 @@ export class SpecialHandsManager {
         }
         return false;
     }
-} 
+}
