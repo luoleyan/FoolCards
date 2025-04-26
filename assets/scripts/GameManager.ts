@@ -5,6 +5,7 @@ import { SpecialHandsManager, SpecialHand, SpecialHandType } from './SpecialHand
 import { SceneEffect, SceneEffectType } from './SceneEffect';
 import { PlatformAdapter } from './PlatformAdapter';
 import { SpecialHandsPopup } from './SpecialHandsPopup';
+import { GameOverPopup } from './GameOverPopup';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
@@ -50,6 +51,9 @@ export class GameManager extends Component {
 
     @property(Button)
     private endTurnButton: Button = null;  // 结束回合按钮
+
+    @property(Node)
+    private gameOverPopup: Node = null;  // 游戏结束弹窗
 
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
@@ -290,8 +294,8 @@ export class GameManager extends Component {
         const cardWidth = 120 * 0.25;
         // 卡牌高度（实际高度乘以缩放比例）
         const cardHeight = 180 * 0.25;
-        // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
-        const cardSpacing = cardWidth * 2.3;
+        // 卡牌间距（设为卡牌宽度的150%，减小间距使排列更紧凑）
+        const cardSpacing = cardWidth * 1.5;
 
         // 获取背景节点的实际显示尺寸
         if (!this.background || !this.background.node) {
@@ -485,7 +489,7 @@ export class GameManager extends Component {
 
         // 计算最终位置
         const cardWidth = 120 * 0.25;
-        const spacing = cardWidth * 2.3;
+        const spacing = cardWidth * 1.5; // 减小间距使排列更紧凑
         const totalWidth = (this.opponentHand.children.length - 1) * spacing;
         const startX = -totalWidth / 2;
         const finalX = startX + index * spacing;
@@ -632,13 +636,16 @@ export class GameManager extends Component {
 
     // 开始新回合
     public startNewRound() {
+        // 检查是否达到最大回合数
         if (this._currentRound >= this.maxRounds) {
-            console.log('游戏结束');
+            console.log(`游戏结束，达到最大回合数：${this.maxRounds}`);
+            this.showGameOver();
             return;
         }
 
         // 更新回合数
         this._currentRound++;
+        console.log(`开始第 ${this._currentRound}/${this.maxRounds} 回合`);
 
         // 检查是否需要揭示新的场景效果
         if (this._currentRound <= 3 && this._revealedEffects < this._currentRound) {
@@ -654,8 +661,8 @@ export class GameManager extends Component {
 
         // 卡牌宽度（实际宽度乘以缩放比例）
         const cardWidth = 120 * 0.25;
-        // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
-        const cardSpacing = cardWidth * 2.3;
+        // 卡牌间距（设为卡牌宽度的150%，减小间距使排列更紧凑）
+        const cardSpacing = cardWidth * 1.5;
 
         // 获取当前玩家和对手的卡牌数量
         const playerCardCount = this.playerHand.children.length;
@@ -774,7 +781,7 @@ export class GameManager extends Component {
 
         // 计算最终位置
         const cardWidth = 120 * 0.25;
-        const cardSpacing = cardWidth * 2.3;
+        const cardSpacing = cardWidth * 1.5; // 减小间距使排列更紧凑
         const totalWidth = (this.playerHand.children.length - 1) * cardSpacing;
         const finalX = -totalWidth / 2 + index * cardSpacing;
 
@@ -864,13 +871,31 @@ export class GameManager extends Component {
 
     // 揭示下一个场景效果
     private revealNextSceneEffect() {
-        if (this._revealedEffects < this.sceneEffects.length) {
-            const effect = this.sceneEffects[this._revealedEffects];
+        // 检查是否已经揭示了所有效果
+        if (this._revealedEffects >= this.sceneEffects.length) {
+            console.log("所有场景效果已揭示");
+            return;
+        }
+
+        // 获取下一个要揭示的效果
+        const effect = this.sceneEffects[this._revealedEffects];
+
+        // 检查效果是否有效
+        if (!effect) {
+            console.error(`场景效果 ${this._revealedEffects} 不存在`);
+            return;
+        }
+
+        try {
+            // 揭示效果
             effect.reveal();
             this._revealedEffects++;
+            console.log(`揭示场景效果 ${this._revealedEffects}/${this.sceneEffects.length}`);
 
             // 应用场景效果
             effect.applyEffect(this, this._revealedEffects - 1);
+        } catch (error) {
+            console.error("揭示场景效果时发生错误:", error);
         }
     }
 
@@ -968,8 +993,21 @@ export class GameManager extends Component {
         console.log('playCard 方法被调用');
         console.log('参数检查：', { areaIndex, card: card ? '有效' : '无效' });
 
+        // 检查卡牌是否有效
+        if (!card) {
+            console.error("无效的卡牌对象");
+            return;
+        }
+
+        // 检查卡牌节点是否有效
+        if (!card.node) {
+            console.error("卡牌节点不存在");
+            return;
+        }
+
+        // 检查场地索引是否有效
         if (areaIndex < 0 || areaIndex >= this.playAreas.length) {
-            console.error("Invalid play area index");
+            console.error("无效的场地索引");
             return;
         }
 
@@ -1138,7 +1176,7 @@ export class GameManager extends Component {
 
         // 计算卡牌间距
         const cardWidth = 120 * 0.25; // 卡牌宽度（考虑缩放）
-        const spacing = cardWidth * 2.3; // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
+        const spacing = cardWidth * 1.5; // 卡牌间距（设为卡牌宽度的150%，减小间距使排列更紧凑）
         const totalWidth = (cards.length - 1) * spacing;
         const startX = -totalWidth / 2;
 
@@ -1180,18 +1218,19 @@ export class GameManager extends Component {
         const bottomY = -(areaTransform.height / 2) - (cardHeight * 0.35);
 
         // 排列公共牌（如果有）
-        const publicTotalWidth = (publicCards.length - 1) * (cardWidth * 0.25 + spacing);  // 保持0.25
+        const cardSpacingFactor = 0.2; // 减小场地区域卡牌间距
+        const publicTotalWidth = (publicCards.length - 1) * (cardWidth * 0.25 + spacing * cardSpacingFactor);
         const publicStartX = -publicTotalWidth / 2;
         publicCards.forEach((container, index) => {
-            const x = publicStartX + index * (cardWidth * 0.25 + spacing);  // 保持0.25
+            const x = publicStartX + index * (cardWidth * 0.25 + spacing * cardSpacingFactor);
             container.setPosition(new Vec3(x, 0, 0)); // 公共牌放在中间位置
         });
 
         // 排列玩家打出的牌
-        const playerTotalWidth = (playerCards.length - 1) * (cardWidth * 0.25 + spacing);  // 保持0.25
+        const playerTotalWidth = (playerCards.length - 1) * (cardWidth * 0.25 + spacing * cardSpacingFactor);
         const playerStartX = -playerTotalWidth / 2;
         playerCards.forEach((container, index) => {
-            const x = playerStartX + index * (cardWidth * 0.25 + spacing);  // 保持0.25
+            const x = playerStartX + index * (cardWidth * 0.25 + spacing * cardSpacingFactor);
             container.setPosition(new Vec3(x, bottomY, 0)); // 玩家牌放在底部
         });
     }
@@ -1999,5 +2038,55 @@ export class GameManager extends Component {
     // 获取剩余换牌次数
     public getExchangeCount(): number {
         return this._exchangeCount;
+    }
+
+    /**
+     * 显示游戏结束弹窗
+     */
+    private showGameOver() {
+        console.log("显示游戏结束弹窗");
+        console.log(`基础分数 - 玩家: ${this.playerScore}, 对手: ${this.opponentScore}`);
+
+        // 计算最终分数（包括所有场地分数）
+        let finalPlayerScore = this.playerScore;
+        let finalOpponentScore = this.opponentScore;
+
+        // 将场地分数加到玩家总分中
+        console.log("场地分数详情:");
+        for (let i = 0; i < this.areaScores.length; i++) {
+            console.log(`场地${i+1}: ${this.areaScores[i]}分`);
+            finalPlayerScore += this.areaScores[i];
+        }
+
+        console.log(`最终分数 - 玩家: ${finalPlayerScore}, 对手: ${finalOpponentScore}`);
+
+        // 确定游戏结果
+        let result = "平局！";
+        if (finalPlayerScore > finalOpponentScore) {
+            result = "玩家获胜！";
+        } else if (finalPlayerScore < finalOpponentScore) {
+            result = "对手获胜！";
+        }
+        console.log(`游戏结果: ${result}`);
+
+        // 如果有游戏结束弹窗，显示它
+        if (this.gameOverPopup) {
+            const gameOverPopupComp = this.gameOverPopup.getComponent(GameOverPopup);
+            if (gameOverPopupComp) {
+                gameOverPopupComp.showPopup(finalPlayerScore, finalOpponentScore);
+            } else {
+                console.error("GameOverPopup组件未找到");
+            }
+        } else {
+            console.error("游戏结束弹窗未设置");
+            // 如果没有弹窗，直接返回主菜单
+            this.scheduleOnce(() => {
+                director.loadScene('MainMenu');
+            }, 2);
+        }
+
+        // 停止所有计时器和动画
+        this.stopTurnTimer();
+        this.unscheduleAllCallbacks();
     }
 }

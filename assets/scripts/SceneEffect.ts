@@ -100,7 +100,7 @@ export class SceneEffect extends Component {
             const playAreaTransform = this.playArea.getComponent(UITransform);
             if (playAreaTransform) {
                 const playAreaSize = playAreaTransform.contentSize;
-                
+
                 // 设置效果名称位置（场地内部上方）
                 const effectNamePos = new Vec3(0, playAreaSize.height / 2 - 30, 0);
                 this.effectName.node.position = effectNamePos;
@@ -119,9 +119,9 @@ export class SceneEffect extends Component {
     // 揭示效果
     public reveal() {
         if (this._isRevealed) return;
-        
+
         this._isRevealed = true;
-        
+
         // 确保公共牌容器可见
         if (this.publicCardContainer) {
             this.publicCardContainer.active = true;
@@ -142,21 +142,21 @@ export class SceneEffect extends Component {
                 }
             });
         }
-        
+
         // 隐藏卡牌背面
         if (this.cardBack && this.cardBack.node) {
             this.cardBack.node.active = false;
         }
-        
+
         // 显示效果文本
         if (this.effectDescription) {
             this.effectDescription.node.active = true;
             this.effectDescription.string = this.effectDescription.string;
         }
-        
+
         // 更新位置
         this.updatePositions();
-        
+
         // 播放揭示动画
         this.playRevealAnimation();
     }
@@ -167,12 +167,12 @@ export class SceneEffect extends Component {
         if (this.effectDescription) {
             this.effectDescription.node.active = false;
         }
-        
+
         // 隐藏公共牌容器
         if (this.publicCardContainer) {
             this.publicCardContainer.active = false;
         }
-        
+
         // 显示卡牌背面
         if (this.cardBack && this.cardBack.node) {
             this.cardBack.node.active = true;
@@ -193,7 +193,7 @@ export class SceneEffect extends Component {
         // 显示卡牌背面
         this.cardBack.node.active = true;
         this.hideEffect();
-        
+
         // 生成公共牌并确保它们可见
         this.generatePublicCards();
         if (this.publicCardContainer) {
@@ -201,7 +201,7 @@ export class SceneEffect extends Component {
                 child.active = true;
             });
         }
-        
+
         this.updatePositions();
     }
 
@@ -209,7 +209,7 @@ export class SceneEffect extends Component {
     private generatePublicCards() {
         // 清空现有公共牌
         this._publicCards = [];
-        
+
         // 生成两张随机公共牌
         for (let i = 0; i < 2; i++) {
             // 创建容器节点
@@ -639,10 +639,19 @@ export class SceneEffect extends Component {
             case SceneEffectType.RandomPlay:
                 // 随机出1张牌
                 const handCards = gameManager.getPlayerHandCards();
-                if (handCards.length > 0) {
+                if (handCards && handCards.length > 0) {
                     const randomIndex = Math.floor(Math.random() * handCards.length);
-                    const randomAreaIndex = Math.floor(Math.random() * 3);
-                    gameManager.playCard(handCards[randomIndex], randomAreaIndex);
+                    const randomCard = handCards[randomIndex];
+                    // 确保卡牌有效
+                    if (randomCard && randomCard.node) {
+                        const randomAreaIndex = Math.floor(Math.random() * 3);
+                        console.log(`随机出牌：${randomCard.getFullName()} 到场地 ${randomAreaIndex + 1}`);
+                        gameManager.playCard(randomCard, randomAreaIndex);
+                    } else {
+                        console.warn("随机选择的卡牌无效，跳过随机出牌效果");
+                    }
+                } else {
+                    console.warn("玩家手牌为空，跳过随机出牌效果");
                 }
                 break;
 
@@ -691,4 +700,4 @@ export class SceneEffect extends Component {
             default: return 0;
         }
     }
-} 
+}
