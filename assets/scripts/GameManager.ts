@@ -48,6 +48,9 @@ export class GameManager extends Component {
     @property(Button)
     private specialHandsButton: Button = null;
 
+    @property(Button)
+    private endTurnButton: Button = null;  // 结束回合按钮
+
     private deck: Card[] = [];  // 牌堆
     private _currentRound: number = 0;
     private maxRounds: number = 5;  // 最大回合数
@@ -79,7 +82,7 @@ export class GameManager extends Component {
     private turnTimeLimit: number = 60;  // 每回合60秒
     private remainingTime: number = 60;  // 剩余时间
     private isTimerRunning: boolean = false;
-    
+
     @property(Label)
     private timerLabel: Label = null;    // 显示倒计时的标签
 
@@ -90,7 +93,7 @@ export class GameManager extends Component {
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
-        
+
         // 初始化特殊牌型管理器
         this.specialHandsManager = SpecialHandsManager.getInstance();
 
@@ -117,6 +120,11 @@ export class GameManager extends Component {
             this.specialHandsButton.node.on(Button.EventType.CLICK, this.showSpecialHandsPopup, this);
         }
 
+        // 设置结束回合按钮点击事件
+        if (this.endTurnButton) {
+            this.endTurnButton.node.on(Button.EventType.CLICK, this.onEndTurnButtonClicked, this);
+        }
+
         // 初始化出牌次数
         this.cardsPlayedThisTurn = 0;
 
@@ -132,6 +140,9 @@ export class GameManager extends Component {
 
             // 设置换牌区域位置
             this.setupExchangeAreaPosition();
+
+            // 设置UI元素位置（结束回合按钮和计时器）
+            this.setupUIElementsPosition();
 
             // 初始化换牌次数显示
             this.updateExchangeCountLabel();
@@ -187,7 +198,7 @@ export class GameManager extends Component {
         this.dealInitialCards();
         // 设置当前回合为1
         this._currentRound = 1;
-        
+
         // 揭示第一个场景效果
         this.revealNextSceneEffect();
     }
@@ -298,10 +309,10 @@ export class GameManager extends Component {
         if (this.opponentHand) {
             // 设置对手手牌区域的位置
             this.opponentHand.setPosition(0, topY, 0);
-            
+
             // 确保对手手牌区域可见
             this.opponentHand.active = true;
-            
+
             // 设置对手手牌区域的大小
             const opponentHandTransform = this.opponentHand.getComponent(UITransform);
             if (opponentHandTransform) {
@@ -310,17 +321,17 @@ export class GameManager extends Component {
                 opponentHandTransform.setContentSize(totalWidth, cardHeight);
                 console.log(`Opponent hand area size set to: ${totalWidth} x ${cardHeight}`);
             }
-            
+
             // 设置对手手牌区域的缩放
             this.opponentHand.setScale(1, 1, 1);
-            
+
             // 确保所有子节点可见
             this.opponentHand.children.forEach(child => {
                 child.active = true;
                 // 设置子节点的缩放
                 child.setScale(0.25, 0.25, 1);
             });
-            
+
             console.log(`Opponent hand area positioned at: (0, ${topY}, 0)`);
         } else {
             console.error("Opponent hand area is null");
@@ -331,7 +342,7 @@ export class GameManager extends Component {
             this.playerHand.setPosition(0, bottomY, 0);
             // 确保玩家手牌区域可见
             this.playerHand.active = true;
-            
+
             // 设置玩家手牌区域的大小
             const playerHandTransform = this.playerHand.getComponent(UITransform);
             if (playerHandTransform) {
@@ -340,10 +351,10 @@ export class GameManager extends Component {
                 playerHandTransform.setContentSize(totalWidth, cardHeight);
                 console.log(`Player hand area size set to: ${totalWidth} x ${cardHeight}`);
             }
-            
+
             // 设置玩家手牌区域的缩放
             this.playerHand.setScale(1, 1, 1);
-            
+
             // 确保所有子节点可见
             this.playerHand.children.forEach(child => {
                 child.active = true;
@@ -378,10 +389,10 @@ export class GameManager extends Component {
                 // 设置卡牌初始位置为牌堆位置
                 card.node.setPosition(deckPosition);
                 card.node.active = true;
-                
+
                 // 确保卡牌缩放为0.25，与玩家卡牌一致
                 card.node.setScale(0.25, 0.25, 1);
-                
+
                 // 确保UITransform组件设置正确
                 const uiTransform = card.node.getComponent(UITransform);
                 if (uiTransform) {
@@ -434,7 +445,7 @@ export class GameManager extends Component {
             .call(() => {
                 // 确保显示卡牌正面
                 card.showCardFace();
-                
+
                 // 添加触摸事件监听器，确保点击时也显示正面
                 card.node.on(Node.EventType.TOUCH_START, () => {
                     card.showCardFace();
@@ -446,42 +457,42 @@ export class GameManager extends Component {
     // 给对手发牌的动画（自上而下）
     private animateCardToOpponent(card: Card, index: number) {
         console.log(`Animating card to opponent, index: ${index}`);
-        
+
         // 设置父节点为对手手牌区域
         card.node.setParent(this.opponentHand);
         console.log('Card parent set to opponent hand');
-        
+
         // 设置卡牌缩放为0.25，与玩家卡牌一致
         card.node.setScale(0.25, 0.25, 1);
-        
+
         // 确保UITransform组件设置正确
         const uiTransform = card.node.getComponent(UITransform);
         if (uiTransform) {
             // 设置内容尺寸为120x180，与玩家卡牌一致
             uiTransform.setContentSize(120, 180);
         }
-        
+
         // 计算最终位置
         const cardWidth = 120 * 0.25;
         const spacing = cardWidth * 2.3;
         const totalWidth = (this.opponentHand.children.length - 1) * spacing;
         const startX = -totalWidth / 2;
         const finalX = startX + index * spacing;
-        
+
         console.log(`Card position calculated: startX=${startX}, finalX=${finalX}, totalWidth=${totalWidth}`);
-        
+
         // 设置初始位置（从牌堆位置开始）
         const deckPosition = new Vec3(0, 0, 0);
         card.node.setPosition(deckPosition);
-        
+
         // 确保卡牌节点可见
         card.node.active = true;
         console.log('Card node activated');
-        
+
         // 确保对手手牌区域可见
         this.opponentHand.active = true;
         console.log('Opponent hand area activated');
-        
+
         // 创建移动动画
         tween(card.node)
             .to(0.3, { position: new Vec3(finalX, 0, 0) }, {
@@ -491,18 +502,18 @@ export class GameManager extends Component {
                 console.log('Card animation completed');
                 // 确保卡牌可见
                 card.node.active = true;
-                
+
                 // 确保显示卡牌背面
                 card.showCardBackSync();
-                
+
                 // 添加触摸事件监听器，确保点击时也显示背面
                 card.node.on(Node.EventType.TOUCH_START, () => {
                     card.showCardBackSync();
                 });
-                
+
                 // 打印最终位置
                 console.log(`Card final position: ${card.node.position.toString()}`);
-                
+
                 // 确保卡牌在正确的层级
                 card.node.setSiblingIndex(index);
             })
@@ -828,11 +839,11 @@ export class GameManager extends Component {
             if (i < selectedEffects.length) {
                 const effectNode = instantiate(this.sceneEffectPrefab);
                 const effect = effectNode.getComponent(SceneEffect);
-                
+
                 // 设置场景效果的父节点为对应的场地区域
                 effectNode.setParent(this.playAreas[i]);
                 effectNode.setPosition(Vec3.ZERO);
-                
+
                 // 初始化场景效果
                 effect.init(selectedEffects[i], this.playAreas[i]);
                 this.sceneEffects.push(effect);
@@ -898,7 +909,7 @@ export class GameManager extends Component {
 
     public isSameColor(cards: Card[]): boolean {
         if (!cards || cards.length === 0) return false;  // 添加空数组检查
-        
+
         // 过滤掉无效的卡牌
         const validCards = cards.filter(card => card && card.suit);
         if (validCards.length < this.sameColorRequirement) return false;
@@ -945,19 +956,19 @@ export class GameManager extends Component {
         console.log('=================== 出牌日志开始 ===================');
         console.log('playCard 方法被调用');
         console.log('参数检查：', { areaIndex, card: card ? '有效' : '无效' });
-        
+
         if (areaIndex < 0 || areaIndex >= this.playAreas.length) {
             console.error("Invalid play area index");
             return;
         }
 
         const playArea = this.playAreas[areaIndex];
-        
+
         // 从场地的SceneEffect组件中获取公共牌和场地效果信息
         const sceneEffect = this.sceneEffects[areaIndex];
         const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
 
-        console.log('场地检查：', { 
+        console.log('场地检查：', {
             playArea: playArea ? '有效' : '无效',
             totalChildren: playArea ? playArea.children.length : 0,
             publicCardsCount: publicCards.length,
@@ -1006,10 +1017,10 @@ export class GameManager extends Component {
 
         // 获取玩家打出的牌容器数量
         const playerCardContainers = playArea.children.filter(child => child.name === 'PlayerCard');
-        
+
         if (playerCardContainers.length < 4) {
             console.log('开始处理出牌');
-            
+
             // 从原位置移除卡牌
             card.node.removeFromParent();
 
@@ -1040,24 +1051,24 @@ export class GameManager extends Component {
 
             // 将卡牌添加到容器中
             cardContainer.addChild(card.node);
-            
+
             // 设置卡牌在容器中的位置和大小
             card.node.setPosition(Vec3.ZERO);
             card.node.setScale(0.5, 0.5, 1);
-            
+
             const cardTransform = card.node.getComponent(UITransform);
             if (cardTransform) {
                 cardTransform.setContentSize(120, 180);
             }
-            
+
             // 确保卡牌显示正面
             card.showCardFace();
-            
+
             // 记录出牌信息
             console.log(`出牌信息：`);
             console.log(`- 卡牌：${card.getRank()} ${card.getSuit()}`);
             console.log(`- 场地：${areaIndex + 1}号场地`);
-            
+
             // 获取更新后的公共牌信息（仍然从SceneEffect中获取）
             const updatedPublicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
             console.log(`- 更新后场地公共牌数量：${updatedPublicCards.length}`);
@@ -1067,16 +1078,16 @@ export class GameManager extends Component {
                     console.log(`  ${index + 1}. ${publicCard.getRank()} ${publicCard.getSuit()}`);
                 }
             });
-            
+
             // 记录出牌
             this.recordCardPlayed(card, areaIndex);
 
             // 重新计算场地区域的分数
             this.calculateAreaScore(areaIndex);
-            
+
             // 重新排列场地区域的卡牌
             this.arrangePlayArea(playArea);
-            
+
             console.log('出牌处理完成');
         } else {
             console.log('场地已满（已有4张卡牌），无法出牌');
@@ -1113,7 +1124,7 @@ export class GameManager extends Component {
 
         // 获取所有卡牌并保持原有顺序
         const cards = [...playerHand.children];
-        
+
         // 计算卡牌间距
         const cardWidth = 120 * 0.25; // 卡牌宽度（考虑缩放）
         const spacing = cardWidth * 2.3; // 卡牌间距（设为卡牌宽度的230%，实现更松散的堆叠效果）
@@ -1127,7 +1138,7 @@ export class GameManager extends Component {
                 // 设置卡牌位置
                 const x = startX + index * spacing;
                 cardNode.setPosition(x, 0, 0);
-                
+
                 // 确保卡牌显示正面
                 card.showCardFace();
             }
@@ -1142,7 +1153,7 @@ export class GameManager extends Component {
         // 分别获取公共牌和玩家打出的牌
         const publicCards = playArea.children.filter(child => child.name === 'PublicCard');
         const playerCards = playArea.children.filter(child => child.name === 'PlayerCard');
-        
+
         const cardWidth = 120 * 0.5;
         const spacing = 46;  // 修改为46
 
@@ -1182,18 +1193,18 @@ export class GameManager extends Component {
         }
 
         const scale = platformAdapter.getScreenScale();
-        
+
         // 调整卡牌大小
         if (this.playerHand && this.opponentHand) {
             const cardWidth = 120 * scale;  // 使用与玩家手牌相同的宽度
             const cardHeight = 180 * scale; // 使用与玩家手牌相同的高度
-            
+
             // 调整玩家手牌位置
             const playerHandTransform = this.playerHand.getComponent(UITransform);
             if (playerHandTransform) {
                 playerHandTransform.setContentSize(cardWidth * 5, cardHeight);
             }
-            
+
             // 调整对手手牌位置，使用与玩家手牌相同的尺寸
             const opponentHandTransform = this.opponentHand.getComponent(UITransform);
             if (opponentHandTransform) {
@@ -1238,37 +1249,114 @@ export class GameManager extends Component {
 
     // 设置换牌区域位置
     private setupExchangeAreaPosition() {
-        if (!this.playerHand || !this.exchangeArea || !this.background) {
-            console.error("PlayerHand, ExchangeArea or Background not found");
+        if (!this.exchangeArea || !this.background) {
+            console.error("ExchangeArea or Background not found");
             return;
         }
 
         // 获取背景节点的UITransform组件
         const backgroundTransform = this.background.node.getComponent(UITransform);
         const exchangeAreaTransform = this.exchangeArea.getComponent(UITransform);
-        
+
         if (!backgroundTransform || !exchangeAreaTransform) {
             console.error("Required UITransform components not found");
             return;
         }
 
-        // 计算右下角的位置（考虑背景尺寸和换牌区域尺寸）
-        const targetPos = new Vec3(
-            400, // 固定在右侧位置
-            -500, // 固定在下方位置，调整为更低的位置
-            0
-        );
-        
+        // 计算屏幕尺寸
+        const screenWidth = backgroundTransform.width;
+        const screenHeight = backgroundTransform.height;
+
+        // 计算右下角位置，留出极小边距
+        const margin = 5; // 非常小的边距
+
+        // 设置一个明显的缩放，确保可见
+        this.exchangeArea.setScale(1.2, 1.2, 1);
+
+        // 计算位置 - 向左下方向移动
+        const exchangeX = screenWidth / 2 - exchangeAreaTransform.width / 2 - margin - 120; // 进一步向左移动，增加额外空间
+        const exchangeY = -screenHeight / 2 + exchangeAreaTransform.height / 2 + margin - 10; // 向下移动，减小底部边距
+
         // 设置换牌区域的位置
-        this.exchangeArea.setPosition(targetPos);
-        
+        this.exchangeArea.setPosition(new Vec3(exchangeX, exchangeY, 0));
+
         // 确保换牌区域可见
         this.exchangeArea.active = true;
 
-        // 打印位置信息以便调试
-        console.log('Exchange area position set to:', targetPos.toString());
-        console.log('Exchange area size:', exchangeAreaTransform.width, exchangeAreaTransform.height);
-        console.log('Exchange area active:', this.exchangeArea.active);
+        console.log('Exchange area position set to:', this.exchangeArea.position.toString());
+    }
+
+    // 设置UI元素位置（结束回合按钮和计时器）
+    private setupUIElementsPosition() {
+        if (!this.background) {
+            console.error("Background not found");
+            return;
+        }
+
+        // 获取背景节点的UITransform组件
+        const backgroundTransform = this.background.node.getComponent(UITransform);
+        if (!backgroundTransform) {
+            console.error("Background UITransform not found");
+            return;
+        }
+
+        // 获取屏幕尺寸
+        const screenWidth = backgroundTransform.width;
+        const screenHeight = backgroundTransform.height;
+
+        // 设置结束回合按钮位置
+        if (this.endTurnButton && this.endTurnButton.node) {
+            // 获取按钮尺寸
+            const buttonTransform = this.endTurnButton.node.getComponent(UITransform);
+            if (!buttonTransform) {
+                console.error("End turn button UITransform not found");
+                return;
+            }
+
+            const buttonWidth = buttonTransform.width;
+            const buttonHeight = buttonTransform.height;
+
+            // 计算右下角位置，使按钮紧贴右下角
+            const margin = 5; // 非常小的边距，几乎紧贴边缘
+            const buttonX = screenWidth / 2 - buttonWidth / 2 - margin; // 右侧边缘减去极小边距
+            const buttonY = -screenHeight / 2 + buttonHeight / 2 + margin; // 底部边缘加上极小边距
+
+            // 设置按钮位置
+            this.endTurnButton.node.setPosition(new Vec3(buttonX, buttonY, 0));
+
+            // 确保按钮可见
+            this.endTurnButton.node.active = true;
+
+            console.log('End turn button position set to:', this.endTurnButton.node.position.toString());
+
+            // 设置计时器位置
+            if (this.timerLabel && this.timerLabel.node) {
+                // 获取计时器尺寸
+                const timerTransform = this.timerLabel.node.getComponent(UITransform);
+                if (!timerTransform) {
+                    console.error("Timer label UITransform not found");
+                    return;
+                }
+
+                const timerWidth = timerTransform.width;
+                const timerHeight = timerTransform.height;
+
+                // 获取结束回合按钮的位置
+                const buttonPos = this.endTurnButton.node.position;
+
+                // 计时器放在结束回合按钮正上方，X坐标相同
+                const timerX = buttonPos.x; // 与结束回合按钮相同的X坐标
+                const timerY = buttonPos.y + buttonHeight / 2 + timerHeight / 2 + 0; // 在结束回合按钮上方，无间距
+
+                // 设置计时器位置
+                this.timerLabel.node.setPosition(new Vec3(timerX, timerY, 0));
+
+                // 确保计时器可见
+                this.timerLabel.node.active = true;
+
+                console.log('Timer position set to:', this.timerLabel.node.position.toString());
+            }
+        }
     }
 
     // 设置场地区域位置
@@ -1295,21 +1383,21 @@ export class GameManager extends Component {
         this.playAreas.forEach((area, index) => {
             // 确保出牌区域可见
             area.active = true;
-            
+
             // 设置位置
             area.setPosition(new Vec3(startX + index * playAreaSpacing, 0, 0));
-            
+
             // 移除旧的分数标签（如果存在）
             const oldLabel = area.getChildByName('ScoreLabel');
             if (oldLabel) {
                 oldLabel.destroy();
             }
-            
+
             // 确保所有子节点可见
             area.children.forEach(child => {
                 child.active = true;
             });
-            
+
             console.log(`Play area ${index} positioned at (${startX + index * playAreaSpacing}, 0, 0) with scale ${screenScale}`);
         });
     }
@@ -1618,12 +1706,12 @@ export class GameManager extends Component {
     public markPlayAreaRevealed(areaIndex: number): void {
         if (areaIndex >= 0 && areaIndex < this.revealedAreas.length) {
             this.revealedAreas[areaIndex] = true;
-            
+
             // 更新UI显示
             if (this.playAreas[areaIndex]) {
                 // 可以添加一些视觉效果，比如高亮或动画
                 console.log(`Play area ${areaIndex} has been revealed`);
-                
+
                 // 如果有特殊效果，可以在这里添加
                 // 暂时注释掉，等待SceneEffect类实现playRevealEffect方法
                 // if (this.sceneEffects[areaIndex]) {
@@ -1687,22 +1775,22 @@ export class GameManager extends Component {
     private retrieveCard(card: Card, areaIndex: number) {
         // 获取卡牌的容器节点
         const cardContainer = card.node.parent;
-        
+
         // 从场地区域移除卡牌前，先重置其所有变换
         card.node.setScale(1.45, 1.45, 1);  // 进一步增加回收卡牌的缩放
         const cardTransform = card.node.getComponent(UITransform);
         if (cardTransform) {
             cardTransform.setContentSize(120, 180);  // 重置为原始尺寸
         }
-        
+
         // 从场地区域移除卡牌
         card.node.removeFromParent();
-        
+
         // 删除空的容器节点
         if (cardContainer) {
             cardContainer.destroy();
         }
-        
+
         // 从当前回合打出的牌列表中移除
         const playedCards = this.currentTurnPlayedCards.get(areaIndex);
         if (playedCards) {
@@ -1715,16 +1803,16 @@ export class GameManager extends Component {
         // 将卡牌添加回玩家手牌并设置正确的缩放
         this.playerHand.addChild(card.node);
         card.node.setScale(1.45, 1.45, 1);  // 进一步增加回收卡牌的缩放
-        
+
         // 重新排列玩家手牌
         this.arrangePlayerHand();
-        
+
         // 重新计算场地区域的分数
         this.calculateAreaScore(areaIndex);
-        
+
         // 重新排列场地区域的卡牌
         this.arrangePlayArea(this.playAreas[areaIndex]);
-        
+
         // 减少出牌次数
         this.cardsPlayedThisTurn--;
     }
@@ -1772,17 +1860,26 @@ export class GameManager extends Component {
     }
 
     // 结束当前回合
-    private endTurn() {
+    public endTurn() {
+        console.log("结束当前回合");
         this.stopTurnTimer();
-        
+
         // 重置回合状态
         this.resetCardPlayCount();
-        
-        // TODO: 在这里添加回合结束时的其他逻辑
-        // 例如：切换玩家、计算分数等
-        
+
+        // 计算所有场地的分数
+        for (let i = 0; i < this.playAreas.length; i++) {
+            this.calculateAreaScore(i);
+        }
+
         // 开始新回合
-        this.startNewTurn();
+        this.startNewRound();
+    }
+
+    // 结束回合按钮点击事件处理
+    public onEndTurnButtonClicked() {
+        console.log("结束回合按钮被点击");
+        this.endTurn();
     }
 
     // 开始新回合
@@ -1790,10 +1887,10 @@ export class GameManager extends Component {
         // 重置计时器
         this.remainingTime = this.turnTimeLimit;
         this.updateTimerDisplay();
-        
+
         // 重置回合状态
         this.resetCardPlayCount();
-        
+
         // 开始计时
         this.startTurnTimer();
     }
@@ -1868,4 +1965,4 @@ export class GameManager extends Component {
     public getExchangeCount(): number {
         return this._exchangeCount;
     }
-} 
+}
