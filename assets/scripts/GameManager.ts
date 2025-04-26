@@ -122,7 +122,18 @@ export class GameManager extends Component {
 
         // 设置结束回合按钮点击事件
         if (this.endTurnButton) {
+            // 先移除可能存在的旧事件监听器，防止重复绑定
+            this.endTurnButton.node.off(Button.EventType.CLICK);
+
+            // 重新绑定点击事件
             this.endTurnButton.node.on(Button.EventType.CLICK, this.onEndTurnButtonClicked, this);
+
+            // 确保按钮可交互
+            this.endTurnButton.interactable = true;
+
+            console.log("结束回合按钮事件已绑定");
+        } else {
+            console.error("结束回合按钮未找到");
         }
 
         // 初始化出牌次数
@@ -521,7 +532,7 @@ export class GameManager extends Component {
     }
 
     // 执行理牌动画
-    private performShuffleAnimation(cardSpacing: number) {
+    private performShuffleAnimation(_cardSpacing: number) {
         console.log("Starting shuffle animation");
 
         // 获取所有玩家和对手的卡牌
@@ -1338,7 +1349,7 @@ export class GameManager extends Component {
                     return;
                 }
 
-                const timerWidth = timerTransform.width;
+                // 获取计时器高度用于定位
                 const timerHeight = timerTransform.height;
 
                 // 获取结束回合按钮的位置
@@ -1495,11 +1506,14 @@ export class GameManager extends Component {
         console.log(`- 详情：\n${this.areaScoreDetails[areaIndex]}`);
     }
 
+    // 注释掉未使用的方法，如果将来需要可以取消注释
+    /*
     // 重新计算场地区域的分数和牌型
     private recalculateAreaScoreAndHandType(areaIndex: number) {
         // 直接调用calculateAreaScore方法进行完整的分数计算
         this.calculateAreaScore(areaIndex);
     }
+    */
 
     // 更新指定场地的分数显示
     private updateAreaScoreLabel(areaIndex: number) {
@@ -1852,9 +1866,19 @@ export class GameManager extends Component {
         if (!this.isTimerRunning) return;
 
         this.remainingTime--;
+
+        // 确保时间不会变成负数
+        if (this.remainingTime < 0) {
+            this.remainingTime = 0;
+        }
+
         this.updateTimerDisplay();
 
         if (this.remainingTime <= 0) {
+            console.log("计时器归零，结束回合");
+            // 停止计时器，防止多次调用endTurn
+            this.stopTurnTimer();
+            // 结束回合
             this.endTurn();
         }
     }
@@ -1874,12 +1898,23 @@ export class GameManager extends Component {
 
         // 开始新回合
         this.startNewRound();
+
+        // 重置并启动计时器
+        this.startNewTurn();
     }
 
     // 结束回合按钮点击事件处理
     public onEndTurnButtonClicked() {
         console.log("结束回合按钮被点击");
+
+        // 确保计时器停止
+        this.stopTurnTimer();
+
+        // 调用结束回合方法
         this.endTurn();
+
+        // 添加调试信息
+        console.log("回合已结束，新回合开始");
     }
 
     // 开始新回合
