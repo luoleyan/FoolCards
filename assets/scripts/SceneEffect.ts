@@ -442,11 +442,24 @@ export class SceneEffect extends Component {
         switch (this._effectType) {
             case SceneEffectType.JQKBonus:
                 // J、Q、K额外加15分
-                this._publicCards.forEach(card => {
-                    if ([CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1) {
-                        gameManager.addScoreToArea(areaIndex, 15, 'JQK奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算JQK奖励
+                    allCards.forEach(card => {
+                        if ([CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1) {
+                            gameManager.addScoreToArea(areaIndex, 15, 'JQK奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.FourCardSameColor:
@@ -479,67 +492,197 @@ export class SceneEffect extends Component {
 
             case SceneEffectType.A2358Bonus:
                 // A、2、3、5、8额外加15分
-                this._publicCards.forEach(card => {
-                    if ([CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Five, CardRank.Eight].indexOf(card.rank) !== -1) {
-                        gameManager.addScoreToArea(areaIndex, 15, 'A2358奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算A2358奖励
+                    allCards.forEach(card => {
+                        if ([CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Five, CardRank.Eight].indexOf(card.rank) !== -1) {
+                            gameManager.addScoreToArea(areaIndex, 15, 'A2358奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.KBonus:
                 // K额外加25分
-                this._publicCards.forEach(card => {
-                    if (card.rank === CardRank.King) {
-                        gameManager.addScoreToArea(areaIndex, 25, 'K奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算K奖励
+                    allCards.forEach(card => {
+                        if (card.rank === CardRank.King) {
+                            gameManager.addScoreToArea(areaIndex, 25, 'K奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.EvenStarBonus:
                 // 包含偶星额外加15分
-                if (this._publicCards.some(card => card.rank === CardRank.Two || card.rank === CardRank.Four ||
-                    card.rank === CardRank.Six || card.rank === CardRank.Eight || card.rank === CardRank.Ten)) {
-                    gameManager.addScoreToArea(areaIndex, 15, '偶星奖励');
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 检查是否有特殊牌型
+                    const specialHand = gameManager.specialHandsManager.checkSpecialHand(allCards);
+
+                    // 检查是否包含偶星牌型（PAIR、TWO_PAIRS、FULL_HOUSE、FOUR_OF_A_KIND）
+                    const hasPairType = specialHand &&
+                        (specialHand.type === 10 || // PAIR
+                         specialHand.type === 9 ||  // TWO_PAIRS
+                         specialHand.type === 6 ||  // FULL_HOUSE
+                         specialHand.type === 4);   // FOUR_OF_A_KIND
+
+                    // 检查是否包含偶数牌（2、4、6、8、10）
+                    const hasEvenCard = allCards.some(card =>
+                        [CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1);
+
+                    // 如果有偶星牌型或偶数牌，应用奖励
+                    if (hasPairType || hasEvenCard) {
+                        console.log("应用偶星奖励：", hasPairType ? "检测到偶星牌型" : "检测到偶数牌");
+                        gameManager.addScoreToArea(areaIndex, 15, '偶星奖励');
+                    } else {
+                        console.log("不应用偶星奖励：没有检测到偶星牌型或偶数牌");
+                    }
                 }
                 break;
 
             case SceneEffectType.NoTypeBonus:
                 // 无牌型时每张牌加15分
-                if (!gameManager.hasValidType(this._publicCards)) {
-                    this._publicCards.forEach(() => gameManager.addScoreToArea(areaIndex, 15, '无型奖励'));
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 检查是否有特殊牌型
+                    const specialHand = gameManager.specialHandsManager.checkSpecialHand(allCards);
+
+                    // 只有在没有任何牌型时才应用无型奖励
+                    if (!gameManager.hasValidType(allCards) && !specialHand) {
+                        console.log("应用无型奖励：没有检测到任何牌型");
+                        allCards.forEach(() => gameManager.addScoreToArea(areaIndex, 15, '无型奖励'));
+                    } else {
+                        console.log("不应用无型奖励：检测到牌型");
+                        if (gameManager.hasValidType(allCards)) {
+                            console.log("- 检测到基本牌型（顺子或同色）");
+                        }
+                        if (specialHand) {
+                            console.log(`- 检测到特殊牌型：${specialHand.name}`);
+                        }
+                    }
                 }
                 break;
 
             case SceneEffectType.ClubBonus:
                 // 每张梅花加15分
-                this._publicCards.forEach(card => {
-                    if (card.suit === CardSuit.Club) {
-                        gameManager.addScoreToArea(areaIndex, 15, '梅花奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算梅花奖励
+                    allCards.forEach(card => {
+                        if (card.suit === CardSuit.Club) {
+                            gameManager.addScoreToArea(areaIndex, 15, '梅花奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.SpadeBonus:
                 // 每张黑桃加15分
-                this._publicCards.forEach(card => {
-                    if (card.suit === CardSuit.Spade) {
-                        gameManager.addScoreToArea(areaIndex, 15, '黑桃奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算黑桃奖励
+                    allCards.forEach(card => {
+                        if (card.suit === CardSuit.Spade) {
+                            gameManager.addScoreToArea(areaIndex, 15, '黑桃奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.DiamondBonus:
                 // 每张方块加15分
-                this._publicCards.forEach(card => {
-                    if (card.suit === CardSuit.Diamond) {
-                        gameManager.addScoreToArea(areaIndex, 15, '方块奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算方块奖励
+                    allCards.forEach(card => {
+                        if (card.suit === CardSuit.Diamond) {
+                            gameManager.addScoreToArea(areaIndex, 15, '方块奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.HeartBonus:
                 // 每张红桃加15分
-                this._publicCards.forEach(card => {
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                const playArea = gameManager.playAreas[areaIndex];
+                const playerCards = playArea.children
+                    .filter(child => child.name === 'PlayerCard')
+                    .map(container => container.getComponentInChildren(Card))
+                    .filter(card => card !== null);
+
+                // 合并公共牌和玩家打出的牌
+                const allCards = [...this._publicCards, ...playerCards];
+
+                // 计算红桃奖励
+                allCards.forEach(card => {
                     if (card.suit === CardSuit.Heart) {
                         gameManager.addScoreToArea(areaIndex, 15, '红桃奖励');
                     }
@@ -548,20 +691,46 @@ export class SceneEffect extends Component {
 
             case SceneEffectType.EvenBonus:
                 // 每张偶数牌加15分
-                this._publicCards.forEach(card => {
-                    if ([CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1) {
-                        gameManager.addScoreToArea(areaIndex, 15, '偶数奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算偶数牌奖励
+                    allCards.forEach(card => {
+                        if ([CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1) {
+                            gameManager.addScoreToArea(areaIndex, 15, '偶数奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.OddBonus:
                 // 每张奇数牌加15分
-                this._publicCards.forEach(card => {
-                    if ([CardRank.Ace, CardRank.Three, CardRank.Five, CardRank.Seven, CardRank.Nine].indexOf(card.rank) !== -1) {
-                        gameManager.addScoreToArea(areaIndex, 15, '奇数奖励');
-                    }
-                });
+                // 获取场地中的所有卡牌（包括公共牌和玩家打出的牌）
+                {
+                    const playArea = gameManager.playAreas[areaIndex];
+                    const playerCards = playArea.children
+                        .filter(child => child.name === 'PlayerCard')
+                        .map(container => container.getComponentInChildren(Card))
+                        .filter(card => card !== null);
+
+                    // 合并公共牌和玩家打出的牌
+                    const allCards = [...this._publicCards, ...playerCards];
+
+                    // 计算奇数牌奖励
+                    allCards.forEach(card => {
+                        if ([CardRank.Ace, CardRank.Three, CardRank.Five, CardRank.Seven, CardRank.Nine].indexOf(card.rank) !== -1) {
+                            gameManager.addScoreToArea(areaIndex, 15, '奇数奖励');
+                        }
+                    });
+                }
                 break;
 
             case SceneEffectType.SequenceChain:

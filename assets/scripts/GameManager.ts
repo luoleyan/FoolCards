@@ -61,7 +61,7 @@ export class GameManager extends Component {
     private maxExchangeCount: number = 12;  // 最大换牌次数
     private _revealedEffects: number = 0;
 
-    private specialHandsManager: SpecialHandsManager;
+    public specialHandsManager: SpecialHandsManager;
     private playerScore: number = 0;
     private opponentScore: number = 0;
     private areaScores: number[] = [0, 0, 0];  // 每个场地的分数
