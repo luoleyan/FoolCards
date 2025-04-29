@@ -1,4 +1,4 @@
-# Joker Cards
+# FoolCards
 
 一个基于Cocos Creator开发的卡牌游戏，玩家可以通过组合不同的卡牌获得分数。
 
@@ -27,7 +27,7 @@
 1. 克隆仓库
 
    ```bash
-   git clone https://github.com/你的用户名/JokerCards.git
+   git clone https://github.com/luoleyan/FoolCards.git
    ```
 
 2. 使用Cocos Creator打开项目
