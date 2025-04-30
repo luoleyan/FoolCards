@@ -135,8 +135,23 @@ export class SceneEffect extends Component {
                         cardNode.active = true;
                         const card = cardNode.getComponent(Card);
                         if (card) {
-                            // 立即显示卡牌正面
-                            card.showCardFace();
+                            // 确保卡牌精灵组件已设置
+                            if (!card.cardSprite) {
+                                console.warn('Card sprite component is missing, trying to recreate it');
+                                const sprite = cardNode.getComponent(Sprite);
+                                if (sprite) {
+                                    card.cardSprite = sprite;
+                                } else {
+                                    const newSprite = cardNode.addComponent(Sprite);
+                                    card.cardSprite = newSprite;
+                                }
+                            }
+
+                            // 使用Promise处理卡牌显示
+                            card.showCardFace()
+                                .catch(err => {
+                                    console.error('Error showing card face:', err);
+                                });
                         }
                     }
                 }
@@ -222,14 +237,37 @@ export class SceneEffect extends Component {
 
             // 添加卡牌组件
             const card = cardNode.addComponent(Card);
-            const sprite = cardNode.addComponent(Sprite);
+
+            // 添加UITransform组件
+            const uiTransform = cardNode.getComponent(UITransform);
+            if (!uiTransform) {
+                cardNode.addComponent(UITransform).setContentSize(120, 180);
+            }
+
+            // 添加Sprite组件
+            let sprite = cardNode.getComponent(Sprite);
+            if (!sprite) {
+                sprite = cardNode.addComponent(Sprite);
+            }
+
+            // 设置Card组件的精灵引用
             card.cardSprite = sprite;
 
             // 随机生成卡牌
             const suit = this.getRandomSuit();
             const rank = this.getRandomRank();
-            card.init(suit, rank);
-            card.showCardBackSync();
+
+            // 使用Promise初始化卡牌
+            card.init(suit, rank)
+                .then(() => {
+                    // 初始化完成后显示卡牌背面
+                    return card.showCardBack();
+                })
+                .catch(err => {
+                    console.error('Error initializing public card:', err);
+                    // 出错时使用同步方法显示背面
+                    card.showCardBackSync();
+                });
 
             // 设置卡牌容器的位置
             const x = (i - 0.5) * (this._cardWidth * 0.15 + this._cardSpacing * 0.15 + 50); // 增加50的额外间距
@@ -257,10 +295,33 @@ export class SceneEffect extends Component {
 
             // 添加大王牌组件
             const joker = jokerNode.addComponent(Card);
-            const sprite = jokerNode.addComponent(Sprite);
+
+            // 添加UITransform组件
+            const uiTransform = jokerNode.getComponent(UITransform);
+            if (!uiTransform) {
+                jokerNode.addComponent(UITransform).setContentSize(120, 180);
+            }
+
+            // 添加Sprite组件
+            let sprite = jokerNode.getComponent(Sprite);
+            if (!sprite) {
+                sprite = jokerNode.addComponent(Sprite);
+            }
+
+            // 设置Card组件的精灵引用
             joker.cardSprite = sprite;
-            joker.init(CardSuit.Joker, CardRank.JokerB);
-            joker.showCardBackSync();
+
+            // 使用Promise初始化卡牌
+            joker.init(CardSuit.Joker, CardRank.JokerB)
+                .then(() => {
+                    // 初始化完成后显示卡牌背面
+                    return joker.showCardBack();
+                })
+                .catch(err => {
+                    console.error('Error initializing joker card:', err);
+                    // 出错时使用同步方法显示背面
+                    joker.showCardBackSync();
+                });
 
             // 设置大王牌容器的位置
             const x = (this._publicCards.length - 0.5) * (this._cardWidth * 0.15 + this._cardSpacing * 0.15 + 50);
@@ -317,8 +378,23 @@ export class SceneEffect extends Component {
                                         cardNode.active = true;
                                         const card = cardNode.getComponent(Card);
                                         if (card) {
-                                            // 播放卡牌翻转动画
-                                            card.showCardFace();
+                                            // 确保卡牌精灵组件已设置
+                                            if (!card.cardSprite) {
+                                                console.warn('Card sprite component is missing in animation, trying to recreate it');
+                                                const sprite = cardNode.getComponent(Sprite);
+                                                if (sprite) {
+                                                    card.cardSprite = sprite;
+                                                } else {
+                                                    const newSprite = cardNode.addComponent(Sprite);
+                                                    card.cardSprite = newSprite;
+                                                }
+                                            }
+
+                                            // 使用Promise处理卡牌显示
+                                            card.showCardFace()
+                                                .catch(err => {
+                                                    console.error('Error showing card face in animation:', err);
+                                                });
                                         }
                                     }
                                 }

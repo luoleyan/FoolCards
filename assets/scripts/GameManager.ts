@@ -6,6 +6,7 @@ import { SceneEffect, SceneEffectType } from './SceneEffect';
 import { PlatformAdapter } from './PlatformAdapter';
 import { SpecialHandsPopup } from './SpecialHandsPopup';
 import { GameOverPopup } from './GameOverPopup';
+import { AIOpponent } from './AIOpponent';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
@@ -92,6 +93,9 @@ export class GameManager extends Component {
 
     private currentTurnPlayedCards: Map<number, Card[]> = new Map(); // 记录每个场地区域当前回合打出的牌
 
+    // AI机器人组件
+    private aiOpponent: AIOpponent = null;
+
     private _exchangeCount: number = 12;  // 换牌次数
 
     start() {
@@ -164,6 +168,9 @@ export class GameManager extends Component {
 
             // 初始化场景效果
             this.initSceneEffects();
+
+            // 初始化AI对手
+            this.initAIOpponent();
 
             // 初始化游戏
             this.initGame();
@@ -658,6 +665,12 @@ export class GameManager extends Component {
 
         // 更新换牌次数显示
         this.updateExchangeCountLabel();
+
+        // 在新回合开始时，只清除AI机器人上一回合的内部记录
+        // 但不清除显示的卡牌，让它们像玩家打出的牌一样常驻在场地上
+        if (this.aiOpponent) {
+            this.aiOpponent.clearPlayedCardsRecord();
+        }
 
         // 卡牌宽度（实际宽度乘以缩放比例）
         const cardWidth = 120 * 0.25;
@@ -1875,6 +1888,9 @@ export class GameManager extends Component {
         this.cardsPlayedThisTurn = 0;
         this.extraPlayCount = 0;
         this.currentTurnPlayedCards.clear(); // 清空当前回合打出的牌记录
+
+        // 不清除AI出牌记录，因为需要在回合结束时展示
+        // 在startNewRound方法中会清除AI出牌记录
     }
 
     // 更新计时器显示
@@ -1922,6 +1938,36 @@ export class GameManager extends Component {
         }
     }
 
+    // 初始化AI对手
+    private initAIOpponent() {
+        console.log("开始初始化AI对手");
+
+        // 检查是否已经有AI对手组件
+        this.aiOpponent = this.getComponent(AIOpponent);
+        if (!this.aiOpponent) {
+            // 如果没有，添加AI对手组件
+            this.aiOpponent = this.addComponent(AIOpponent);
+            console.log("添加了AIOpponent组件");
+        }
+
+        // 检查对手手牌区域和场地区域是否存在
+        if (!this.opponentHand) {
+            console.error("对手手牌区域未设置");
+            return;
+        }
+
+        if (!this.playAreas || this.playAreas.length === 0) {
+            console.error("场地区域未设置或为空");
+            return;
+        }
+
+        console.log(`对手手牌区域: ${this.opponentHand.name}, 场地区域数量: ${this.playAreas.length}`);
+
+        // 初始化AI对手
+        this.aiOpponent.init(this, this.opponentHand, this.playAreas);
+        console.log("AI对手初始化完成");
+    }
+
     // 结束当前回合
     public endTurn() {
         console.log("结束当前回合");
@@ -1930,16 +1976,40 @@ export class GameManager extends Component {
         // 重置回合状态
         this.resetCardPlayCount();
 
+        // AI机器人出牌
+        if (this.aiOpponent) {
+            this.aiOpponent.playCards(this.maxCardsPerTurn);
+            // AI出牌信息现在直接由AIOpponent类显示，不需要再调用displayAIPlayedCards
+        } else {
+            console.error("AI对手组件未初始化");
+        }
+
         // 计算所有场地的分数
         for (let i = 0; i < this.playAreas.length; i++) {
             this.calculateAreaScore(i);
         }
 
-        // 开始新回合
+        // 直接开始新回合，不需要延迟
+        // 因为AI打出的牌会常驻显示在场地上
         this.startNewRound();
 
         // 重置并启动计时器
         this.startNewTurn();
+    }
+
+    // 注意：displayAIPlayedCards方法已被移除，AI出牌信息现在直接由AIOpponent类显示
+
+    // 清除所有场地区域中的AI出牌信息（仅在游戏结束时使用）
+    private clearAllAICards() {
+        console.log("开始清除所有AI卡牌");
+
+        // 使用AIOpponent的方法清除所有AI卡牌容器
+        if (this.aiOpponent) {
+            this.aiOpponent.removeAllCardContainers();
+            console.log("已清除所有AI卡牌显示");
+        } else {
+            console.error("AI对手组件未初始化，无法清除AI卡牌显示");
+        }
     }
 
     // 结束回合按钮点击事件处理
@@ -1964,6 +2034,9 @@ export class GameManager extends Component {
 
         // 重置回合状态
         this.resetCardPlayCount();
+
+        // 注意：AI出牌信息现在由AIOpponent类管理
+        // AI打出的牌会像玩家打出的牌一样常驻在场地上，不需要清除
 
         // 开始计时
         this.startTurnTimer();
@@ -2046,6 +2119,10 @@ export class GameManager extends Component {
     private showGameOver() {
         console.log("显示游戏结束弹窗");
         console.log(`基础分数 - 玩家: ${this.playerScore}, 对手: ${this.opponentScore}`);
+
+        // 清理AI卡牌
+        console.log("清理AI机器人卡牌");
+        this.clearAllAICards();
 
         // 计算最终分数（包括所有场地分数）
         let finalPlayerScore = this.playerScore;

@@ -82,7 +82,7 @@ export class Card extends Component {
     start() {
         // 在组件启动时就预加载背面图片
         Card.preloadCardBack();
-        
+
         // 添加触摸事件监听
         this.node.on(Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.node.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
@@ -107,15 +107,15 @@ export class Card extends Component {
             console.warn('Only Joker cards can be transformed');
             return;
         }
-        
+
         // 记录原始的万能牌信息
         const originalSuit = this._suit;
         const originalRank = this._rank;
-        
+
         // 更新卡牌信息
         this._suit = suit;
         this._rank = rank;
-        
+
         // 详细的换牌日志
         console.log('=== 万能牌转换详情 ===');
         console.log(`原始牌: ${this.getJokerDescription(originalSuit, originalRank)}`);
@@ -224,12 +224,18 @@ export class Card extends Component {
                             reject(err);
                             return;
                         }
-                        if (this.cardSprite) {
-                            this.cardSprite.spriteFrame = spriteFrame;
-                            resolve();
-                        } else {
-                            reject(new Error('Card sprite component is missing after loading sprite frame!'));
+                        // 如果Sprite组件丢失，尝试重新添加
+                        if (!this.cardSprite) {
+                            console.warn('Card sprite component is missing after loading joker sprite, trying to recreate it');
+                            this.cardSprite = this.getComponent(Sprite);
+                            if (!this.cardSprite) {
+                                this.cardSprite = this.addComponent(Sprite);
+                                console.log('Created new Sprite component for joker card');
+                            }
                         }
+
+                        this.cardSprite.spriteFrame = spriteFrame;
+                        resolve();
                     });
                     return;
                 }
@@ -242,12 +248,38 @@ export class Card extends Component {
                         reject(err);
                         return;
                     }
-                    if (this.cardSprite) {
-                        this.cardSprite.spriteFrame = spriteFrame;
-                        resolve();
-                    } else {
-                        reject(new Error('Card sprite component is missing after loading sprite frame!'));
+                    // 如果Sprite组件丢失，尝试重新添加
+                    if (!this.cardSprite) {
+                        console.warn('Card sprite component is missing after loading card sprite, trying to recreate it');
+                        // 检查节点是否有效
+                        if (!this.node || !this.isValid) {
+                            console.error('Card node is invalid, cannot recreate sprite component');
+                            reject(new Error('Card node is invalid'));
+                            return;
+                        }
+
+                        try {
+                            this.cardSprite = this.getComponent(Sprite);
+                            if (!this.cardSprite) {
+                                this.cardSprite = this.addComponent(Sprite);
+                                console.log('Created new Sprite component for normal card');
+                            }
+                        } catch (error) {
+                            console.error('Error recreating sprite component:', error);
+                            reject(error);
+                            return;
+                        }
                     }
+
+                    // 再次检查cardSprite是否有效
+                    if (!this.cardSprite) {
+                        console.error('Failed to recreate sprite component');
+                        reject(new Error('Failed to recreate sprite component'));
+                        return;
+                    }
+
+                    this.cardSprite.spriteFrame = spriteFrame;
+                    resolve();
                 });
             } else {
                 // 显示背面
@@ -264,13 +296,19 @@ export class Card extends Component {
                             reject(err);
                             return;
                         }
-                        if (this.cardSprite) {
-                            this.cardSprite.spriteFrame = spriteFrame;
-                            Card.cardBackSprite = spriteFrame;
-                            resolve();
-                        } else {
-                            reject(new Error('Card sprite component is missing when showing back!'));
+                        // 如果Sprite组件丢失，尝试重新添加
+                        if (!this.cardSprite) {
+                            console.warn('Card sprite component is missing when showing back, trying to recreate it');
+                            this.cardSprite = this.getComponent(Sprite);
+                            if (!this.cardSprite) {
+                                this.cardSprite = this.addComponent(Sprite);
+                                console.log('Created new Sprite component for card back');
+                            }
                         }
+
+                        this.cardSprite.spriteFrame = spriteFrame;
+                        Card.cardBackSprite = spriteFrame;
+                        resolve();
                     });
                 }
             }
@@ -279,9 +317,33 @@ export class Card extends Component {
 
     // 显示卡牌正面
     public showCardFace(): Promise<void> {
-        if (!this.cardSprite) {
-            return Promise.reject(new Error('Cannot show card face: sprite component is missing!'));
+        // 检查节点是否有效
+        if (!this.node || !this.isValid) {
+            console.error('Card node is invalid in showCardFace');
+            return Promise.reject(new Error('Card node is invalid'));
         }
+
+        // 如果Sprite组件丢失，尝试重新添加
+        if (!this.cardSprite) {
+            console.warn('Card sprite component is missing, trying to recreate it');
+            try {
+                this.cardSprite = this.getComponent(Sprite);
+                if (!this.cardSprite) {
+                    this.cardSprite = this.addComponent(Sprite);
+                    console.log('Created new Sprite component for card');
+                }
+            } catch (error) {
+                console.error('Error recreating sprite component in showCardFace:', error);
+                return Promise.reject(error);
+            }
+        }
+
+        // 再次检查cardSprite是否有效
+        if (!this.cardSprite) {
+            console.error('Failed to recreate sprite component in showCardFace');
+            return Promise.reject(new Error('Failed to recreate sprite component'));
+        }
+
         this._isFaceUp = true;
         return this.updateCardSprite();
     }
@@ -297,13 +359,18 @@ export class Card extends Component {
 
     // 同步显示卡牌背面
     public showCardBackSync() {
+        // 如果Sprite组件丢失，尝试重新添加
         if (!this.cardSprite) {
-            console.error('Cannot show card back sync: sprite component is missing!');
-            return;
+            console.warn('Card sprite component is missing in showCardBackSync, trying to recreate it');
+            this.cardSprite = this.getComponent(Sprite);
+            if (!this.cardSprite) {
+                this.cardSprite = this.addComponent(Sprite);
+                console.log('Created new Sprite component for card back sync');
+            }
         }
-        
+
         this._isFaceUp = false;
-        
+
         // 设置卡牌缩放和尺寸
         if (this.node) {
             this.node.setScale(0.25, 0.25, 1);
@@ -312,40 +379,53 @@ export class Card extends Component {
                 uiTransform.setContentSize(120, 180);
             }
         }
-        
-        // 使用预加载的背面图片
-        if (Card.cardBackSprite) {
-            this.cardSprite.spriteFrame = Card.cardBackSprite;
-        } else if (this.cardBack) {
-            this.cardSprite.spriteFrame = this.cardBack;
-        } else {
-            resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
-                if (err) {
-                    console.error('Failed to load card back sprite:', err);
-                    return;
-                }
-                if (this.cardSprite) {
+
+        try {
+            // 使用预加载的背面图片
+            if (Card.cardBackSprite) {
+                this.cardSprite.spriteFrame = Card.cardBackSprite;
+            } else if (this.cardBack) {
+                this.cardSprite.spriteFrame = this.cardBack;
+            } else {
+                resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                    if (err) {
+                        console.error('Failed to load card back sprite:', err);
+                        return;
+                    }
+
+                    // 再次检查Sprite组件是否存在
+                    if (!this.cardSprite) {
+                        console.warn('Card sprite component is missing after loading back sprite, trying to recreate it');
+                        this.cardSprite = this.getComponent(Sprite);
+                        if (!this.cardSprite) {
+                            this.cardSprite = this.addComponent(Sprite);
+                            console.log('Created new Sprite component for card back after loading');
+                        }
+                    }
+
                     this.cardSprite.spriteFrame = spriteFrame;
                     Card.cardBackSprite = spriteFrame;
-                }
-            });
+                });
+            }
+        } catch (error) {
+            console.error('Error in showCardBackSync:', error);
         }
     }
 
     // 触摸开始事件
     private onTouchStart(event: EventTouch) {
         console.log('Touch start event triggered');
-        
+
         // 获取父节点名称
         const parentName = this.node.parent ? this.node.parent.name : '';
         console.log('Parent node name:', parentName);
-        
+
         // 如果是对手的卡牌，只显示背面
         if (parentName === 'OpponentHand') {
             this.showCardBackSync();
             return;
         }
-        
+
         // 如果是玩家手牌，允许拖动
         if (parentName === 'PlayerHand') {
             console.log('Starting drag on player card');
@@ -356,13 +436,13 @@ export class Card extends Component {
             // 计算拖拽偏移量
             const touchPos = event.getLocation();
             const camera = director.getScene().getComponentInChildren(Camera);
-            
+
             if (camera) {
                 // 将触摸位置转换为世界坐标
                 const worldPos = camera.screenToWorld(new Vec3(touchPos.x, touchPos.y, 0));
                 // 将世界坐标转换为节点本地坐标
                 const localPos = this.node.parent.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
-                
+
                 // 计算偏移量（节点位置减去触摸位置）
                 this._dragOffset = new Vec3(
                     this.node.position.x - localPos.x,
@@ -388,13 +468,13 @@ export class Card extends Component {
 
         console.log('Touch move event triggered');
         const touchPos = event.getLocation();
-        
+
         // 将触摸位置转换为节点本地坐标
         const camera = director.getScene().getComponentInChildren(Camera);
         if (camera) {
             const worldPos = camera.screenToWorld(new Vec3(touchPos.x, touchPos.y, 0));
             const localPos = this.node.parent.getComponent(UITransform).convertToNodeSpaceAR(worldPos);
-            
+
             // 应用拖拽偏移量
             this.node.setPosition(
                 localPos.x + this._dragOffset.x,
@@ -414,13 +494,13 @@ export class Card extends Component {
     // 触摸结束事件
     private onTouchEnd(event: EventTouch) {
         console.log('Touch ended');
-        
+
         if (!this._isDragging) {
             return;
         }
-        
+
         this._isDragging = false;
-        
+
         // 获取游戏管理器
         const gameManager = director.getScene().getComponentInChildren(GameManager);
         if (!gameManager) {
@@ -442,7 +522,7 @@ export class Card extends Component {
             if (exchangeAreaTransform) {
                 const cardRect = cardTransform.getBoundingBoxToWorld();
                 const exchangeAreaRect = exchangeAreaTransform.getBoundingBoxToWorld();
-                
+
                 if (this.isOverlapping(cardRect, exchangeAreaRect)) {
                     console.log('Card overlaps with exchange area');
                     // 检查是否还有换牌次数
@@ -464,36 +544,36 @@ export class Card extends Component {
             this.returnToOriginalPosition();
             return;
         }
-        
+
         // 检查是否与任何场地区域重叠
         const playAreas = gameManager.playAreas;
         console.log(`Found ${playAreas.length} play areas`);
-        
+
         for (let i = 0; i < playAreas.length; i++) {
             const playArea = playAreas[i];
             if (!playArea) {
                 console.log(`Play area ${i} is null`);
                 continue;
             }
-            
+
             // 获取场地区域的UITransform组件
             const areaTransform = playArea.getComponent(UITransform);
             if (!areaTransform) {
                 console.log(`Play area ${i} has no UITransform component`);
                 continue;
             }
-            
+
             // 计算重叠
             const cardRect = cardTransform.getBoundingBoxToWorld();
             const areaRect = areaTransform.getBoundingBoxToWorld();
-            
+
             console.log(`Checking overlap with play area ${i}:`);
             console.log(`Card rect: ${JSON.stringify(cardRect)}`);
             console.log(`Area rect: ${JSON.stringify(areaRect)}`);
-            
+
             if (this.isOverlapping(cardRect, areaRect)) {
                 console.log(`Card overlaps with play area ${i}`);
-                
+
                 // 检查场地区域是否已经翻开
                 if (gameManager.isPlayAreaRevealed(i)) {
                     console.log(`Play area ${i} is revealed, playing card`);
@@ -514,7 +594,7 @@ export class Card extends Component {
                 }
             }
         }
-        
+
         // 如果没有与任何区域重叠，返回原位
         console.log('No overlap with any area, returning to original position');
         this.returnToOriginalPosition();
@@ -529,7 +609,7 @@ export class Card extends Component {
     // 将卡牌放置到场地区域
     private playCardToArea(playArea: Node, areaIndex: number, gameManager: GameManager) {
         console.log('Starting playCardToArea');
-        
+
         // 从玩家手牌中移除卡牌
         if (this.node.parent && this.node.parent.name === 'PlayerHand') {
             console.log('Removing card from player hand');
@@ -559,7 +639,7 @@ export class Card extends Component {
         // 计算水平位置（基于已有的卡牌数量）
         const existingContainers = playArea.children.filter(child => child.name === 'CardContainer');
         const cardIndex = existingContainers.length - 1;  // 减1是因为我们刚刚添加了新的容器
-        
+
         // 计算水平偏移
         const totalWidth = cardIndex * (cardWidth * 0.5 + spacing);  // 考虑缩放后的卡牌宽度
         const startX = -(totalWidth / 2);  // 居中起始位置
@@ -570,20 +650,20 @@ export class Card extends Component {
 
         // 将卡牌添加到容器中
         cardContainer.addChild(this.node);
-        
+
         // 设置卡牌在容器中的位置和大小
         this.node.setPosition(Vec3.ZERO);  // 相对于容器的位置为原点
         this.node.setScale(0.5, 0.5, 1);   // 缩小卡牌尺寸
-        
+
         const cardTransform = this.node.getComponent(UITransform);
         if (cardTransform) {
             cardTransform.setContentSize(120, 180);  // 设置原始大小
         }
-        
+
         // 确保卡牌显示正面
         console.log('Showing card face');
         this.showCardFace();
-        
+
         // 获取场地区域中的所有卡牌
         console.log('Getting all cards in play area');
         const cards: Card[] = [];
@@ -593,17 +673,17 @@ export class Card extends Component {
                 cards.push(card);
             }
         });
-        
+
         console.log(`Found ${cards.length} cards in play area`);
-        
+
         // 计算并更新场地区域的分数
         console.log('Calculating area score');
         gameManager.calculateAreaScore(areaIndex);
-        
+
         // 重新排列玩家手牌
         console.log('Arranging player hand');
         gameManager.arrangePlayerHand();
-        
+
         console.log('playCardToArea completed');
     }
 
@@ -631,7 +711,7 @@ export class Card extends Component {
             // 设置卡牌位置（x轴居中，y轴在场地区域下方）
             const x = startX + index * (cardWidth + spacing);
             cardNode.setPosition(new Vec3(x, bottomY, 0));
-            
+
             // 确保卡牌大小和缩放正确
             cardNode.setScale(0.5, 0.5, 1);  // 缩小卡牌尺寸
             const cardTransform = cardNode.getComponent(UITransform);
@@ -674,4 +754,4 @@ export class Card extends Component {
                 rect1.y + rect1.height < rect2.y ||
                 rect2.y + rect2.height < rect1.y);
     }
-} 
+}
