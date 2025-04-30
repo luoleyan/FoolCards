@@ -10,10 +10,24 @@
 | - currentRound    |       | - isRevealed      |       | - publicCards     |
 | - maxRounds       |       +-------------------+       +-------------------+
 | - playAreas       |       | + getFullName()   |       | + reveal()        |
-| - specialHandsMgr |       | + getValue()      |       | + applyEffect()   |
-+-------------------+       | + flip()          |       | + calculateScore()|
-| + startNewRound() |       +-------------------+       +-------------------+
-| + endTurn()       |               ^                           ^
+| - aiOpponent      |       | + showCardFace()  |       | + apply()         |
++-------------------+       +-------------------+       +-------------------+
+        |
+        |
+        v
++-------------------+
+|    AIOpponent     |
++-------------------+
+| - opponentHand    |
+| - playAreas       |
+| - aiPlayedCards   |
+| - aiCardContainers|
++-------------------+
+| + init()          |
+| + playCards()     |
+| + showCardInPlayArea() |
+| + arrangeAICardsInPlayArea() |
++-------------------+       +-------------------+       +-------------------+
 | + playCard()      |               |                           |
 | + calculateScore()|               |                           |
 | + showGameOver()  |               |                           |

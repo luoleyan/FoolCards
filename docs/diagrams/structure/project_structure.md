@@ -27,6 +27,7 @@ FoolCards/
 │   │   └── MainMenu.scene       # 主菜单场景
 │   │
 │   └── scripts/                 # 脚本目录
+│       ├── AIOpponent.ts        # AI对手组件
 │       ├── Card.ts              # 卡牌类
 │       ├── GameLauncher.ts      # 游戏启动器
 │       ├── GameManager.ts       # 游戏管理器
