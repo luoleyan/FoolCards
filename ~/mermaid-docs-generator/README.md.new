@@ -1,0 +1,13 @@
+## 注意事项
+
+1. Mermaid图表的渲染依赖于Mermaid.js库，确保您的网络环境可以访问CDN
+2. 保存图片功能依赖html2canvas库，该库会在需要时自动加载
+3. 如果html2canvas库加载失败，系统会尝试直接保存SVG格式的图表
+
+## 作者
+
+[luoleyan](https://github.com/luoleyan) - [npm](https://www.npmjs.com/~luoleyan)
+
+## 许可证
+
+MIT
