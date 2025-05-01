@@ -93,22 +93,20 @@ erDiagram
     <div class="test-section">
       <h2>类图测试</h2>
               <div class="mermaid">
-
-
 classDiagram
--int score
-+startGame()
-+endGame()
-}
+    class GameManager {
+        -int score
+        +startGame() void
+        +endGame() void
+    }
 
--string suit
--int rank
-+getValue()
-}
+    class Card {
+        -string suit
+        -int rank
+        +getValue() int
+    }
 
-GameManager --> Card
-
-
+    GameManager --> Card
 </div>
     </div>
 
