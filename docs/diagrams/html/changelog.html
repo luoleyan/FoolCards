@@ -30,18 +30,75 @@
   <div class="container">
     <main class="content" style="width: 100%;">
       <h1>FoolCards 更新日志</h1>
-      
+
       <p>本文档记录FoolCards项目的主要更新和变更。</p>
-      
+
+      <h2>2023年12月更新</h2>
+
+      <h3>文档功能增强</h3>
+
+      <h4>添加图表交互功能 (2023-12-10)</h4>
+
+      <p><strong>新增功能</strong>：</p>
+      <ul>
+        <li><strong>点击图表查看大图</strong>：
+          <ul>
+            <li>用户可以点击任何Mermaid图表在模态框中查看大图</li>
+            <li>大图模式下支持放大、缩小和重置操作</li>
+            <li>可通过关闭按钮、点击外部区域或ESC键关闭大图</li>
+          </ul>
+        </li>
+        <li><strong>保存图表为图片</strong>：
+          <ul>
+            <li>在大图模式下可通过右下角按钮保存图表为PNG图片</li>
+            <li>支持右键菜单，提供保存图片、放大、缩小和重置缩放选项</li>
+            <li>保存的图片文件名根据图表标题自动生成</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p><strong>技术改进</strong>：</p>
+      <ul>
+        <li>添加html2canvas库支持，用于将SVG图表转换为PNG图片</li>
+        <li>添加右键菜单功能，提升用户体验</li>
+        <li>优化图表交互提示，增加悬停效果</li>
+      </ul>
+
+      <p><strong>受影响文件</strong>：</p>
+      <ul>
+        <li><code>docs/diagrams/html/css/modal.css</code> (新增)</li>
+        <li><code>docs/diagrams/html/js/diagram-modal.js</code> (新增)</li>
+        <li>所有HTML文档页面 (更新)</li>
+      </ul>
+
+      <h4>修复侧边栏链接问题 (2023-12-05)</h4>
+
+      <p><strong>问题描述</strong>：</p>
+      <p>在子页面中点击侧边栏链接时，会出现404错误。这是因为相对路径解析问题，导致URL中出现重复的目录路径。</p>
+
+      <p><strong>修复内容</strong>：</p>
+      <ul>
+        <li>更新结构图子页面的侧边栏链接</li>
+        <li>更新ER图子页面的侧边栏链接</li>
+        <li>更新流程图子页面的侧边栏链接</li>
+        <li>更新UI设计图子页面的侧边栏链接</li>
+      </ul>
+
+      <p><strong>技术改进</strong>：</p>
+      <ul>
+        <li>使用更明确的相对路径，确保链接在不同目录层级下正常工作</li>
+        <li>统一所有页面的链接格式，提高可维护性</li>
+      </ul>
+
       <h2>2023年11月更新</h2>
-      
+
       <h3>错误修复</h3>
-      
+
       <h4>AI对手卡牌显示错误修复</h4>
-      
+
       <p><strong>问题描述</strong>：</p>
       <p>在AI对手出牌过程中，当卡牌显示时偶尔会出现"Cannot read properties of null (reading 'getComponent')"错误。这个问题发生在异步加载卡牌精灵的过程中，当节点在加载完成前被销毁时。</p>
-      
+
       <p><strong>修复内容</strong>：</p>
       <ol>
         <li>在AIOpponent.ts中添加了全面的节点有效性检查</li>
@@ -49,13 +106,13 @@
         <li>添加了try-catch块来捕获组件操作中的异常</li>
         <li>在Promise链的每个步骤中添加了额外的安全检查</li>
       </ol>
-      
+
       <p><strong>受影响文件</strong>：</p>
       <ul>
         <li><code>assets/scripts/AIOpponent.ts</code></li>
         <li><code>assets/scripts/Card.ts</code></li>
       </ul>
-      
+
       <p><strong>技术细节</strong>：</p>
       <ul>
         <li>添加了对节点和组件有效性的全面检查</li>
@@ -66,9 +123,9 @@
         <li>确保在节点无效时优雅地终止操作</li>
         <li>添加了对组件创建过程的验证</li>
       </ul>
-      
+
       <h3>文档更新</h3>
-      
+
       <ol>
         <li>更新了项目结构图，添加了AIOpponent.ts</li>
         <li>更新了类图，添加了AIOpponent类及其与GameManager的关系</li>
@@ -76,25 +133,25 @@
         <li>创建了AI对手实现文档，详细描述了AIOpponent组件的功能和实现</li>
         <li>创建了错误处理策略文档，描述了项目中使用的错误处理机制和最近的改进</li>
       </ol>
-      
+
       <p><strong>新增文档</strong>：</p>
       <ul>
         <li><code>docs/diagrams/structure/ai_opponent.md</code></li>
         <li><code>docs/diagrams/structure/error_handling.md</code></li>
         <li><code>docs/diagrams/changelog.md</code></li>
       </ul>
-      
+
       <p><strong>更新文档</strong>：</p>
       <ul>
         <li><code>docs/diagrams/structure/project_structure.md</code></li>
         <li><code>docs/diagrams/structure/class_diagram.md</code></li>
         <li><code>docs/diagrams/structure/component_interaction.md</code></li>
       </ul>
-      
+
       <h2>未来计划</h2>
-      
+
       <h3>近期计划</h3>
-      
+
       <ol>
         <li><strong>AI策略改进</strong>：
           <ul>
@@ -115,9 +172,9 @@
           </ul>
         </li>
       </ol>
-      
+
       <h3>长期计划</h3>
-      
+
       <ol>
         <li><strong>多难度级别</strong>：
           <ul>

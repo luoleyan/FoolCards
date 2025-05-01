@@ -9,16 +9,20 @@
 3. 支持代码高亮显示
 4. 响应式设计，适应不同屏幕尺寸
 5. 分类展示不同类型的文档
+6. 支持点击图表查看大图
+7. 支持右键菜单保存图表为图片文件
 
 ## 目录结构
 
-```
+```bash
 html/
 ├── css/                  # 样式文件
-│   └── style.css         # 主样式文件
+│   ├── style.css         # 主样式文件
+│   └── modal.css         # 模态框和图表交互样式
 │
 ├── js/                   # JavaScript文件
-│   └── md-converter.js   # Markdown转换工具
+│   ├── md-converter.js   # Markdown转换工具
+│   └── diagram-modal.js  # 图表查看和保存功能
 │
 ├── images/               # 图片资源
 │
@@ -84,9 +88,26 @@ html/
 - [Marked.js](https://marked.js.org/) - Markdown解析器
 - [Mermaid.js](https://mermaid.js.org/) - 图表生成库
 - [Highlight.js](https://highlightjs.org/) - 代码高亮库
+- [html2canvas](https://html2canvas.hertzen.com/) - HTML转图片库
+
+## 图表交互功能
+
+### 查看大图
+
+1. 点击任何Mermaid图表可以在模态框中查看大图
+2. 大图模式下可以使用右下角的控制按钮进行放大、缩小和重置操作
+3. 点击关闭按钮、点击模态框外部区域或按ESC键可以关闭大图
+
+### 保存图表为图片
+
+1. 在大图模式下，点击右下角的"保存图片"按钮可以将图表保存为PNG图片
+2. 在大图模式下，右键点击图表，在弹出的菜单中选择"保存图片"也可以保存图表
+3. 保存的图片文件名会根据图表标题自动生成
 
 ## 注意事项
 
 1. ASCII图表转换为Mermaid图表的功能仅支持基本的格式，复杂的ASCII图表可能需要手动调整
 2. 生成脚本需要Node.js环境
 3. 如果修改了CSS或JavaScript文件，需要重新运行生成脚本以应用更改
+4. 保存图片功能依赖html2canvas库，该库会在需要时自动加载
+5. 如果html2canvas库加载失败，系统会尝试直接保存SVG格式的图表
