@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>检查Mermaid图表 - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    #progress {
+      font-weight: bold;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    p {
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>检查Mermaid图表</h1>
+
+    <p>此工具将检查所有包含Mermaid图表的页面是否能正确渲染，并检测是否有语法错误。</p>
+
+    <div id="progress">进度: 0/0</div>
+
+    <div id="results">
+      <p>正在准备检查...</p>
+    </div>
+  </div>
+
+  <script src="check_pages.js"></script>
+</body>
+</html>

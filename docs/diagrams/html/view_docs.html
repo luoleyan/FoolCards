@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoolCards 项目分析文档查看器</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card h2 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: #3498db;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #2980b9;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FoolCards 项目分析文档查看器</h1>
+    
+    <div class="card">
+      <h2>查看文档</h2>
+      <p>点击下面的链接查看项目分析文档：</p>
+      <p><a href="index.html" class="btn">打开文档</a></p>
+    </div>
+    
+    <div class="card">
+      <h2>文档说明</h2>
+      <p>本文档包含FoolCards项目的各种图表和设计文档，用于帮助开发者理解项目结构、数据流和游戏逻辑。</p>
+      <p>文档分为以下几个部分：</p>
+      <ul>
+        <li><strong>结构图</strong>：展示项目的文件和目录结构、主要类及其关系、组件交互关系和整体架构设计</li>
+        <li><strong>实体关系图</strong>：展示游戏中的主要实体及其关系</li>
+        <li><strong>流程图</strong>：展示游戏的主要流程和状态转换</li>
+        <li><strong>UI设计图</strong>：展示游戏界面的布局设计、交互流程和组件层次结构</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>生成文档</h2>
+      <p>如果您想重新生成文档，请确保已安装Node.js，然后运行以下批处理文件：</p>
+      <ul>
+        <li><a href="generate_en.bat">generate_en.bat</a> - 英文界面</li>
+      </ul>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+    </div>
+  </div>
+</body>
+</html>

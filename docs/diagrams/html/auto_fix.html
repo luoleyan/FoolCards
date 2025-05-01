@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动修复所有页面 - FoolCards 项目分析文档</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2 {
+      color: #2c3e50;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    #progress {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    .warning {
+      color: #e67e22;
+      font-weight: bold;
+    }
+    
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    
+    .success {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>自动修复所有页面</h1>
+  
+  <p>此工具将自动检查所有HTML页面中的常见问题，并尝试修复它们。</p>
+  <p class="warning">注意：此工具会修改HTML文件，请确保已备份原始文件。</p>
+  
+  <div>
+    <button id="check-only">仅检查问题</button>
+    <button id="check-and-fix">检查并修复问题</button>
+  </div>
+  
+  <div id="progress">进度: 0/0</div>
+  
+  <div id="results">
+    <p>点击按钮开始检查或修复所有页面。</p>
+  </div>
+  
+  <h2>常见问题</h2>
+  <ul>
+    <li>未闭合的script标签</li>
+    <li>Mermaid图表中的pre和code标签</li>
+    <li>错误的HTML实体</li>
+    <li>未闭合的HTML标签</li>
+  </ul>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultDiv = document.getElementById('results');
+      const progressDiv = document.getElementById('progress');
+      const checkOnlyButton = document.getElementById('check-only');
+      const checkAndFixButton = document.getElementById('check-and-fix');
+      
+      // 获取所有HTML文件的链接
+      async function getAllHtmlLinks() {
+        try {
+          const response = await fetch('all_pages.html');
+          const html = await response.text();
+          
+          // 创建一个临时的DOM元素来解析HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          
+          // 获取所有链接
+          const links = Array.from(tempDiv.querySelectorAll('a[href]'))
+            .map(link => link.getAttribute('href'))
+            .filter(href => href.endsWith('.html'));
+          
+          return links;
+        } catch (error) {
+          console.error('获取链接失败:', error);
+          return [];
+        }
+      }
+      
+      // 检查页面中的问题
+      async function checkPage(url, fix = false) {
+        try {
+          const response = await fetch(url);
+          const html = await response.text();
+          
+          const issues = [];
+          let fixedHtml = html;
+          
+          // 检查未闭合的script标签
+          const scriptTagMatches = html.match(/<script[^>]*>/g) || [];
+          const closingScriptTagMatches = html.match(/<\/script>/g) || [];
+          
+          if (scriptTagMatches.length > closingScriptTagMatches.length) {
+            issues.push('未闭合的script标签');
+            
+            if (fix) {
+              // 修复未闭合的script标签
+              fixedHtml = fixedHtml.replace(/<script[^>]*>(?![\s\S]*?<\/script>)[\s\S]*?(?=<\/head>|
+  </script><body>)/g, (match) => {
+                return match + '\n</script>';
+              });
+            }
+          }
+          
+          // 检查Mermaid图表中的pre和code标签
+          if (html.includes('mermaid') && (html.includes('<pre><code>') || html.includes('</code></pre>'))) {
+            issues.push('Mermaid图表中的pre和code标签');
+            
+            if (fix) {
+              // 修复Mermaid图表中的pre和code标签
+              fixedHtml = fixedHtml.replace(/        <div class="mermaid">
+
+    ([\s\S]*?)<\/div>/g, (match, mermaidContent) => {
+    // 移除pre和code标签
+    let fixedMermaidContent = mermaidContent
+    .replace(//g, '')
+    .replace(/<\/code><\/pre>/g, '')
+    .replace(/<\/code><\/pre/g, '')
+    .replace(//g, '')
+    .replace(/<\/code></g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/</g, '<')
+    .replace(/>/g, '>');
+    return `${fixedMermaidContent}
+</div>
+        </div>`;
+              });
+            }
+          }
+          
+          // 检查错误的HTML实体
+          if (html.includes('&quot;') || html.includes('&lt;') || html.includes('&gt;')) {
+            issues.push('错误的HTML实体');
+            
+            if (fix) {
+              // 修复错误的HTML实体
+              fixedHtml = fixedHtml
+                .replace(/&quot;/g, '&quot;')
+                .replace(/&lt;/g, '&lt;')
+                .replace(/&gt;/g, '&gt;');
+            }
+          }
+          
+          // 如果需要修复并且有问题，保存修复后的HTML
+          if (fix && issues.length > 0 && fixedHtml !== html) {
+            // 这里只是模拟保存，实际上无法在浏览器中直接保存文件
+            // 需要通过服务器端脚本来实现
+            console.log(`模拟保存修复后的文件: ${url}`);
+            // 在实际应用中，这里应该发送一个请求到服务器，让服务器保存修复后的文件
+          }
+          
+          return {
+            url,
+            issues,
+            fixed: fix && issues.length > 0
+          };
+        } catch (error) {
+          console.error(`检查页面失败: ${url}`, error);
+          return {
+            url,
+            issues: [`检查失败: ${error.message}`],
+            fixed: false
+          };
+        }
+      }
+      
+      // 检查所有页面
+      async function checkAllPages(fix = false) {
+        // 清空结果
+        resultDiv.innerHTML = '';
+        
+        // 获取所有链接
+        const links = await getAllHtmlLinks();
+        
+        if (links.length === 0) {
+          resultDiv.innerHTML = '<p class="error">未找到任何HTML链接</p>';
+          return;
+        }
+        
+        let checkedCount = 0;
+        let issueCount = 0;
+        let fixedCount = 0;
+        const pagesWithIssues = [];
+        
+        resultDiv.innerHTML = `<p>正在检查 ${links.length} 个页面...</p>`;
+        
+        // 逐个检查页面
+        for (const link of links) {
+          const result = await checkPage(link, fix);
+          
+          if (result.issues.length > 0) {
+            issueCount += result.issues.length;
+            pagesWithIssues.push(result);
+            
+            if (result.fixed) {
+              fixedCount++;
+              resultDiv.innerHTML += `<p><span class="success">✓ 已修复:</span> ${link} - 问题: ${result.issues.join(', ')}</p>`;
+            } else {
+              resultDiv.innerHTML += `<p><span class="error">✗ 发现问题:</span> ${link} - 问题: ${result.issues.join(', ')}</p>`;
+            }
+          } else {
+            resultDiv.innerHTML += `<p><span class="success">✓ 正常:</span> ${link}</p>`;
+          }
+          
+          checkedCount++;
+          progressDiv.textContent = `进度: ${checkedCount}/${links.length}`;
+        }
+        
+        // 显示最终结果
+        resultDiv.innerHTML += `
+          <h2>检查完成</h2>
+          <p>总共检查: ${checkedCount} 个页面</p>
+          <p>发现问题: ${issueCount} 个</p>
+          ${fix ? `<p>已修复: ${fixedCount} 个页面</p>` : ''}
+        `;
+        
+        if (pagesWithIssues.length > 0) {
+          resultDiv.innerHTML += `
+            <h3>有问题的页面:</h3>
+            <ul>
+              ${pagesWithIssues.map(page => `<li>${page.url}: ${page.issues.join(', ')}</li>`).join('')}
+            </ul>
+            <p class="warning">注意: 由于浏览器安全限制，无法直接保存修复后的文件。请使用服务器端脚本来实现文件修复。</p>
+          `;
+        }
+      }
+      
+      // 绑定按钮事件
+      checkOnlyButton.addEventListener('click', () => checkAllPages(false));
+      checkAndFixButton.addEventListener('click', () => {
+        alert('注意: 由于浏览器安全限制，此功能只能检查问题，无法直接保存修复后的文件。请使用服务器端脚本来实现文件修复。');
+        checkAllPages(true);
+      });
+    });
+  </script>
+</body>
+</html>

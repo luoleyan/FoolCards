@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoolCards 类图</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    h2 {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .diagram-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .description {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f7ff;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FoolCards 类图</h1>
+    
+    <h2>核心类关系图</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+classDiagram
+GameManager "1"   -->   "*" Card : 管理
+GameManager "1"   -->   "*" PlayArea : 管理
+GameManager "1"   -->   "1" AIOpponent : 控制
+GameManager   ..>   SpecialHands : 使用
+PlayArea "1"   -->   "*" Card : 包含
+PlayArea "1"   -->   "1" SceneEffect : 应用
+AIOpponent   ..>   Card : 使用
+-playerScore: number
+-opponentScore: number
+-areaScores: number[]
+-currentRound: number
+-maxRounds: number
+-playAreas: PlayArea[]
+-aiOpponent: AIOpponent
++playCard(card: Card, area: PlayArea): void
++calculateScore(): number
++showGameOver(): void
+}
+-suit: string
+-rank: number
+-value: number
+-isRevealed: boolean
++getFullName(): string
++showCardFace(): void
+}
+-position: number
+-cards: Card[]
+-effect: SceneEffect
++addCard(card: Card): void
++removeCard(card: Card): void
++getScore(): number
+}
+-type: string
+-name: string
+-description: string
+-multiplier: number
++apply(cards: Card[]): number
++reveal(): void
+}
+-specialHands: object
++checkSpecialHand(cards: Card[]): string
++getHandBonus(handType: string): number
+}
+-opponentHand: Card[]
+-playAreas: PlayArea[]
+-aiPlayedCards: Card[][]
++init(gameManager: GameManager): void
++playCards(count: number): void
++showCardInPlayArea(card: Card, areaIndex: number): void
+}
+
+
+</div>
+    </div>
+    <div class="description">
+      <p>核心类关系图展示了FoolCards游戏中主要类之间的关系：</p>
+      <ul>
+        <li><strong>GameManager</strong>：游戏的核心管理类，负责游戏逻辑和状态管理</li>
+        <li><strong>Card</strong>：卡牌类，表示游戏中的一张卡牌</li>
+        <li><strong>PlayArea</strong>：场地类，表示游戏中的一个场地区域</li>
+        <li><strong>SceneEffect</strong>：场景效果类，定义不同场景的特殊效果</li>
+        <li><strong>SpecialHands</strong>：特殊牌型管理类，检测和处理特殊牌型</li>
+        <li><strong>AIOpponent</strong>：AI对手类，处理AI的行为和决策</li>
+      </ul>
+    </div>
+    
+    <h2>UI类关系图</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+classDiagram
+GameManager   -->   MainMenu : 控制
+GameManager   -->   LoadingScene : 控制
+GameManager   -->   GameOverPopup : 显示
+-startButton: Button
+-settingsButton: Button
++onStartClicked(): void
++onSettingsClicked(): void
+}
+-progressBar: ProgressBar
+-loadingText: Label
++loadResources(): void
++updateProgress(progress: number): void
+}
+-popupNode: Node
+-resultLabel: Label
+-playerScoreLabel: Label
+-opponentScoreLabel: Label
+-returnButton: Button
++showPopup(playerScore: number, opponentScore: number): void
++hidePopup(): void
+}
+
+
+</div>
+    </div>
+    
+    <h2>类继承关系</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+classDiagram
+Component <|--   UIComponent
+UIComponent <|--   Button
+UIComponent <|--   Label
+UIComponent <|--   ProgressBar
+Component <|--   GameComponent
+GameComponent <|--   Card
+GameComponent <|--   PlayArea
+GameComponent <|--   SceneEffect
++node: Node
++enabled: boolean
++onLoad(): void
++start(): void
++update(dt: number): void
+}
++opacity: number
++visible: boolean
++setPosition(x: number, y: number): void
++setScale(x: number, y: number): void
+}
++gameManager: GameManager
++init(gameManager: GameManager): void
++reset(): void
+}
+
+
+</div>
+    </div>
+    
+    <h2>详细类描述</h2>
+    
+    <h3>GameManager 类</h3>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+classDiagram
+-playerScore: number
+-opponentScore: number
+-areaScores: number[]
+-currentRound: number
+-maxRounds: number
+-playAreas: PlayArea[]
+-aiOpponent: AIOpponent
+-specialHands: SpecialHands
+-gameState: string
++init(): void
++startGame(): void
++startNewRound(): void
++endRound(): void
++playCard(card: Card, area: PlayArea): void
++calculateScore(): number
++checkSpecialHands(): void
++showGameOver(): void
++resetGame(): void
+}
+
+
+</div>
+    </div>
+    <div class="description">
+      <p><strong>GameManager</strong> 是游戏的核心管理类，负责：</p>
+      <ul>
+        <li>管理玩家分数、回合数和游戏区域</li>
+        <li>控制游戏流程（开始新回合、结束回合等）</li>
+        <li>处理卡牌的打出和分数计算</li>
+        <li>检测特殊牌型和应用场地效果</li>
+        <li>控制AI对手的行为</li>
+        <li>显示游戏结果</li>
+      </ul>
+    </div>
+    
+    <h3>Card 类</h3>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+classDiagram
+-suit: string
+-rank: number
+-value: number
+-isRevealed: boolean
+-isSelected: boolean
+-originalPosition: Vector2
+-targetPosition: Vector2
++init(suit: string, rank: number): void
++getFullName(): string
++getValue(): number
++getSuit(): string
++showCardFace(): void
++hideCardFace(): void
++select(): void
++deselect(): void
++moveTo(position: Vector2): void
++returnToHand(): void
+}
+
+
+</div>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true
+      },
+      classDiagram: {
+        curve: 'basis'
+      },
+      themeVariables: {
+        primaryColor: '#3498db',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#2980b9',
+        lineColor: '#2980b9',
+        secondaryColor: '#5dade2',
+        tertiaryColor: '#f8f9fa'
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interaction Flow - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>UI设计图</h3>
+      <ul>
+        <li><a href="ui/card_interaction.html">Card Interaction</a></li>
+<li><a href="ui/game_wireframe.html">Game Wireframe</a></li>
+<li><a href="ui/interaction_flow.html">Interaction Flow</a></li>
+<li><a href="ui/menu_wireframe.html">Menu Wireframe</a></li>
+<li><a href="ui/README.html">README</a></li>
+<li><a href="ui/ui_component_hierarchy.html">Ui Component Hierarchy</a></li>
+<li><a href="ui/ui_layout.html">Ui Layout</a></li>
+<li><a href="ui/ui_style_guide.html">Ui Style Guide</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Interaction Flow</h1>
+      <div class="content-body">
+        <h1 id="foolcards-游戏界面交互流程图">FoolCards 游戏界面交互流程图</h1>
+<h2 id="游戏主流程交互">游戏主流程交互</h2>
+        <div class="mermaid">
+flowchart TD
+    A[启动游戏] --> B[主菜单界面] --> C[点击开始游戏]
+    C --> D[加载界面] --> E[资源加载完成] --> F[游戏主界面]
+    F --> G[游戏循环] --> H[游戏结束]
+    H --> I[显示结果弹窗] --> J[选择后续操作]
+    J --> K[返回主菜单]
+    J --> L[再玩一局] --> F
+    K --> B
+</div>
+
+<h2 id="玩家回合交互流程">玩家回合交互流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[回合开始] --> B[玩家操作阶段] --> C[选择卡牌]
+    C --> D[选择场地] --> E[卡牌放置]
+    E --> F[计算得分]
+    E --> G[检查特殊牌型]
+    G --> H["显示特殊牌型弹窗 (如有)"]
+    D --> I[点击结束回合按钮] --> J[回合结束]
+</div>
+
+<h2 id="换牌操作交互流程">换牌操作交互流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[点击换牌区域] --> B[进入换牌模式] --> C[选择要换的卡牌]
+    C --> D[确认换牌] --> E[换牌完成] --> F[返回正常模式]
+</div>
+
+<h2 id="特殊牌型检测交互流程">特殊牌型检测交互流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[卡牌放置完成] --> B[检测特殊牌型]
+    B --> C[无特殊牌型]
+    B --> D[发现特殊牌型]
+    D --> E[显示特殊牌型弹窗]
+    E --> F["应用特殊牌型效果和加分"]
+</div>
+
+<h2 id="游戏结束交互流程">游戏结束交互流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[最后回合结束] --> B[计算最终得分] --> C[显示游戏结束弹窗]
+    C --> D["点击'返回主菜单'按钮"] --> E[返回主菜单界面]
+    C --> F["点击'再玩一局'按钮"] --> G[重置游戏状态] --> H[开始新游戏]
+</div>
+
+<h2 id="设置菜单交互流程">设置菜单交互流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[点击设置按钮] --> B[显示设置弹窗] --> C[调整设置选项]
+    C --> D["点击'取消'按钮"] --> E[关闭设置弹窗] --> F[不保存更改]
+    C --> G["点击'确认'按钮"] --> H[保存设置更改] --> I[关闭设置弹窗]
+</div>
+
+<h2 id="触摸点击反馈流程">触摸/点击反馈流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[用户触摸/点击屏幕] --> B[检测点击位置] --> C[判断交互元素]
+    C --> D[执行对应操作]
+    D --> E["视觉反馈(高亮/动画)"]
+    D --> F[音效反馈]
+</div>
+
+<h2 id="拖拽操作流程-可选实现">拖拽操作流程 (可选实现)</h2>
+        <div class="mermaid">
+flowchart TD
+    A[按下卡牌] --> B[开始拖拽] --> C[移动卡牌]
+    C --> D["放置无效(非有效区域)"] --> E[卡牌返回原位置]
+    C --> F["放置有效(有效区域)"] --> G[卡牌放置到目标位置]
+</div>
+
+<h2 id="错误处理流程">错误处理流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[用户操作] --> B[验证操作]
+    B --> C[操作有效] --> D[执行操作]
+    B --> E[操作无效] --> F[显示错误提示] --> G["错误动画(震动/闪烁)"]
+</div>
+
+<h2 id="场景转换流程">场景转换流程</h2>
+        <div class="mermaid">
+flowchart TD
+    A[触发场景切换] --> B[当前场景淡出] --> C[加载新场景资源] --> D[新场景淡入]
+</div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

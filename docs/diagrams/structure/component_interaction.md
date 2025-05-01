@@ -2,85 +2,88 @@
 
 ## 核心组件交互
 
-```
-+-------------------+       +-------------------+       +-------------------+
-|    GameLauncher   |------>|    LoadingScene   |------>|     MainMenu      |
-+-------------------+       +-------------------+       +-------------------+
-         |                                                       |
-         |                                                       |
-         v                                                       v
-+-------------------+                                   +-------------------+
-|   PlatformAdapter |<----------------------------------+   GameManager     |
-+-------------------+                                   +-------------------+
-                                                                |
-                    +-------------------+                       |
-                    |   GameOverPopup   |<----------------------+
-                    +-------------------+                       |
-                                                                |
-         +-------------+-------------+-------------+            |
-         |             |             |             |            |
-         v             v             v             v            v
-+----------------+ +----------+ +----------+ +----------+ +----------+
-|                | |          | |          | |          | |          |
-|      Card      | |PlayArea 1| |PlayArea 2| |PlayArea 3| |ExchangeArea|
-|                | |          | |          | |          | |          |
-+----------------+ +----------+ +----------+ +----------+ +----------+
-         |             |             |             |
-         |             |             |             |
-         v             v             v             v
-+-------------------+  |  +-------------------+    |
-|   SpecialHands    |<-+->|   SceneEffect     |<---+
-+-------------------+     +-------------------+
+```mermaid
+flowchart TD
+    GameLauncher["GameLauncher"] --> LoadingScene["LoadingScene"]
+    LoadingScene --> MainMenu["MainMenu"]
+
+    MainMenu --> GameManager["GameManager"]
+    GameLauncher --> |初始化| PlatformAdapter["PlatformAdapter"]
+    GameManager --> |平台适配| PlatformAdapter
+
+    GameManager --> GameOverPopup["GameOverPopup"]
+
+    GameManager --> Card["Card"]
+    GameManager --> PlayArea1["PlayArea 1"]
+    GameManager --> PlayArea2["PlayArea 2"]
+    GameManager --> PlayArea3["PlayArea 3"]
+    GameManager --> ExchangeArea["ExchangeArea"]
+
+    Card --> SpecialHands["SpecialHands"]
+    PlayArea1 --> SceneEffect["SceneEffect"]
+    PlayArea2 --> SceneEffect
+    PlayArea3 --> SceneEffect
+
+    SpecialHands <--> SceneEffect
+
+    %% 样式定义
+    classDef launcher fill:#9f9,stroke:#393,stroke-width:2px;
+    classDef manager fill:#f96,stroke:#933,stroke-width:2px;
+    classDef scene fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef component fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef popup fill:#f99,stroke:#933,stroke-width:1px;
+
+    %% 应用样式
+    class GameLauncher launcher;
+    class GameManager manager;
+    class LoadingScene,MainMenu scene;
+    class Card,PlayArea1,PlayArea2,PlayArea3,ExchangeArea,SpecialHands,SceneEffect,PlatformAdapter component;
+    class GameOverPopup popup;
 ```
 
 ## 数据流向
 
-```
-+-------------------+       +-------------------+       +-------------------+
-|                   |       |                   |       |                   |
-|  用户输入/交互    |------>|  GameManager处理  |------>|  UI状态更新       |
-|                   |       |                   |       |                   |
-+-------------------+       +-------------------+       +-------------------+
-                                    |
-                                    v
-                            +-------------------+
-                            |                   |
-                            |  游戏状态更新     |
-                            |                   |
-                            +-------------------+
-                                    |
-                                    v
-+-------------------+       +-------------------+       +-------------------+
-|                   |       |                   |       |                   |
-|  分数计算         |<------|  特殊效果处理     |<------|  卡牌状态更新     |
-|                   |       |                   |       |                   |
-+-------------------+       +-------------------+       +-------------------+
+```mermaid
+flowchart TD
+    UserInput["用户输入/交互"] --> GameManagerProcess["GameManager处理"]
+    GameManagerProcess --> UIUpdate["UI状态更新"]
+
+    GameManagerProcess --> GameStateUpdate["游戏状态更新"]
+
+    GameStateUpdate --> CardStateUpdate["卡牌状态更新"]
+    CardStateUpdate --> EffectProcess["特殊效果处理"]
+    EffectProcess --> ScoreCalculation["分数计算"]
+
+    %% 样式定义
+    classDef input fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef process fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef output fill:#9cf,stroke:#36c,stroke-width:1px;
+
+    %% 应用样式
+    class UserInput input;
+    class GameManagerProcess,GameStateUpdate,EffectProcess process;
+    class UIUpdate,CardStateUpdate,ScoreCalculation output;
 ```
 
 ## 事件传递机制
 
-```
-+-------------------+
-|                   |
-|    事件源组件     |
-|                   |
-+--------+----------+
-         |
-         | 触发事件
-         v
-+-------------------+
-|                   |
-|    事件系统       |
-|                   |
-+--------+----------+
-         |
-         | 分发事件
-         v
-+-------------------+     +-------------------+     +-------------------+
-|                   |     |                   |     |                   |
-|   监听者组件 1    |     |   监听者组件 2    |     |   监听者组件 3    |
-|                   |     |                   |     |                   |
-+-------------------+     +-------------------+     +-------------------+
+```mermaid
+flowchart TD
+    SourceComponent["事件源组件"] -->|触发事件| EventSystem["事件系统"]
+
+    EventSystem -->|分发事件| Listener1["监听者组件 1"]
+    EventSystem -->|分发事件| Listener2["监听者组件 2"]
+    EventSystem -->|分发事件| Listener3["监听者组件 3"]
+
+    %% 样式定义
+    classDef source fill:#f96,stroke:#933,stroke-width:2px;
+    classDef system fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef listener fill:#9cf,stroke:#36c,stroke-width:1px;
+
+    %% 应用样式
+    class SourceComponent source;
+    class EventSystem system;
+    class Listener1,Listener2,Listener3 listener;
 ```
 
 ## 主要事件类型

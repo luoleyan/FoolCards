@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目结构图 - 直接查看</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #2c3e50;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    pre {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      border: 1px solid #ddd;
+    }
+    
+    code {
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #3498db;
+      text-decoration: none;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FoolCards 项目结构图</h1>
+    
+    <pre><code>FoolCards/
+│
+├── assets/                      # 游戏资源目录
+│   ├── docs/                    # 文档目录
+│   │
+│   ├── prefabs/                 # 预制体目录
+│   │   ├── Card.prefab          # 卡牌预制体
+│   │   ├── GameOverPopup.prefab # 游戏结束弹窗预制体
+│   │   └── SceneEffect.prefab   # 场景效果预制体
+│   │
+│   ├── resources/               # 资源目录
+│   │   ├── background/          # 背景图片
+│   │   ├── cards/               # 卡牌图片
+│   │   ├── menu/                # 菜单资源
+│   │   └── ui-assets/           # UI资源
+│   │       ├── Buttons/         # 按钮资源
+│   │       ├── Cursors/         # 光标资源
+│   │       ├── Gen UI/          # 通用UI资源
+│   │       └── Symbols & Text/  # 符号和文本资源
+│   │
+│   ├── scenes/                  # 场景目录
+│   │   ├── Game.scene           # 游戏主场景
+│   │   ├── Loading.scene        # 加载场景
+│   │   └── MainMenu.scene       # 主菜单场景
+│   │
+│   └── scripts/                 # 脚本目录
+│       ├── AIOpponent.ts        # AI对手组件
+│       ├── Card.ts              # 卡牌类
+│       ├── GameLauncher.ts      # 游戏启动器
+│       ├── GameManager.ts       # 游戏管理器
+│       ├── GameOverPopup.ts     # 游戏结束弹窗
+│       ├── LoadingScene.ts      # 加载场景脚本
+│       ├── MainMenu.ts          # 主菜单脚本
+│       ├── PlatformAdapter.ts   # 平台适配器
+│       ├── SceneEffect.ts       # 场景效果
+│       ├── SpecialHands.ts      # 特殊牌型
+│       └── SpecialHandsPopup.ts # 特殊牌型弹窗
+│
+├── docs/                        # 项目文档目录
+│   └── diagrams/                # 项目图表目录
+│       ├── structure/           # 结构图
+│       ├── er/                  # ER图
+│       ├── flowcharts/          # 流程图
+│       └── ui/                  # UI设计图
+│
+├── .gitignore                   # Git忽略文件
+├── LICENSE                      # MIT许可证
+├── README.md                    # 项目说明文件
+└── project.json                 # 项目配置文件</code></pre>
+    
+    <h2>项目结构说明</h2>
+    
+    <h3>主要目录</h3>
+    
+    <ol>
+      <li><strong>assets/</strong>: 包含所有游戏资源
+        <ul>
+          <li><strong>docs/</strong>: 项目文档</li>
+          <li><strong>prefabs/</strong>: 游戏中使用的预制体</li>
+          <li><strong>resources/</strong>: 游戏资源（图片、音频等）</li>
+          <li><strong>scenes/</strong>: 游戏场景</li>
+          <li><strong>scripts/</strong>: 游戏脚本</li>
+        </ul>
+      </li>
+      <li><strong>docs/</strong>: 项目文档和图表
+        <ul>
+          <li><strong>diagrams/</strong>: 项目相关图表
+            <ul>
+              <li><strong>structure/</strong>: 项目结构图</li>
+              <li><strong>er/</strong>: 实体关系图</li>
+              <li><strong>flowcharts/</strong>: 流程图</li>
+              <li><strong>ui/</strong>: UI设计图</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ol>
+    
+    <h3>主要脚本文件</h3>
+    
+    <ol>
+      <li><strong>Card.ts</strong>: 卡牌类，定义卡牌的属性和行为</li>
+      <li><strong>GameManager.ts</strong>: 游戏管理器，负责游戏逻辑和状态管理</li>
+      <li><strong>SceneEffect.ts</strong>: 场景效果，定义不同场景的特殊效果</li>
+      <li><strong>SpecialHands.ts</strong>: 特殊牌型，定义和检测特殊牌型组合</li>
+      <li><strong>GameOverPopup.ts</strong>: 游戏结束弹窗，显示游戏结果</li>
+    </ol>
+    
+    <h3>场景文件</h3>
+    
+    <ol>
+      <li><strong>MainMenu.scene</strong>: 主菜单场景</li>
+      <li><strong>Loading.scene</strong>: 加载场景</li>
+      <li><strong>Game.scene</strong>: 游戏主场景</li>
+    </ol>
+    
+    <h3>预制体</h3>
+    
+    <ol>
+      <li><strong>Card.prefab</strong>: 卡牌预制体</li>
+      <li><strong>GameOverPopup.prefab</strong>: 游戏结束弹窗预制体</li>
+      <li><strong>SceneEffect.prefab</strong>: 场景效果预制体</li>
+    </ol>
+    
+    <a href="view_docs.html" class="back-link">← 返回文档查看器</a>
+    
+    <div class="footer">
+      <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+    </div>
+  </div>
+</body>
+</html>

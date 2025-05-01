@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>结构图</h3>
+      <ul>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Architecture</h1>
+      <div class="content-body">
+        <h1 id="foolcards-架构设计">FoolCards 架构设计</h1>
+<h2 id="整体架构">整体架构</h2>
+        <div class="mermaid">
+
+
+flowchart LR
+View["表现层 (View)"] <--> Logic["逻辑层 (Logic)"] <--> Data["数据层 (Data)"]
+%%样式定义
+%% 分隔classDef语句
+%% 分隔classDef语句
+%%应用样式
+
+
+style View fill:#9cf,stroke:#36c,stroke-width:2px
+style Logic fill:#f96,stroke:#933,stroke-width:2px
+style Data fill:#9f9,stroke:#393,stroke-width:2px
+</div>
+
+<h2 id="分层详细结构">分层详细结构</h2>
+<h3 id="表现层-view">表现层 (View)</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+View["表现层 (View)"]
+View --> UIComponents["UI组件"]
+View --> Scenes["场景"]
+View --> Animations["动画效果"]
+View --> InputHandling["用户输入处理"]
+View --> VisualFeedback["视觉反馈"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style View fill:#9cf,stroke:#36c,stroke-width:2px
+style UIComponents fill:#cdf,stroke:#36c,stroke-width:1px
+style Scenes fill:#cdf,stroke:#36c,stroke-width:1px
+style Animations fill:#cdf,stroke:#36c,stroke-width:1px
+style InputHandling fill:#cdf,stroke:#36c,stroke-width:1px
+style VisualFeedback fill:#cdf,stroke:#36c,stroke-width:1px
+</div>
+
+<h3 id="逻辑层-logic">逻辑层 (Logic)</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+Logic["逻辑层 (Logic)"]
+Logic --> GameManager["游戏管理器"]
+Logic --> CardLogic["卡牌逻辑"]
+Logic --> AreaLogic["场地逻辑"]
+Logic --> SpecialHandsLogic["特殊牌型逻辑"]
+Logic --> ScoreCalculation["分数计算"]
+Logic --> GameRules["游戏规则"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style Logic fill:#f96,stroke:#933,stroke-width:2px
+style GameManager fill:#fda,stroke:#933,stroke-width:1px
+style CardLogic fill:#fda,stroke:#933,stroke-width:1px
+style AreaLogic fill:#fda,stroke:#933,stroke-width:1px
+style SpecialHandsLogic fill:#fda,stroke:#933,stroke-width:1px
+style ScoreCalculation fill:#fda,stroke:#933,stroke-width:1px
+style GameRules fill:#fda,stroke:#933,stroke-width:1px
+</div>
+
+<h3 id="数据层-data">数据层 (Data)</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+Data["数据层 (Data)"]
+Data --> CardData["卡牌数据"]
+Data --> PlayerData["玩家数据"]
+Data --> GameState["游戏状态"]
+Data --> ConfigData["配置数据"]
+Data --> Storage["持久化存储"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style Data fill:#9f9,stroke:#393,stroke-width:2px
+style CardData fill:#cfc,stroke:#393,stroke-width:1px
+style PlayerData fill:#cfc,stroke:#393,stroke-width:1px
+style GameState fill:#cfc,stroke:#393,stroke-width:1px
+style ConfigData fill:#cfc,stroke:#393,stroke-width:1px
+style Storage fill:#cfc,stroke:#393,stroke-width:1px
+</div>
+
+<h2 id="核心模块">核心模块</h2>
+<h3 id="游戏管理模块">游戏管理模块</h3>
+        <div class="mermaid">
+classDiagram
+    class GameManager {
+        +游戏初始化() void
+        +回合管理() void
+        +状态转换() void
+        +事件分发() void
+        +结果计算() void
+    }
+</div>
+
+<h3 id="卡牌系统">卡牌系统</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+CardSystem["卡牌系统"]
+CardSystem --> CardDefinition["卡牌定义"]
+CardSystem --> CardBehavior["卡牌行为"]
+CardSystem --> CardEffect["卡牌效果"]
+CardSystem --> CardInteraction["卡牌交互"]
+CardSystem --> CardCombination["卡牌组合"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style CardSystem fill:#f96,stroke:#933,stroke-width:2px
+style CardDefinition fill:#fda,stroke:#933,stroke-width:1px
+style CardBehavior fill:#fda,stroke:#933,stroke-width:1px
+style CardEffect fill:#fda,stroke:#933,stroke-width:1px
+style CardInteraction fill:#fda,stroke:#933,stroke-width:1px
+style CardCombination fill:#fda,stroke:#933,stroke-width:1px
+</div>
+
+<h3 id="场地系统">场地系统</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+AreaSystem["场地系统"]
+AreaSystem --> AreaDefinition["场地定义"]
+AreaSystem --> AreaEffect["场地效果"]
+AreaSystem --> CardPlacementRules["卡牌放置规则"]
+AreaSystem --> ScoreCalculation["分数计算"]
+AreaSystem --> SpecialEffectTrigger["特殊效果触发"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style AreaSystem fill:#f96,stroke:#933,stroke-width:2px
+style AreaDefinition fill:#fda,stroke:#933,stroke-width:1px
+style AreaEffect fill:#fda,stroke:#933,stroke-width:1px
+style CardPlacementRules fill:#fda,stroke:#933,stroke-width:1px
+style ScoreCalculation fill:#fda,stroke:#933,stroke-width:1px
+style SpecialEffectTrigger fill:#fda,stroke:#933,stroke-width:1px
+</div>
+
+<h3 id="特殊牌型系统">特殊牌型系统</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+SpecialHandsSystem["特殊牌型系统"]
+SpecialHandsSystem --> HandDefinition["牌型定义"]
+SpecialHandsSystem --> HandDetection["牌型检测"]
+SpecialHandsSystem --> EffectApplication["效果应用"]
+SpecialHandsSystem --> BonusRules["加分规则"]
+SpecialHandsSystem --> VisualFeedback["视觉反馈"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style SpecialHandsSystem fill:#f96,stroke:#933,stroke-width:2px
+style HandDefinition fill:#fda,stroke:#933,stroke-width:1px
+style HandDetection fill:#fda,stroke:#933,stroke-width:1px
+style EffectApplication fill:#fda,stroke:#933,stroke-width:1px
+style BonusRules fill:#fda,stroke:#933,stroke-width:1px
+style VisualFeedback fill:#fda,stroke:#933,stroke-width:1px
+</div>
+
+<h3 id="ui系统">UI系统</h3>
+        <div class="mermaid">
+
+
+flowchart TD
+UISystem["UI系统"]
+UISystem --> Layout["界面布局"]
+UISystem --> Controls["交互控件"]
+UISystem --> Animations["动画效果"]
+UISystem --> PopupManagement["弹窗管理"]
+UISystem --> FeedbackSystem["反馈系统"]
+%%样式定义
+%% 分隔classDef语句
+%%应用样式
+
+
+style UISystem fill:#9cf,stroke:#36c,stroke-width:2px
+style Layout fill:#cdf,stroke:#36c,stroke-width:1px
+style Controls fill:#cdf,stroke:#36c,stroke-width:1px
+style Animations fill:#cdf,stroke:#36c,stroke-width:1px
+style PopupManagement fill:#cdf,stroke:#36c,stroke-width:1px
+style FeedbackSystem fill:#cdf,stroke:#36c,stroke-width:1px
+</div>
+
+<h2 id="数据流向">数据流向</h2>
+        <div class="mermaid">
+
+
+flowchart LR
+UserInput["用户输入"] --> UISystem["UI系统"]
+UISystem --> GameManager["游戏管理模块"]
+GameManager --> LogicProcessing["逻辑处理"]
+LogicProcessing --> DataUpdate["数据更新"]
+DataUpdate --> UIUpdate["UI更新"]
+UIUpdate --> VisualFeedback["视觉反馈"]
+%%样式定义
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+%%应用样式
+
+
+style UserInput fill:#bbf,stroke:#33f,stroke-width:2px
+style UISystem fill:#f96,stroke:#933,stroke-width:1px
+style GameManager fill:#f96,stroke:#933,stroke-width:1px
+style LogicProcessing fill:#f96,stroke:#933,stroke-width:1px
+style DataUpdate fill:#9f9,stroke:#393,stroke-width:1px
+style UIUpdate fill:#9cf,stroke:#36c,stroke-width:1px
+style VisualFeedback fill:#9cf,stroke:#36c,stroke-width:1px
+</div>
+
+<h2 id="扩展性设计">扩展性设计</h2>
+<ol>
+<li><p><strong>新卡牌类型</strong>：</p>
+<ul>
+<li>通过扩展Card基类</li>
+<li>定义新的卡牌效果和行为</li>
+</ul>
+</li>
+<li><p><strong>新场地效果</strong>：</p>
+<ul>
+<li>通过扩展SceneEffect类</li>
+<li>实现新的效果逻辑</li>
+</ul>
+</li>
+<li><p><strong>新特殊牌型</strong>：</p>
+<ul>
+<li>在SpecialHands中添加新的检测方法</li>
+<li>定义新的加分规则</li>
+</ul>
+</li>
+<li><p><strong>新游戏模式</strong>：</p>
+<ul>
+<li>通过扩展GameManager</li>
+<li>修改游戏规则和流程</li>
+</ul>
+</li>
+</ol>
+<h2 id="技术栈">技术栈</h2>
+<ol>
+<li><strong>引擎</strong>：Cocos Creator 3.x</li>
+<li><strong>语言</strong>：TypeScript</li>
+<li><strong>UI框架</strong>：Cocos UI系统</li>
+<li><strong>动画系统</strong>：Cocos Animation</li>
+<li><strong>资源管理</strong>：Cocos Asset Bundle</li>
+</ol>
+<h2 id="性能考虑">性能考虑</h2>
+<ol>
+<li><p><strong>对象池</strong>：</p>
+<ul>
+<li>卡牌对象重用</li>
+<li>UI元素复用</li>
+</ul>
+</li>
+<li><p><strong>事件优化</strong>：</p>
+<ul>
+<li>减少不必要的事件触发</li>
+<li>使用事件委托模式</li>
+</ul>
+</li>
+<li><p><strong>渲染优化</strong>：</p>
+<ul>
+<li>合理使用图集</li>
+<li>控制同屏元素数量</li>
+</ul>
+</li>
+<li><p><strong>内存管理</strong>：</p>
+<ul>
+<li>及时释放不需要的资源</li>
+<li>避免循环引用</li>
+</ul>
+</li>
+</ol>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Structure - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>结构图</h3>
+      <ul>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Project Structure</h1>
+      <div class="content-body">
+        <h1 id="foolcards-项目结构图">FoolCards 项目结构图</h1>
+<h2 id="文件目录结构">文件目录结构</h2>
+        <div class="mermaid">
+
+
+flowchart TD
+Root["FoolCards/"] --> Assets["assets/"]
+Root --> Docs["docs/"]
+Root --> GitIgnore[".gitignore"]
+Root --> License["LICENSE"]
+Root --> Readme["README.md"]
+Root --> ProjectJson["project.json"]
+%%Assets 子目录
+Assets --> AssetDocs["docs/"]
+Assets --> Prefabs["prefabs/"]
+Assets --> Resources["resources/"]
+Assets --> Scenes["scenes/"]
+Assets --> Scripts["scripts/"]
+%%Prefabs 子目录
+Prefabs --> CardPrefab["Card.prefab"]
+Prefabs --> GameOverPopupPrefab["GameOverPopup.prefab"]
+Prefabs --> SceneEffectPrefab["SceneEffect.prefab"]
+%%Resources 子目录
+Resources --> Background["background/"]
+Resources --> Cards["cards/"]
+Resources --> Menu["menu/"]
+Resources --> UiAssets["ui-assets/"]
+%%UI Assets 子目录
+UiAssets --> Buttons["Buttons/"]
+UiAssets --> Cursors["Cursors/"]
+UiAssets --> GenUI["Gen UI/"]
+UiAssets --> SymbolsText["Symbols & Text/"]
+%%Scenes 子目录
+Scenes --> GameScene["Game.scene"]
+Scenes --> LoadingScene["Loading.scene"]
+Scenes --> MainMenuScene["MainMenu.scene"]
+%%Scripts 子目录
+Scripts --> AIOpponent["AIOpponent.ts"]
+Scripts --> Card["Card.ts"]
+Scripts --> GameLauncher["GameLauncher.ts"]
+Scripts --> GameManager["GameManager.ts"]
+Scripts --> GameOverPopup["GameOverPopup.ts"]
+Scripts --> LoadingSceneScript["LoadingScene.ts"]
+Scripts --> MainMenu["MainMenu.ts"]
+Scripts --> PlatformAdapter["PlatformAdapter.ts"]
+Scripts --> SceneEffect["SceneEffect.ts"]
+Scripts --> SpecialHands["SpecialHands.ts"]
+Scripts --> SpecialHandsPopup["SpecialHandsPopup.ts"]
+%%Docs 子目录
+Docs --> DiagramsDir["diagrams/"]
+%%Diagrams 子目录
+DiagramsDir --> StructureDir["structure/"]
+DiagramsDir --> ERDir["er/"]
+DiagramsDir --> FlowchartsDir["flowcharts/"]
+DiagramsDir --> UIDir["ui/"]
+%%样式设置
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style Root fill:#f9f,stroke:#333,stroke-width:2px
+style Assets fill:#bbf,stroke:#33f,stroke-width:1px
+style Docs fill:#bbf,stroke:#33f,stroke-width:1px
+style AssetDocs fill:#ddf,stroke:#33f,stroke-width:1px
+style Prefabs fill:#ddf,stroke:#33f,stroke-width:1px
+style Resources fill:#ddf,stroke:#33f,stroke-width:1px
+style Scenes fill:#ddf,stroke:#33f,stroke-width:1px
+style Scripts fill:#ddf,stroke:#33f,stroke-width:1px
+style DiagramsDir fill:#ddf,stroke:#33f,stroke-width:1px
+style StructureDir fill:#ddf,stroke:#33f,stroke-width:1px
+style ERDir fill:#ddf,stroke:#33f,stroke-width:1px
+style FlowchartsDir fill:#ddf,stroke:#33f,stroke-width:1px
+style UIDir fill:#ddf,stroke:#33f,stroke-width:1px
+style UiAssets fill:#ddf,stroke:#33f,stroke-width:1px
+style CardPrefab fill:#fff,stroke:#999,stroke-width:1px
+style GameOverPopupPrefab fill:#fff,stroke:#999,stroke-width:1px
+style SceneEffectPrefab fill:#fff,stroke:#999,stroke-width:1px
+style GameScene fill:#fff,stroke:#999,stroke-width:1px
+style LoadingScene fill:#fff,stroke:#999,stroke-width:1px
+style MainMenuScene fill:#fff,stroke:#999,stroke-width:1px
+style AIOpponent fill:#fff,stroke:#999,stroke-width:1px
+style Card fill:#fff,stroke:#999,stroke-width:1px
+style GameLauncher fill:#fff,stroke:#999,stroke-width:1px
+style GameManager fill:#fff,stroke:#999,stroke-width:1px
+style GameOverPopup fill:#fff,stroke:#999,stroke-width:1px
+style LoadingSceneScript fill:#fff,stroke:#999,stroke-width:1px
+style MainMenu fill:#fff,stroke:#999,stroke-width:1px
+style PlatformAdapter fill:#fff,stroke:#999,stroke-width:1px
+style SceneEffect fill:#fff,stroke:#999,stroke-width:1px
+style SpecialHands fill:#fff,stroke:#999,stroke-width:1px
+style SpecialHandsPopup fill:#fff,stroke:#999,stroke-width:1px
+style GitIgnore fill:#fff,stroke:#999,stroke-width:1px
+style License fill:#fff,stroke:#999,stroke-width:1px
+style Readme fill:#fff,stroke:#999,stroke-width:1px
+style ProjectJson fill:#fff,stroke:#999,stroke-width:1px
+style Background fill:#fff,stroke:#999,stroke-width:1px
+style Cards fill:#fff,stroke:#999,stroke-width:1px
+style Menu fill:#fff,stroke:#999,stroke-width:1px
+style Buttons fill:#fff,stroke:#999,stroke-width:1px
+style Cursors fill:#fff,stroke:#999,stroke-width:1px
+style GenUI fill:#fff,stroke:#999,stroke-width:1px
+style SymbolsText fill:#fff,stroke:#999,stroke-width:1px
+</div>
+
+<h2 id="核心组件关系图">核心组件关系图</h2>
+        <div class="mermaid">
+
+
+flowchart TB
+GameManager["GameManager.ts"] --> Card["Card.ts"]
+GameManager --> AIOpponent["AIOpponent.ts"]
+GameManager --> PlayArea["PlayArea"]
+GameManager --> SpecialHands["SpecialHands.ts"]
+GameManager --> GameOverPopup["GameOverPopup.ts"]
+Card --> SceneEffect["SceneEffect.ts"]
+PlayArea --> SceneEffect
+AIOpponent --> Card
+SpecialHands --> Card
+%% 分隔classDef语句
+
+
+style GameManager fill:#f96,stroke:#333,stroke-width:2px
+style Card fill:#9cf,stroke:#36c,stroke-width:1px
+style AIOpponent fill:#9cf,stroke:#36c,stroke-width:1px
+style PlayArea fill:#9cf,stroke:#36c,stroke-width:1px
+style SpecialHands fill:#9cf,stroke:#36c,stroke-width:1px
+style SceneEffect fill:#9cf,stroke:#36c,stroke-width:1px
+style GameOverPopup fill:#9cf,stroke:#36c,stroke-width:1px
+</div>
+
+<h2 id="游戏流程图">游戏流程图</h2>
+        <div class="mermaid">
+
+
+flowchart LR
+GameLauncher["GameLauncher.ts"] --> LoadingScene["LoadingScene.ts"]
+LoadingScene --> MainMenu["MainMenu.ts"]
+MainMenu --> GameManager["GameManager.ts"]
+GameManager --> GameOverPopup["GameOverPopup.ts"]
+GameOverPopup --> |重新开始| GameManager
+GameOverPopup --> |返回主菜单| MainMenu
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style GameLauncher fill:#9f9,stroke:#333,stroke-width:2px
+style LoadingScene fill:#ff9,stroke:#993,stroke-width:1px
+style MainMenu fill:#ff9,stroke:#993,stroke-width:1px
+style GameManager fill:#ff9,stroke:#993,stroke-width:1px
+style GameOverPopup fill:#f99,stroke:#933,stroke-width:1px
+</div>
+
+<h2 id="项目结构说明">项目结构说明</h2>
+<h3 id="主要目录">主要目录</h3>
+<ol>
+<li><p><strong>assets/</strong>: 包含所有游戏资源</p>
+<ul>
+<li><strong>docs/</strong>: 项目文档</li>
+<li><strong>prefabs/</strong>: 游戏中使用的预制体</li>
+<li><strong>resources/</strong>: 游戏资源（图片、音频等）</li>
+<li><strong>scenes/</strong>: 游戏场景</li>
+<li><strong>scripts/</strong>: 游戏脚本</li>
+</ul>
+</li>
+<li><p><strong>docs/</strong>: 项目文档和图表</p>
+<ul>
+<li><strong>diagrams/</strong>: 项目相关图表<ul>
+<li><strong>structure/</strong>: 项目结构图</li>
+<li><strong>er/</strong>: 实体关系图</li>
+<li><strong>flowcharts/</strong>: 流程图</li>
+<li><strong>ui/</strong>: UI设计图</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="主要脚本文件">主要脚本文件</h3>
+<table>
+<thead>
+<tr>
+<th>文件名</th>
+<th>描述</th>
+<th>主要功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>GameManager.ts</strong></td>
+<td>游戏管理器</td>
+<td>游戏核心逻辑、回合管理、分数计算</td>
+</tr>
+<tr>
+<td><strong>Card.ts</strong></td>
+<td>卡牌类</td>
+<td>定义卡牌属性和行为、卡牌视觉表现</td>
+</tr>
+<tr>
+<td><strong>AIOpponent.ts</strong></td>
+<td>AI对手组件</td>
+<td>AI出牌逻辑、对手卡牌管理、AI卡牌显示</td>
+</tr>
+<tr>
+<td><strong>SceneEffect.ts</strong></td>
+<td>场景效果</td>
+<td>定义不同场景的特殊效果、效果应用逻辑</td>
+</tr>
+<tr>
+<td><strong>SpecialHands.ts</strong></td>
+<td>特殊牌型</td>
+<td>特殊牌型检测、特殊牌型效果应用</td>
+</tr>
+<tr>
+<td><strong>GameOverPopup.ts</strong></td>
+<td>游戏结束弹窗</td>
+<td>显示游戏结果、提供重新开始选项</td>
+</tr>
+<tr>
+<td><strong>MainMenu.ts</strong></td>
+<td>主菜单脚本</td>
+<td>处理主菜单界面交互、游戏启动</td>
+</tr>
+<tr>
+<td><strong>LoadingScene.ts</strong></td>
+<td>加载场景脚本</td>
+<td>资源加载、进度显示</td>
+</tr>
+<tr>
+<td><strong>GameLauncher.ts</strong></td>
+<td>游戏启动器</td>
+<td>游戏初始化、资源预加载</td>
+</tr>
+<tr>
+<td><strong>PlatformAdapter.ts</strong></td>
+<td>平台适配器</td>
+<td>处理不同平台的兼容性问题</td>
+</tr>
+</tbody></table>
+<h3 id="场景文件">场景文件</h3>
+<table>
+<thead>
+<tr>
+<th>场景文件</th>
+<th>描述</th>
+<th>主要功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Game.scene</strong></td>
+<td>游戏主场景</td>
+<td>包含游戏主界面、卡牌区域、场地区域</td>
+</tr>
+<tr>
+<td><strong>MainMenu.scene</strong></td>
+<td>主菜单场景</td>
+<td>包含开始游戏、设置等选项</td>
+</tr>
+<tr>
+<td><strong>Loading.scene</strong></td>
+<td>加载场景</td>
+<td>显示资源加载进度</td>
+</tr>
+</tbody></table>
+<h3 id="预制体">预制体</h3>
+<table>
+<thead>
+<tr>
+<th>预制体</th>
+<th>描述</th>
+<th>主要组件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Card.prefab</strong></td>
+<td>卡牌预制体</td>
+<td>包含卡牌视觉元素、交互组件</td>
+</tr>
+<tr>
+<td><strong>GameOverPopup.prefab</strong></td>
+<td>游戏结束弹窗预制体</td>
+<td>包含结果显示、按钮组件</td>
+</tr>
+<tr>
+<td><strong>SceneEffect.prefab</strong></td>
+<td>场景效果预制体</td>
+<td>包含效果视觉元素、动画组件</td>
+</tr>
+</tbody></table>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

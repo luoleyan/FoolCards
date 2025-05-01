@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid 测试页面</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .test-section h2 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .mermaid {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .success {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mermaid 图表测试页面</h1>
+    <p>此页面用于测试Mermaid图表是否正确渲染。</p>
+
+    <div class="test-section">
+      <h2>流程图测试</h2>
+              <div class="mermaid">
+flowchart TD
+    A[开始] --> B{是否有错误?}
+    B -- 是 --> C[修复错误]
+    B -- 否 --> D[继续]
+    C --> D
+    D --> E[结束]
+
+    style A fill:#9f9,stroke:#333,stroke-width:2px
+    style E fill:#f99,stroke:#933,stroke-width:1px
+</div>
+    </div>
+
+    <div class="test-section">
+      <h2>实体关系图测试</h2>
+              <div class="mermaid">
+
+erDiagram
+    PLAYER {
+    int id PK
+    string name
+    int score
+    }
+
+    GAME {
+    int id PK
+    datetime startTime
+    datetime endTime
+    }
+
+    PLAYER ||--o{ GAME : "参与"
+
+</div>
+    </div>
+
+    <div class="test-section">
+      <h2>类图测试</h2>
+              <div class="mermaid">
+
+
+classDiagram
+-int score
++startGame()
++endGame()
+}
+
+-string suit
+-int rank
++getValue()
+}
+
+GameManager --> Card
+
+
+</div>
+    </div>
+
+    <div class="test-section">
+      <h2>状态图测试</h2>
+              <div class="mermaid">
+
+stateDiagram-v2
+    [*] --> 准备
+    准备 --> 游戏中
+    游戏中 --> 结束
+    结束 --> [*]
+
+</div>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultDiv = document.getElementById('result');
+
+      // 使用mermaid.run()渲染图表
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).then(() => {
+          resultDiv.innerHTML = '<p class="success">所有图表渲染成功!</p>';
+        }).catch(error => {
+          resultDiv.innerHTML = `<p class="error">图表渲染错误: ${error.message}</p>`;
+          console.error('Mermaid运行错误:', error);
+        });
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">图表处理错误: ${error.message}</p>`;
+        console.error('Mermaid处理错误:', error);
+      }
+    });
+  </script>
+</body>
+</html>

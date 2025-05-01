@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoolCards 实体关系图</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    h2 {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .diagram-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .description {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f7ff;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FoolCards 实体关系图</h1>
+    
+    <h2>游戏核心实体关系</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+erDiagram
+    PLAYER {
+    int playerId PK
+    string name
+    int score
+    boolean isAI
+    }
+    GAME {
+    int gameId PK
+    datetime startTime
+    datetime endTime
+    string status
+    }
+    ROUND {
+    int roundId PK
+    int roundNumber
+    int gameId FK
+    datetime startTime
+    datetime endTime
+    }
+    PLAYER_IN_GAME {
+    int playerGameId PK
+    int playerId FK
+    int gameId FK
+    int finalScore
+    }
+    PLAYER ||  --o  { PLAYER_IN_GAME : "参与"
+    GAME ||  --o  { PLAYER_IN_GAME : "包含"
+    GAME ||  --o  { ROUND : "包含"
+    ROUND ||  --o  { PLAYER_IN_GAME : "关联"
+
+</div>
+    </div>
+    <div class="description">
+      <p>游戏核心实体关系图展示了FoolCards游戏中的主要实体及其关系：</p>
+      <ul>
+        <li><strong>Player（玩家）</strong>：表示游戏中的玩家，包含玩家ID、名称、分数和是否为AI等属性</li>
+        <li><strong>Game（游戏）</strong>：表示一局游戏，包含游戏ID、开始时间、结束时间和状态等属性</li>
+        <li><strong>Round（回合）</strong>：表示游戏中的一个回合，包含回合ID、回合编号、游戏ID、开始时间和结束时间等属性</li>
+        <li><strong>PlayerInGame（玩家游戏关系）</strong>：表示玩家与游戏的多对多关系，包含玩家ID、游戏ID和最终分数等属性</li>
+      </ul>
+      <p>关系说明：</p>
+      <ul>
+        <li>一个玩家可以参与多个游戏，一个游戏可以包含多个玩家（通过PlayerInGame关联）</li>
+        <li>一个游戏包含多个回合</li>
+        <li>回合与玩家游戏关系相关联，表示玩家在特定回合中的状态</li>
+      </ul>
+    </div>
+    
+    <h2>卡牌和场地实体关系</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+erDiagram
+    CARD {
+    int cardId PK
+    string suit
+    int rank
+    int value
+    }
+    PLAY_AREA {
+    int areaId PK
+    int position
+    int score
+    int gameId FK
+    }
+    SCENE_EFFECT {
+    int effectId PK
+    string type
+    string name
+    string description
+    }
+    CARD_IN_HAND {
+    int cardHandId PK
+    int cardId FK
+    int playerId FK
+    int gameId FK
+    int position
+    }
+    CARD_IN_AREA {
+    int cardAreaId PK
+    int cardId FK
+    int areaId FK
+    int position
+    boolean isPublic
+    }
+    CARD ||  --o  { CARD_IN_HAND : "属于"
+    CARD ||  --o  { CARD_IN_AREA : "放置于"
+    PLAY_AREA ||  --o  { CARD_IN_AREA : "包含"
+    PLAY_AREA ||  --|  | SCENE_EFFECT : "应用"
+
+</div>
+    </div>
+    <div class="description">
+      <p>卡牌和场地实体关系图展示了FoolCards游戏中卡牌、场地和效果之间的关系：</p>
+      <ul>
+        <li><strong>Card（卡牌）</strong>：表示游戏中的一张卡牌，包含卡牌ID、花色、点数和价值等属性</li>
+        <li><strong>PlayArea（场地）</strong>：表示游戏中的一个场地，包含场地ID、位置、分数和游戏ID等属性</li>
+        <li><strong>SceneEffect（场景效果）</strong>：表示场地的特殊效果，包含效果ID、类型、名称和描述等属性</li>
+        <li><strong>CardInHand（手牌）</strong>：表示玩家手中的卡牌，包含卡牌ID、玩家ID、游戏ID和位置等属性</li>
+        <li><strong>CardInArea（场地卡牌）</strong>：表示放置在场地上的卡牌，包含卡牌ID、场地ID、位置和是否公开等属性</li>
+      </ul>
+      <p>关系说明：</p>
+      <ul>
+        <li>一张卡牌可以属于多个玩家的手牌（在不同游戏中）</li>
+        <li>一张卡牌可以放置在多个场地（在不同游戏中）</li>
+        <li>一个场地可以包含多张卡牌</li>
+        <li>一个场地应用一个场景效果</li>
+      </ul>
+    </div>
+    
+    <h2>特殊牌型实体关系</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+erDiagram
+    SPECIAL_HAND {
+    int handId PK
+    int areaId FK
+    int typeId FK
+    int bonusPoints
+    }
+    SPECIAL_HAND_TYPE {
+    int typeId PK
+    string name
+    string description
+    int baseBonus
+    }
+    PLAY_AREA {
+    int areaId PK
+    int position
+    int score
+    int gameId FK
+    }
+    SPECIAL_HAND }o--  || SPECIAL_HAND_TYPE : "属于"
+    PLAY_AREA ||  --o  { SPECIAL_HAND : "形成"
+
+</div>
+    </div>
+    <div class="description">
+      <p>特殊牌型实体关系图展示了FoolCards游戏中特殊牌型相关的实体及其关系：</p>
+      <ul>
+        <li><strong>SpecialHand（特殊牌型）</strong>：表示场地中形成的特殊牌型，包含牌型ID、场地ID、类型ID和额外分数等属性</li>
+        <li><strong>SpecialHandType（特殊牌型类型）</strong>：表示特殊牌型的类型，包含类型ID、名称、描述和基础加分等属性</li>
+        <li><strong>PlayArea（场地）</strong>：表示游戏中的一个场地，包含场地ID、位置、分数和游戏ID等属性</li>
+      </ul>
+      <p>关系说明：</p>
+      <ul>
+        <li>一个场地可以形成多个特殊牌型</li>
+        <li>一个特殊牌型属于一个特殊牌型类型</li>
+        <li>一个特殊牌型类型可以有多个特殊牌型实例</li>
+      </ul>
+    </div>
+    
+    <h2>完整实体关系图</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+erDiagram
+    PLAYER {
+    int playerId PK
+    string name
+    int score
+    boolean isAI
+    }
+    GAME {
+    int gameId PK
+    datetime startTime
+    datetime endTime
+    string status
+    }
+    ROUND {
+    int roundId PK
+    int roundNumber
+    int gameId FK
+    datetime startTime
+    datetime endTime
+    }
+    PLAYER_IN_GAME {
+    int playerGameId PK
+    int playerId FK
+    int gameId FK
+    int finalScore
+    }
+    CARD {
+    int cardId PK
+    string suit
+    int rank
+    int value
+    }
+    PLAY_AREA {
+    int areaId PK
+    int position
+    int score
+    int gameId FK
+    }
+    SCENE_EFFECT {
+    int effectId PK
+    string type
+    string name
+    string description
+    }
+    CARD_IN_HAND {
+    int cardHandId PK
+    int cardId FK
+    int playerId FK
+    int gameId FK
+    int position
+    }
+    CARD_IN_AREA {
+    int cardAreaId PK
+    int cardId FK
+    int areaId FK
+    int position
+    boolean isPublic
+    }
+    SPECIAL_HAND {
+    int handId PK
+    int areaId FK
+    int typeId FK
+    int bonusPoints
+    }
+    SPECIAL_HAND_TYPE {
+    int typeId PK
+    string name
+    string description
+    int baseBonus
+    }
+    PLAYER ||  --o  { PLAYER_IN_GAME : "参与"
+    GAME ||  --o  { PLAYER_IN_GAME : "包含"
+    GAME ||  --o  { ROUND : "包含"
+    ROUND ||  --o  { PLAYER_IN_GAME : "关联"
+    CARD ||  --o  { CARD_IN_HAND : "属于"
+    CARD ||  --o  { CARD_IN_AREA : "放置于"
+    PLAY_AREA ||  --o  { CARD_IN_AREA : "包含"
+    PLAY_AREA ||  --|  | SCENE_EFFECT : "应用"
+    SPECIAL_HAND }o--  || SPECIAL_HAND_TYPE : "属于"
+    PLAY_AREA ||  --o  { SPECIAL_HAND : "形成"
+    GAME ||  --o  { PLAY_AREA : "包含"
+    PLAYER_IN_GAME ||  --o  { CARD_IN_HAND : "持有"
+
+</div>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      er: {
+        diagramPadding: 20,
+        layoutDirection: 'TB',
+        minEntityWidth: 100,
+        minEntityHeight: 75,
+        entityPadding: 15,
+        stroke: 'gray',
+        fill: 'honeydew',
+        fontSize: 12
+      },
+      themeVariables: {
+        primaryColor: '#3498db',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#2980b9',
+        lineColor: '#2980b9',
+        secondaryColor: '#5dade2',
+        tertiaryColor: '#f8f9fa'
+      }
+    });
+  </script>
+</body>
+</html>

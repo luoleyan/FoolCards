@@ -1,0 +1,21 @@
+{
+  "name": "foolcards-docs-generator",
+  "version": "1.0.0",
+  "description": "FoolCards项目分析文档HTML生成工具",
+  "main": "generate.js",
+  "scripts": {
+    "generate": "node generate.js",
+    "watch": "node auto_update.js --watch",
+    "update-all": "node auto_update.js --all",
+    "update-structure": "node auto_update.js --structure",
+    "update-er": "node auto_update.js --er",
+    "update-flowcharts": "node auto_update.js --flowcharts",
+    "update-ui": "node auto_update.js --ui"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "highlight.js": "^11.11.1",
+    "marked": "^5.1.2"
+  },
+  "private": true
+}

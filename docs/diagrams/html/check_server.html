@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>服务器环境检查Mermaid图表</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .page-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .page-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+    .page-item h3 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .page-item p {
+      margin-bottom: 10px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #3498db;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-right: 10px;
+    }
+    .btn:hover {
+      background-color: #2980b9;
+    }
+    .instructions {
+      background-color: #f8f9fa;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .server-status {
+      background-color: #e8f8f5;
+      border-left: 4px solid #2ecc71;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>服务器环境检查Mermaid图表</h1>
+    
+    <div class="server-status">
+      <h3>服务器状态</h3>
+      <p>服务器正在运行: <span id="server-url">http://localhost:8080</span></p>
+    </div>
+    
+    <div class="instructions">
+      <h3>使用说明</h3>
+      <p>1. 确保已经运行了服务器: <code>node server.js</code></p>
+      <p>2. 点击下面的链接，在新标签页中打开各个页面</p>
+      <p>3. 检查页面中的Mermaid图表是否正确渲染</p>
+    </div>
+    
+    <div class="page-list" id="page-list">
+      <!-- 页面列表将通过JavaScript动态生成 -->
+    </div>
+  </div>
+
+  <script>
+    // 所有包含Mermaid图表的页面
+    const pages = [
+      { path: 'structure/project_structure.html', title: '项目结构图' },
+      { path: 'structure/class_diagram.html', title: '类图' },
+      { path: 'structure/component_interaction.html', title: '组件交互图' },
+      { path: 'structure/architecture.html', title: '架构设计图' },
+      { path: 'structure/ai_opponent.html', title: 'AI对手实现' },
+      { path: 'structure/error_handling.html', title: '错误处理策略' },
+      { path: 'er/entity_relationship.html', title: '实体关系图' },
+      { path: 'flowcharts/game_flow.html', title: '游戏流程图' },
+      { path: 'flowcharts/game_state.html', title: '游戏状态图' },
+      { path: 'ui/ui_layout.html', title: 'UI布局' },
+      { path: 'ui/game_wireframe.html', title: '游戏界面线框图' },
+      { path: 'ui/menu_wireframe.html', title: '菜单界面线框图' },
+      { path: 'ui/card_interaction.html', title: '卡牌交互流程' },
+      { path: 'ui/ui_component_hierarchy.html', title: 'UI组件层次结构' },
+      { path: 'ui/ui_style_guide.html', title: 'UI样式指南' },
+      { path: 'ui/interaction_flow.html', title: '交互流程图' },
+      { path: 'test_mermaid.html', title: 'Mermaid测试页面' }
+    ];
+    
+    // 生成页面列表
+    function generatePageList() {
+      const pageList = document.getElementById('page-list');
+      pageList.innerHTML = '';
+      
+      const serverUrl = document.getElementById('server-url').textContent;
+      
+      pages.forEach((page, index) => {
+        const pageItem = document.createElement('div');
+        pageItem.className = 'page-item';
+        pageItem.innerHTML = `
+          <h3>${page.title}</h3>
+          <p>${page.path}</p>
+          <a href="${serverUrl}/${page.path}" target="_blank" class="btn">在新标签页中打开</a>
+        `;
+        pageList.appendChild(pageItem);
+      });
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      generatePageList();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Diagram - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>结构图</h3>
+      <ul>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Class Diagram</h1>
+      <div class="content-body">
+        <h1 id="foolcards-类图">FoolCards 类图</h1>
+<h2 id="核心类关系">核心类关系</h2>
+        <div class="mermaid">
+classDiagram
+    class GameManager {
+        -playerScore: number
+        -opponentScore: number
+        -areaScores: number[]
+        -currentRound: number
+        -maxRounds: number
+        -playAreas: PlayArea[]
+        -aiOpponent: AIOpponent
+        +playCard(card, area) void
+        +calculateScore() number
+        +showGameOver() void
+    }
+
+    class Card {
+        -suit: string
+        -rank: number
+        -value: number
+        -isRevealed: boolean
+        +getFullName() string
+        +showCardFace() void
+    }
+
+    class AIOpponent {
+        -opponentHand: Card[]
+        -playAreas: PlayArea[]
+        -aiPlayedCards: Card[]
+        -aiCardContainers: Node[]
+        +init() void
+        +playCards() void
+        +showCardInPlayArea(card, area) void
+        +arrangeAICardsInPlayArea() void
+    }
+
+    class PlayArea {
+        -cards: Card[]
+        -maxCards: number
+        +addCard(card) void
+        +getScore() number
+    }
+
+    class SceneEffect {
+        -type: string
+        -name: string
+        -description: string
+        -publicCards: Card[]
+        +reveal() void
+        +apply() void
+    }
+
+    class SpecialHands {
+        -specialHands: object[]
+        +checkSpecialHand(cards) boolean
+        +getHandBonus(cards) number
+    }
+
+    class GameOverPopup {
+        -popupNode: Node
+        -resultLabel: Label
+        -playerScoreLabel: Label
+        -opponentScoreLabel: Label
+        -returnButton: Button
+        +showPopup(playerScore, opponentScore) void
+        +hidePopup() void
+    }
+
+    class MainMenu {
+        -startButton: Button
+        -settingsButton: Button
+        +onStartClicked() void
+        +onSettingsClicked() void
+    }
+
+    class LoadingScene {
+        -progressBar: ProgressBar
+        -loadingText: Label
+        +loadResources() void
+        +updateProgress(progress) void
+    }
+
+    GameManager "1" --> "*" Card : 管理
+    GameManager "1" --> "1" AIOpponent : 控制
+    GameManager "1" --> "*" PlayArea : 管理
+    GameManager ..> SpecialHands : 使用
+    GameManager ..> GameOverPopup : 显示
+    GameManager ..> MainMenu : 控制
+    GameManager ..> LoadingScene : 控制
+    Card "*" --o "1" PlayArea : 属于
+    PlayArea "1" --> "1" SceneEffect : 应用
+    AIOpponent ..> Card : 使用
+    SpecialHands ..> Card : 检测
+</div>
+
+<h2 id="组件继承关系">组件继承关系</h2>
+        <div class="mermaid">
+classDiagram
+    class Component {
+        +node: Node
+        +enabled: boolean
+        +onLoad() void
+        +start() void
+        +update(dt) void
+    }
+
+    class UIComponent {
+        +opacity: number
+        +visible: boolean
+        +setPosition(x, y) void
+        +setScale(x, y) void
+    }
+
+    class GameComponent {
+        +gameManager: GameManager
+        +init(gameManager) void
+        +reset() void
+    }
+
+    class Button {
+        +onClick: Function
+        +interactable: boolean
+    }
+
+    class Label {
+        +string: string
+        +fontSize: number
+        +color: Color
+    }
+
+    class ProgressBar {
+        +progress: number
+        +totalLength: number
+    }
+
+    class Card {
+        -suit: string
+        -rank: number
+        -value: number
+    }
+
+    class PlayArea {
+        -cards: Card[]
+        -maxCards: number
+    }
+
+    class SceneEffect {
+        -type: string
+        -name: string
+    }
+
+    Component <|-- UIComponent
+    Component <|-- GameComponent
+    UIComponent <|-- Button
+    UIComponent <|-- Label
+    UIComponent <|-- ProgressBar
+    GameComponent <|-- Card
+    GameComponent <|-- PlayArea
+    GameComponent <|-- SceneEffect
+</div>
+
+<h2 id="类关系说明">类关系说明</h2>
+<h3 id="主要类">主要类</h3>
+<ol>
+<li><p><strong>GameManager</strong>: 游戏的核心管理类，负责游戏逻辑和状态管理</p>
+<ul>
+<li>管理玩家分数、回合数和游戏区域</li>
+<li>控制游戏流程（开始新回合、结束回合等）</li>
+<li>处理卡牌的打出和分数计算</li>
+</ul>
+</li>
+<li><p><strong>Card</strong>: 卡牌类，表示游戏中的一张卡牌</p>
+<ul>
+<li>包含花色、点数、价值等属性</li>
+<li>提供获取卡牌名称、价值和翻转卡牌等方法</li>
+<li>继承自GameComponent基类</li>
+</ul>
+</li>
+<li><p><strong>SceneEffect</strong>: 场景效果类，定义不同场景的特殊效果</p>
+<ul>
+<li>包含效果类型、名称和描述</li>
+<li>提供应用效果和计算分数的方法</li>
+<li>继承自GameComponent基类</li>
+</ul>
+</li>
+<li><p><strong>SpecialHands</strong>: 特殊牌型管理类，检测和处理特殊牌型</p>
+<ul>
+<li>检查卡牌组合是否形成特殊牌型</li>
+<li>计算特殊牌型的额外分数</li>
+</ul>
+</li>
+<li><p><strong>GameOverPopup</strong>: 游戏结束弹窗类，显示游戏结果</p>
+<ul>
+<li>显示玩家和对手的最终分数</li>
+<li>提供返回主菜单的选项</li>
+<li>使用UIComponent子类（Button、Label等）</li>
+</ul>
+</li>
+<li><p><strong>MainMenu</strong>: 主菜单类，处理主菜单界面的交互</p>
+<ul>
+<li>处理开始游戏和设置按钮的点击事件</li>
+<li>使用UIComponent子类（Button等）</li>
+</ul>
+</li>
+<li><p><strong>LoadingScene</strong>: 加载场景类，处理资源加载和进度显示</p>
+<ul>
+<li>加载游戏所需的资源</li>
+<li>更新加载进度条</li>
+<li>使用UIComponent子类（ProgressBar、Label等）</li>
+</ul>
+</li>
+</ol>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

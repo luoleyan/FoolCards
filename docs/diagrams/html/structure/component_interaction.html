@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Interaction - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>结构图</h3>
+      <ul>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Component Interaction</h1>
+      <div class="content-body">
+        <h1 id="foolcards-组件交互图">FoolCards 组件交互图</h1>
+<h2 id="核心组件交互">核心组件交互</h2>
+        <div class="mermaid">
+
+
+flowchart TD
+GameLauncher["GameLauncher"] --> LoadingScene["LoadingScene"]
+LoadingScene --> MainMenu["MainMenu"]
+MainMenu --> GameManager["GameManager"]
+GameLauncher --> |初始化| PlatformAdapter["PlatformAdapter"]
+GameManager --> |平台适配| PlatformAdapter
+GameManager --> GameOverPopup["GameOverPopup"]
+GameManager --> Card["Card"]
+GameManager --> PlayArea1["PlayArea 1"]
+GameManager --> PlayArea2["PlayArea 2"]
+GameManager --> PlayArea3["PlayArea 3"]
+GameManager --> ExchangeArea["ExchangeArea"]
+Card --> SpecialHands["SpecialHands"]
+PlayArea1 --> SceneEffect["SceneEffect"]
+PlayArea2 --> SceneEffect
+PlayArea3 --> SceneEffect
+SpecialHands <--> SceneEffect
+%%样式定义
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+%%应用样式
+
+
+style GameLauncher fill:#9f9,stroke:#393,stroke-width:2px
+style GameManager fill:#f96,stroke:#933,stroke-width:2px
+style LoadingScene fill:#ff9,stroke:#993,stroke-width:1px
+style MainMenu fill:#ff9,stroke:#993,stroke-width:1px
+style Card fill:#9cf,stroke:#36c,stroke-width:1px
+style PlayArea1 fill:#9cf,stroke:#36c,stroke-width:1px
+style PlayArea2 fill:#9cf,stroke:#36c,stroke-width:1px
+style PlayArea3 fill:#9cf,stroke:#36c,stroke-width:1px
+style ExchangeArea fill:#9cf,stroke:#36c,stroke-width:1px
+style SpecialHands fill:#9cf,stroke:#36c,stroke-width:1px
+style SceneEffect fill:#9cf,stroke:#36c,stroke-width:1px
+style PlatformAdapter fill:#9cf,stroke:#36c,stroke-width:1px
+style GameOverPopup fill:#f99,stroke:#933,stroke-width:1px
+</div>
+
+<h2 id="数据流向">数据流向</h2>
+        <div class="mermaid">
+
+
+flowchart TD
+UserInput["用户输入/交互"] --> GameManagerProcess["GameManager处理"]
+GameManagerProcess --> UIUpdate["UI状态更新"]
+GameManagerProcess --> GameStateUpdate["游戏状态更新"]
+GameStateUpdate --> CardStateUpdate["卡牌状态更新"]
+CardStateUpdate --> EffectProcess["特殊效果处理"]
+EffectProcess --> ScoreCalculation["分数计算"]
+%%样式定义
+%% 分隔classDef语句
+%% 分隔classDef语句
+%%应用样式
+
+
+style UserInput fill:#bbf,stroke:#33f,stroke-width:2px
+style GameManagerProcess fill:#ff9,stroke:#993,stroke-width:1px
+style GameStateUpdate fill:#ff9,stroke:#993,stroke-width:1px
+style EffectProcess fill:#ff9,stroke:#993,stroke-width:1px
+style UIUpdate fill:#9cf,stroke:#36c,stroke-width:1px
+style CardStateUpdate fill:#9cf,stroke:#36c,stroke-width:1px
+style ScoreCalculation fill:#9cf,stroke:#36c,stroke-width:1px
+</div>
+
+<h2 id="事件传递机制">事件传递机制</h2>
+        <div class="mermaid">
+
+
+flowchart TD
+SourceComponent["事件源组件"] -->|触发事件| EventSystem["事件系统"]
+EventSystem -->|分发事件| Listener1["监听者组件 1"]
+EventSystem -->|分发事件| Listener2["监听者组件 2"]
+EventSystem -->|分发事件| Listener3["监听者组件 3"]
+%%样式定义
+%% 分隔classDef语句
+%% 分隔classDef语句
+%%应用样式
+
+
+style SourceComponent fill:#f96,stroke:#933,stroke-width:2px
+style EventSystem fill:#bbf,stroke:#33f,stroke-width:2px
+style Listener1 fill:#9cf,stroke:#36c,stroke-width:1px
+style Listener2 fill:#9cf,stroke:#36c,stroke-width:1px
+style Listener3 fill:#9cf,stroke:#36c,stroke-width:1px
+</div>
+
+<h2 id="主要事件类型">主要事件类型</h2>
+<ol>
+<li><p><strong>游戏流程事件</strong>：</p>
+<ul>
+<li>游戏开始</li>
+<li>回合开始/结束</li>
+<li>游戏结束</li>
+</ul>
+</li>
+<li><p><strong>卡牌事件</strong>：</p>
+<ul>
+<li>卡牌选择</li>
+<li>卡牌打出</li>
+<li>卡牌效果触发</li>
+</ul>
+</li>
+<li><p><strong>场地事件</strong>：</p>
+<ul>
+<li>场地选择</li>
+<li>场地效果触发</li>
+<li>场地分数更新</li>
+</ul>
+</li>
+<li><p><strong>特殊牌型事件</strong>：</p>
+<ul>
+<li>特殊牌型检测</li>
+<li>特殊牌型效果触发</li>
+</ul>
+</li>
+<li><p><strong>UI事件</strong>：</p>
+<ul>
+<li>按钮点击</li>
+<li>拖拽操作</li>
+<li>弹窗显示/隐藏</li>
+</ul>
+</li>
+</ol>
+<h2 id="组件职责">组件职责</h2>
+<ol>
+<li><p><strong>GameLauncher</strong>：</p>
+<ul>
+<li>游戏初始化</li>
+<li>资源预加载</li>
+<li>场景切换管理</li>
+</ul>
+</li>
+<li><p><strong>GameManager</strong>：</p>
+<ul>
+<li>游戏核心逻辑</li>
+<li>回合管理</li>
+<li>分数计算</li>
+<li>游戏状态控制</li>
+<li>AI对手管理</li>
+</ul>
+</li>
+<li><p><strong>AIOpponent</strong>：</p>
+<ul>
+<li>AI出牌逻辑</li>
+<li>对手卡牌管理</li>
+<li>AI卡牌显示</li>
+<li>卡牌排列管理</li>
+</ul>
+</li>
+<li><p><strong>Card</strong>：</p>
+<ul>
+<li>卡牌数据</li>
+<li>卡牌视觉表现</li>
+<li>卡牌交互逻辑</li>
+</ul>
+</li>
+<li><p><strong>PlayArea</strong>：</p>
+<ul>
+<li>场地状态管理</li>
+<li>卡牌放置逻辑</li>
+<li>场地效果触发</li>
+</ul>
+</li>
+<li><p><strong>SceneEffect</strong>：</p>
+<ul>
+<li>场地特殊效果定义</li>
+<li>效果应用逻辑</li>
+<li>视觉效果展示</li>
+</ul>
+</li>
+<li><p><strong>SpecialHands</strong>：</p>
+<ul>
+<li>特殊牌型检测</li>
+<li>特殊牌型效果应用</li>
+<li>特殊牌型视觉反馈</li>
+</ul>
+</li>
+<li><p><strong>GameOverPopup</strong>：</p>
+<ul>
+<li>游戏结果展示</li>
+<li>结算界面交互</li>
+<li>重新开始/返回选项</li>
+</ul>
+</li>
+</ol>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

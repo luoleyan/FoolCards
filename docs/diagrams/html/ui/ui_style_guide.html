@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ui Style Guide - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>UI设计图</h3>
+      <ul>
+        <li><a href="ui/card_interaction.html">Card Interaction</a></li>
+<li><a href="ui/game_wireframe.html">Game Wireframe</a></li>
+<li><a href="ui/interaction_flow.html">Interaction Flow</a></li>
+<li><a href="ui/menu_wireframe.html">Menu Wireframe</a></li>
+<li><a href="ui/README.html">README</a></li>
+<li><a href="ui/ui_component_hierarchy.html">Ui Component Hierarchy</a></li>
+<li><a href="ui/ui_layout.html">Ui Layout</a></li>
+<li><a href="ui/ui_style_guide.html">Ui Style Guide</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Ui Style Guide</h1>
+      <div class="content-body">
+        <h1 id="foolcards-ui-样式指南">FoolCards UI 样式指南</h1>
+<h2 id="颜色方案">颜色方案</h2>
+<h3 id="主要颜色">主要颜色</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["主色调 #1       主色调 #2       主色调 #3       主色调 #4"]
+    node3["#3A7BDA        #2C5BA6        #1D3C6E        #0F1E37"]
+    node4["蓝色            深蓝色          暗蓝色          深暗蓝色"]
+
+</div>
+
+<h3 id="强调色">强调色</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["强调色 #1       强调色 #2       强调色 #3       强调色 #4"]
+    node3["#E67E22        #D35400        #A04000        #6E2C00"]
+    node4["橙色            深橙色          暗橙色          棕色"]
+
+</div>
+
+<h3 id="中性色">中性色</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["中性色 #1       中性色 #2       中性色 #3       中性色 #4"]
+    node3["#FFFFFF        #ECECEC        #BDBDBD        #757575"]
+    node4["白色            浅灰色          灰色            深灰色"]
+
+</div>
+
+<h3 id="功能色">功能色</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["成功色          警告色          错误色          信息色"]
+    node3["#2ECC71        #F1C40F        #E74C3C        #3498DB"]
+    node4["绿色            黄色            红色            蓝色"]
+
+</div>
+
+<h2 id="字体">字体</h2>
+<h3 id="标题字体">标题字体</h3>
+<ul>
+<li><strong>字体家族</strong>: &quot;Arial Bold&quot;, sans-serif</li>
+<li><strong>大小</strong>: <ul>
+<li>主标题: 48px</li>
+<li>副标题: 36px</li>
+<li>小标题: 24px</li>
+</ul>
+</li>
+<li><strong>颜色</strong>: #FFFFFF (白色) 或 #3A7BDA (主蓝色)</li>
+<li><strong>效果</strong>: <ul>
+<li>阴影: 2px 2px 4px rgba(0, 0, 0, 0.5)</li>
+<li>可选描边: 1px #0F1E37 (深暗蓝色)</li>
+</ul>
+</li>
+</ul>
+<h3 id="正文字体">正文字体</h3>
+<ul>
+<li><strong>字体家族</strong>: &quot;Arial&quot;, sans-serif</li>
+<li><strong>大小</strong>: <ul>
+<li>大文本: 18px</li>
+<li>标准文本: 16px</li>
+<li>小文本: 14px</li>
+</ul>
+</li>
+<li><strong>颜色</strong>: #ECECEC (浅灰色) 或 #FFFFFF (白色)</li>
+<li><strong>效果</strong>: <ul>
+<li>轻微阴影: 1px 1px 2px rgba(0, 0, 0, 0.3)</li>
+</ul>
+</li>
+</ul>
+<h3 id="按钮文本">按钮文本</h3>
+<ul>
+<li><strong>字体家族</strong>: &quot;Arial Bold&quot;, sans-serif</li>
+<li><strong>大小</strong>: 20px</li>
+<li><strong>颜色</strong>: #FFFFFF (白色)</li>
+<li><strong>效果</strong>: <ul>
+<li>阴影: 1px 1px 2px rgba(0, 0, 0, 0.5)</li>
+<li>全大写</li>
+</ul>
+</li>
+</ul>
+<h2 id="按钮样式">按钮样式</h2>
+<h3 id="主要按钮">主要按钮</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["默认状态         悬停状态         按下状态"]
+    node4["背景: #3A7BDA    背景: #2C5BA6    背景: #1D3C6E"]
+    node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
+    node6["边框: 无         边框: 无         边框: 无"]
+
+</div>
+
+<h3 id="次要按钮">次要按钮</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["默认状态         悬停状态         按下状态"]
+    node4["背景: #757575    背景: #BDBDBD    背景: #ECECEC"]
+    node5["文本: #FFFFFF    文本: #0F1E37    文本: #1D3C6E"]
+    node6["边框: 无         边框: 无         边框: 无"]
+
+</div>
+
+<h3 id="强调按钮">强调按钮</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["默认状态         悬停状态         按下状态"]
+    node4["背景: #E67E22    背景: #D35400    背景: #A04000"]
+    node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
+    node6["边框: 无         边框: 无         边框: 无"]
+
+</div>
+
+<h3 id="禁用按钮">禁用按钮</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["禁用状态"]
+    node4["背景: #BDBDBD"]
+    node5["文本: #757575"]
+    node6["边框: 无"]
+    node7["透明度: 50%"]
+
+</div>
+
+<h2 id="卡牌样式">卡牌样式</h2>
+<h3 id="卡牌基本样式">卡牌基本样式</h3>
+<ul>
+<li><strong>尺寸</strong>: 120px × 180px</li>
+<li><strong>圆角</strong>: 8px</li>
+<li><strong>边框</strong>: 2px 白色 (#FFFFFF)</li>
+<li><strong>阴影</strong>: 0px 4px 8px rgba(0, 0, 0, 0.5)</li>
+</ul>
+<h3 id="卡牌状态">卡牌状态</h3>
+        <div class="mermaid">
+
+flowchart TD
+    node2["普通状态         选中状态         不可用状态       打出状态"]
+    node4["边框: #FFFFFF    边框: #E67E22    边框: #BDBDBD    边框: #2ECC71"]
+    node5["阴影: 标准       阴影: 增强       透明度: 50%      发光效果"]
+    node6["位置: 正常       位置: 上浮       位置: 正常       位置: 目标区域"]
+
+</div>
+
+<h2 id="图标样式">图标样式</h2>
+<h3 id="功能图标">功能图标</h3>
+<ul>
+<li><strong>尺寸</strong>: 32px × 32px (大), 24px × 24px (中), 16px × 16px (小)</li>
+<li><strong>颜色</strong>: 主要使用白色 (#FFFFFF)</li>
+<li><strong>效果</strong>: <ul>
+<li>轻微阴影: 1px 1px 2px rgba(0, 0, 0, 0.3)</li>
+<li>悬停时颜色变为强调色 (#E67E22)</li>
+</ul>
+</li>
+</ul>
+<h3 id="状态图标">状态图标</h3>
+<ul>
+<li><strong>尺寸</strong>: 24px × 24px</li>
+<li><strong>颜色</strong>: 根据状态使用对应的功能色</li>
+<li><strong>效果</strong>: <ul>
+<li>可能有轻微动画效果</li>
+<li>重要状态可能有脉动效果</li>
+</ul>
+</li>
+</ul>
+<h2 id="弹窗样式">弹窗样式</h2>
+<h3 id="基本弹窗">基本弹窗</h3>
+<ul>
+<li><strong>背景</strong>: 深蓝色 (#1D3C6E) 半透明 (80% 不透明度)</li>
+<li><strong>边框</strong>: 2px 蓝色 (#3A7BDA)</li>
+<li><strong>圆角</strong>: 12px</li>
+<li><strong>阴影</strong>: 0px 8px 16px rgba(0, 0, 0, 0.7)</li>
+<li><strong>标题</strong>: 居中，使用标题字体</li>
+<li><strong>内容</strong>: 使用正文字体</li>
+<li><strong>按钮</strong>: 底部居中或两侧对齐</li>
+</ul>
+<h3 id="特殊弹窗">特殊弹窗</h3>
+<ul>
+<li><strong>成功弹窗</strong>: 使用成功色 (#2ECC71) 作为边框和强调</li>
+<li><strong>警告弹窗</strong>: 使用警告色 (#F1C40F) 作为边框和强调</li>
+<li><strong>错误弹窗</strong>: 使用错误色 (#E74C3C) 作为边框和强调</li>
+</ul>
+<h2 id="动画效果指南">动画效果指南</h2>
+<h3 id="过渡动画">过渡动画</h3>
+<ul>
+<li><strong>持续时间</strong>: 300ms (快速), 500ms (标准), 800ms (慢速)</li>
+<li><strong>缓动函数</strong>: <ul>
+<li>进入: ease-out 或 cubic-bezier(0.0, 0.0, 0.2, 1)</li>
+<li>退出: ease-in 或 cubic-bezier(0.4, 0.0, 1, 1)</li>
+<li>强调: ease-in-out 或 cubic-bezier(0.4, 0.0, 0.2, 1)</li>
+</ul>
+</li>
+</ul>
+<h3 id="反馈动画">反馈动画</h3>
+<ul>
+<li><strong>按钮点击</strong>: 轻微缩小 (scale: 0.95) 然后恢复</li>
+<li><strong>卡牌选择</strong>: 上浮 (translateY: -10px) 并轻微放大 (scale: 1.05)</li>
+<li><strong>错误提示</strong>: 轻微左右摇晃 (translateX: ±5px)</li>
+<li><strong>成功提示</strong>: 轻微放大 (scale: 1.1) 然后恢复</li>
+</ul>
+<h2 id="响应式设计断点">响应式设计断点</h2>
+<ul>
+<li><strong>移动设备</strong>: &lt; 768px</li>
+<li><strong>平板设备</strong>: 768px - 1024px</li>
+<li><strong>桌面设备</strong>: &gt; 1024px</li>
+</ul>
+<h2 id="可访问性指南">可访问性指南</h2>
+<ul>
+<li><strong>颜色对比度</strong>: 所有文本应至少达到 WCAG AA 级别 (4.5:1)</li>
+<li><strong>文本大小</strong>: 最小正文文本不应小于 14px</li>
+<li><strong>交互元素</strong>: <ul>
+<li>最小触摸区域为 44px × 44px</li>
+<li>提供明确的焦点状态</li>
+<li>避免仅依赖颜色传达信息</li>
+</ul>
+</li>
+</ul>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

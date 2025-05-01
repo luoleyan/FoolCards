@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoolCards 游戏流程图</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    h2 {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .diagram-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .description {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f7ff;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FoolCards 游戏流程图</h1>
+    
+    <h2>主要游戏流程</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+flowchart TD
+Start([启动游戏])   -->   LoadResources[加载资源]
+LoadResources   -->   ShowMainMenu[显示主菜单]
+ShowMainMenu   -->   StartNewGame[开始新游戏]
+StartNewGame   -->   GameLoop[游戏循环]
+GameLoop   -->   GameOver[游戏结束]
+GameOver   -->   ShowResults[显示结果]
+ShowResults   -->   ReturnToMenu[返回主菜单]
+ReturnToMenu   -->   ShowMainMenu
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style Start fill:#27ae60,stroke:#219653,color:white,stroke-width:2px
+style LoadResources fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ShowMainMenu fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style StartNewGame fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style GameLoop fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ShowResults fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ReturnToMenu fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style GameOver fill:#e74c3c,stroke:#c0392b,color:white,stroke-width:2px
+</div>
+    </div>
+    <div class="description">
+      <p>主要游戏流程展示了FoolCards游戏从启动到结束的完整流程：</p>
+      <ol>
+        <li>游戏启动后首先加载必要的资源</li>
+        <li>资源加载完成后显示主菜单</li>
+        <li>玩家选择开始新游戏</li>
+        <li>进入游戏循环（包含多个回合）</li>
+        <li>游戏结束后显示结果</li>
+        <li>玩家可以选择返回主菜单</li>
+      </ol>
+    </div>
+    
+    <h2>游戏循环详细流程</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+flowchart TD
+StartNewRound([开始新回合])   -->   DealCards[发放卡牌]
+DealCards   -->   PlayerTurn[玩家回合]
+PlayerTurn   -->   EndRound[结束回合]
+EndRound   -->   CalculateScore[计算分数]
+CalculateScore   -->   CheckGameEnd{检查游戏结束?}
+CheckGameEnd   -->  |是| GameOver[游戏结束<br>达到5回合]
+CheckGameEnd   -->  |否| StartNewRound
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style StartNewRound fill:#27ae60,stroke:#219653,color:white,stroke-width:2px
+style DealCards fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style PlayerTurn fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style EndRound fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CalculateScore fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CheckGameEnd fill:#f39c12,stroke:#d35400,color:white,stroke-width:1px,shape:diamond
+style GameOver fill:#e74c3c,stroke:#c0392b,color:white,stroke-width:2px
+</div>
+    </div>
+    <div class="description">
+      <p>游戏循环详细流程展示了一个完整游戏中的回合循环：</p>
+      <ol>
+        <li>开始新回合，重置回合状态</li>
+        <li>向玩家和AI对手发放卡牌</li>
+        <li>玩家进行回合操作</li>
+        <li>回合结束后计算分数</li>
+        <li>检查游戏是否结束（达到5回合）</li>
+        <li>如果游戏未结束，开始新回合；否则结束游戏</li>
+      </ol>
+    </div>
+    
+    <h2>玩家回合详细流程</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+flowchart TD
+StartPlayerTurn([开始玩家回合])   -->   SelectCard[选择卡牌]
+SelectCard   -->   SelectArea[选择场地]
+SelectArea   -->   ConfirmSelection[确认选择]
+ConfirmSelection   -->   PlayCard[打出卡牌]
+PlayCard   -->   CheckSpecialHand[检查特殊牌型]
+CheckSpecialHand   -->   ApplyAreaEffect[应用场地效果]
+ApplyAreaEffect   -->   CalculateTempScore[计算临时分数]
+CalculateTempScore   -->   ContinueOrEnd{继续或结束回合?}
+ContinueOrEnd   -->  |继续| SelectCard
+ContinueOrEnd   -->  |结束| AITurn[AI对手回合]
+AITurn   -->   EndRound[结束回合]
+%% 分隔classDef语句
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style StartPlayerTurn fill:#27ae60,stroke:#219653,color:white,stroke-width:2px
+style SelectCard fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style SelectArea fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ConfirmSelection fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style PlayCard fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CheckSpecialHand fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ApplyAreaEffect fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CalculateTempScore fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style AITurn fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ContinueOrEnd fill:#f39c12,stroke:#d35400,color:white,stroke-width:1px,shape:diamond
+style EndRound fill:#e74c3c,stroke:#c0392b,color:white,stroke-width:2px
+</div>
+    </div>
+    <div class="description">
+      <p>玩家回合详细流程展示了玩家在一个回合中的操作流程：</p>
+      <ol>
+        <li>玩家从手牌中选择一张卡牌</li>
+        <li>选择要放置卡牌的场地</li>
+        <li>确认选择并打出卡牌</li>
+        <li>系统检查是否形成特殊牌型</li>
+        <li>应用场地效果</li>
+        <li>计算临时分数</li>
+        <li>玩家可以选择继续出牌或结束回合</li>
+        <li>玩家结束回合后，AI对手进行回合操作</li>
+        <li>AI对手回合结束后，当前回合结束</li>
+      </ol>
+    </div>
+    
+    <h2>分数计算流程</h2>
+    <div class="diagram-container">
+              <div class="mermaid">
+
+
+flowchart TD
+StartCalculation([开始计算分数])   -->   CalculateBaseScore[计算基础分数<br>卡牌点数之和]
+CalculateBaseScore   -->   CheckSpecialHands[检查特殊牌型]
+CheckSpecialHands   -->   CalculateSpecialBonus[计算特殊牌型加分]
+CalculateSpecialBonus   -->   ApplyAreaEffects[应用场地效果]
+ApplyAreaEffects   -->   CalculateAreaBonus[计算场地效果加分]
+CalculateAreaBonus   -->   SumAllScores[汇总所有分数]
+SumAllScores   -->   UpdatePlayerScore[更新玩家分数]
+%% 分隔classDef语句
+%% 分隔classDef语句
+
+
+style StartCalculation fill:#27ae60,stroke:#219653,color:white,stroke-width:2px
+style CalculateBaseScore fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CheckSpecialHands fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CalculateSpecialBonus fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style ApplyAreaEffects fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style CalculateAreaBonus fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style SumAllScores fill:#3498db,stroke:#2980b9,color:white,stroke-width:1px
+style UpdatePlayerScore fill:#e74c3c,stroke:#c0392b,color:white,stroke-width:2px
+</div>
+    </div>
+    <div class="description">
+      <p>分数计算流程展示了游戏中分数的计算方式：</p>
+      <ol>
+        <li>计算基础分数：卡牌点数之和</li>
+        <li>检查是否形成特殊牌型（如对子、顺子等）</li>
+        <li>计算特殊牌型带来的额外分数</li>
+        <li>应用场地效果（如花色奖励、点数奖励等）</li>
+        <li>计算场地效果带来的额外分数</li>
+        <li>汇总所有分数：基础分数 + 特殊牌型加分 + 场地效果加分</li>
+        <li>更新玩家的总分数</li>
+      </ol>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      themeVariables: {
+        primaryColor: '#3498db',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#2980b9',
+        lineColor: '#2980b9',
+        secondaryColor: '#5dade2',
+        tertiaryColor: '#f8f9fa'
+      }
+    });
+  </script>
+</body>
+</html>

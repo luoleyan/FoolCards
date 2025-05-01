@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}} - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
+  <!-- 确保按正确顺序加载JavaScript库 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+  <!-- 加载自定义脚本 -->
+  <script src="../js/md-converter.js"></script>
+  <!-- 错误处理 -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('全局错误:', message, 'at', source, lineno, colno);
+      if (error) console.error(error);
+      
+      // 显示友好的错误消息
+      const contentElement = document.getElementById('content');
+      if (contentElement) {
+        contentElement.innerHTML = '<div class="error-message">' +
+          '<h3>加载文档时出错</h3>' +
+          '<p>请检查控制台获取详细信息，或者刷新页面重试。</p>' +
+          '<p>错误信息: ' + message + '</p>' +
+          '</div>';
+      }
+      
+      return true; // 阻止默认错误处理
+    };
+  </script>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>{{sidebar_title}}</h3>
+      <ul>
+        {{sidebar_links}}
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>{{title}}</h1>
+      <div id="content">
+        <div class="loading">
+          <span class="dots">...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+  <script>
+    // 初始化Mermaid（如果可用）
+    if (typeof mermaid !== 'undefined') {
+      try {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'neutral',
+          securityLevel: 'loose',
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true
+          }
+        });
+        console.log('Mermaid初始化成功');
+      } catch (error) {
+        console.error('Mermaid初始化失败:', error);
+      }
+    } else {
+      console.warn('Mermaid库未加载，图表渲染将不可用');
+    }
+
+    // 页面加载完成后初始化内容
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        // 检查必要的库是否已加载
+        if (typeof marked === 'undefined') {
+          throw new Error('marked库未加载');
+        }
+        
+        // 加载并转换Markdown文件
+        console.log('开始加载Markdown文件...');
+        initializeContent('{{markdown_path}}', 'content');
+      } catch (error) {
+        console.error('初始化内容时出错:', error);
+        const contentElement = document.getElementById('content');
+        if (contentElement) {
+          contentElement.innerHTML = '<div class="error-message">' +
+            '<h3>初始化内容时出错</h3>' +
+            '<p>错误信息: ' + error.message + '</p>' +
+            '</div>';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

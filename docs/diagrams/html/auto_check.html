@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动检查所有页面 - FoolCards 项目分析文档</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    #progress {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    #iframes {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>自动检查所有页面</h1>
+  
+  <p>此工具将自动检查所有HTML页面是否能正常加载，并检测是否有JavaScript错误。</p>
+  
+  <button id="start-check">开始检查</button>
+  
+  <div id="progress">进度: 0/0</div>
+  
+  <div id="results">
+    <p>点击"开始检查"按钮开始检查所有页面。</p>
+  </div>
+  
+  <h2>页面预览</h2>
+  <div id="iframes"></div>
+  
+  <script src="auto_check.js"></script>
+</body>
+</html>

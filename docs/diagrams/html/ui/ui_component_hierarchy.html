@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ui Component Hierarchy - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>UI设计图</h3>
+      <ul>
+        <li><a href="ui/card_interaction.html">Card Interaction</a></li>
+<li><a href="ui/game_wireframe.html">Game Wireframe</a></li>
+<li><a href="ui/interaction_flow.html">Interaction Flow</a></li>
+<li><a href="ui/menu_wireframe.html">Menu Wireframe</a></li>
+<li><a href="ui/README.html">README</a></li>
+<li><a href="ui/ui_component_hierarchy.html">Ui Component Hierarchy</a></li>
+<li><a href="ui/ui_layout.html">Ui Layout</a></li>
+<li><a href="ui/ui_style_guide.html">Ui Style Guide</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Ui Component Hierarchy</h1>
+      <div class="content-body">
+        <h1 id="foolcards-ui组件层次结构">FoolCards UI组件层次结构</h1>
+<h2 id="游戏场景ui组件层次">游戏场景UI组件层次</h2>
+<pre><code>Canvas (根节点)
+│
+├── Camera
+│
+├── Background (背景)
+│
+├── UILayer (UI层)
+│   │
+│   ├── TopBar (顶部栏)
+│   │   ├── RoundInfo (回合信息)
+│   │   │   ├── RoundLabel (回合标签)
+│   │   │   ├── RoundCounter (回合计数器)
+│   │   │   └── RoundProgress (回合进度)
+│   │   │
+│   │   └── ScoreInfo (分数信息)
+│   │       ├── PlayerScoreLabel (玩家分数标签)
+│   │       └── OpponentScoreLabel (对手分数标签)
+│   │
+│   ├── GameArea (游戏区域)
+│   │   │
+│   │   ├── OpponentHandArea (对手手牌区域)
+│   │   │   └── [OpponentCard] (对手卡牌)
+│   │   │
+│   │   ├── PlayAreasContainer (场地区域容器)
+│   │   │   │
+│   │   │   ├── PlayArea1 (场地区域1)
+│   │   │   │   ├── AreaBackground (区域背景)
+│   │   │   │   ├── EffectIcon (效果图标)
+│   │   │   │   ├── CardSlots (卡牌槽)
+│   │   │   │   │   ├── CardSlot1 (卡牌槽1)
+│   │   │   │   │   ├── CardSlot2 (卡牌槽2)
+│   │   │   │   │   └── CardSlot3 (卡牌槽3)
+│   │   │   │   └── ScoreLabel (分数标签)
+│   │   │   │
+│   │   │   ├── PlayArea2 (场地区域2)
+│   │   │   │   ├── AreaBackground (区域背景)
+│   │   │   │   ├── EffectIcon (效果图标)
+│   │   │   │   ├── CardSlots (卡牌槽)
+│   │   │   │   │   ├── CardSlot1 (卡牌槽1)
+│   │   │   │   │   ├── CardSlot2 (卡牌槽2)
+│   │   │   │   │   └── CardSlot3 (卡牌槽3)
+│   │   │   │   └── ScoreLabel (分数标签)
+│   │   │   │
+│   │   │   └── PlayArea3 (场地区域3)
+│   │   │       ├── AreaBackground (区域背景)
+│   │   │       ├── EffectIcon (效果图标)
+│   │   │       ├── CardSlots (卡牌槽)
+│   │   │       │   ├── CardSlot1 (卡牌槽1)
+│   │   │       │   ├── CardSlot2 (卡牌槽2)
+│   │   │       │   └── CardSlot3 (卡牌槽3)
+│   │   │       └── ScoreLabel (分数标签)
+│   │   │
+│   │   └── PlayerHandArea (玩家手牌区域)
+│   │       └── [PlayerCard] (玩家卡牌)
+│   │
+│   ├── ControlArea (控制区域)
+│   │   │
+│   │   ├── ExchangeArea (换牌区域)
+│   │   │   ├── ExchangeButton (换牌按钮)
+│   │   │   └── ExchangeCountLabel (换牌次数标签)
+│   │   │
+│   │   ├── TimerArea (计时器区域)
+│   │   │   ├── TimerIcon (计时器图标)
+│   │   │   └── TimerLabel (计时器标签)
+│   │   │
+│   │   └── EndTurnButton (结束回合按钮)
+│   │
+│   └── MenuArea (菜单区域)
+│       ├── BackButton (返回按钮)
+│       └── SpecialHandsButton (特殊牌型按钮)
+│
+└── PopupLayer (弹窗层)
+    │
+    ├── GameOverPopup (游戏结束弹窗)
+    │   ├── PopupBackground (弹窗背景)
+    │   ├── TitleLabel (标题标签)
+    │   ├── ScoreContainer (分数容器)
+    │   │   ├── PlayerFinalScore (玩家最终分数)
+    │   │   └── OpponentFinalScore (对手最终分数)
+    │   └── ButtonContainer (按钮容器)
+    │       ├── ReturnButton (返回按钮)
+    │       └── PlayAgainButton (再玩一次按钮)
+    │
+    └── SpecialHandsPopup (特殊牌型弹窗)
+        ├── PopupBackground (弹窗背景)
+        ├── TitleLabel (标题标签)
+        ├── HandsContainer (牌型容器)
+        │   ├── HandItem1 (牌型项1)
+        │   ├── HandItem2 (牌型项2)
+        │   └── ... (更多牌型项)
+        └── CloseButton (关闭按钮)
+</code></pre>
+<h2 id="主菜单场景ui组件层次">主菜单场景UI组件层次</h2>
+<pre><code>Canvas (根节点)
+│
+├── Camera
+│
+├── Background (背景)
+│
+└── UILayer (UI层)
+    │
+    ├── TitleArea (标题区域)
+    │   └── GameTitle (游戏标题)
+    │
+    └── MenuArea (菜单区域)
+        ├── StartButton (开始按钮)
+        ├── SettingsButton (设置按钮)
+        └── ExitButton (退出按钮)
+</code></pre>
+<h2 id="加载场景ui组件层次">加载场景UI组件层次</h2>
+<pre><code>Canvas (根节点)
+│
+├── Camera
+│
+├── Background (背景)
+│
+└── UILayer (UI层)
+    │
+    ├── LoadingText (加载文本)
+    │
+    ├── ProgressBarContainer (进度条容器)
+    │   ├── ProgressBarBackground (进度条背景)
+    │   └── ProgressBarFill (进度条填充)
+    │
+    └── ProgressPercentage (进度百分比)
+</code></pre>
+<h2 id="设置弹窗ui组件层次">设置弹窗UI组件层次</h2>
+<pre><code>SettingsPopup (设置弹窗)
+│
+├── PopupBackground (弹窗背景)
+│
+├── TitleLabel (标题标签)
+│
+├── SettingsContainer (设置容器)
+│   │
+│   ├── MusicVolumeControl (音乐音量控制)
+│   │   ├── Label (标签)
+│   │   └── Slider (滑块)
+│   │
+│   ├── SoundVolumeControl (音效音量控制)
+│   │   ├── Label (标签)
+│   │   └── Slider (滑块)
+│   │
+│   ├── FullscreenToggle (全屏切换)
+│   │   ├── Label (标签)
+│   │   └── Checkbox (复选框)
+│   │
+│   └── LanguageSelector (语言选择器)
+│       ├── Label (标签)
+│       └── Dropdown (下拉菜单)
+│
+└── ConfirmButton (确认按钮)
+</code></pre>
+<h2 id="组件属性说明">组件属性说明</h2>
+<h3 id="通用属性">通用属性</h3>
+<ul>
+<li><strong>位置 (Position)</strong>: 组件在父节点中的相对位置</li>
+<li><strong>大小 (Size)</strong>: 组件的宽度和高度</li>
+<li><strong>锚点 (Anchor)</strong>: 组件的定位锚点</li>
+<li><strong>缩放 (Scale)</strong>: 组件的缩放比例</li>
+<li><strong>旋转 (Rotation)</strong>: 组件的旋转角度</li>
+<li><strong>颜色 (Color)</strong>: 组件的颜色</li>
+<li><strong>不透明度 (Opacity)</strong>: 组件的不透明度</li>
+</ul>
+<h3 id="特定组件属性">特定组件属性</h3>
+<h4 id="按钮-button">按钮 (Button)</h4>
+<ul>
+<li><strong>正常状态 (Normal)</strong>: 按钮的默认外观</li>
+<li><strong>按下状态 (Pressed)</strong>: 按钮被按下时的外观</li>
+<li><strong>悬停状态 (Hover)</strong>: 鼠标悬停在按钮上时的外观</li>
+<li><strong>禁用状态 (Disabled)</strong>: 按钮被禁用时的外观</li>
+<li><strong>点击事件 (Click Event)</strong>: 按钮被点击时触发的事件</li>
+</ul>
+<h4 id="标签-label">标签 (Label)</h4>
+<ul>
+<li><strong>文本 (Text)</strong>: 标签显示的文本内容</li>
+<li><strong>字体 (Font)</strong>: 标签使用的字体</li>
+<li><strong>字体大小 (Font Size)</strong>: 标签的字体大小</li>
+<li><strong>对齐方式 (Alignment)</strong>: 文本的对齐方式</li>
+<li><strong>行高 (Line Height)</strong>: 多行文本的行高</li>
+</ul>
+<h4 id="进度条-progress-bar">进度条 (Progress Bar)</h4>
+<ul>
+<li><strong>进度值 (Progress)</strong>: 当前进度值 (0-1)</li>
+<li><strong>填充方向 (Fill Direction)</strong>: 进度条的填充方向</li>
+<li><strong>背景图片 (Background Sprite)</strong>: 进度条的背景图片</li>
+<li><strong>填充图片 (Fill Sprite)</strong>: 进度条的填充图片</li>
+</ul>
+<h4 id="滑块-slider">滑块 (Slider)</h4>
+<ul>
+<li><strong>最小值 (Min Value)</strong>: 滑块的最小值</li>
+<li><strong>最大值 (Max Value)</strong>: 滑块的最大值</li>
+<li><strong>当前值 (Current Value)</strong>: 滑块的当前值</li>
+<li><strong>步长 (Step)</strong>: 滑块的步长</li>
+<li><strong>值改变事件 (Value Changed Event)</strong>: 滑块值改变时触发的事件</li>
+</ul>
+<h2 id="响应式布局策略">响应式布局策略</h2>
+<h3 id="桌面端--1024px">桌面端 (&gt; 1024px)</h3>
+<ul>
+<li>所有元素完整显示</li>
+<li>水平布局优先</li>
+<li>使用固定大小和位置</li>
+</ul>
+<h3 id="平板端-768px---1024px">平板端 (768px - 1024px)</h3>
+<ul>
+<li>保持基本布局不变</li>
+<li>适当缩小元素大小</li>
+<li>调整元素间距</li>
+</ul>
+<h3 id="移动端--768px">移动端 (&lt; 768px)</h3>
+<ul>
+<li>垂直布局优先</li>
+<li>手牌区域可滚动</li>
+<li>简化部分UI元素</li>
+<li>增大交互元素的触摸区域</li>
+</ul>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

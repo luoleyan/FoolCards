@@ -1,59 +1,111 @@
 # FoolCards 实体关系图
 
-```
-+----------------+     +----------------+     +----------------+
-|     Player     |     |      Game      |     |     Round      |
-+----------------+     +----------------+     +----------------+
-| PK: playerId   |     | PK: gameId     |     | PK: roundId    |
-| - name         |     | - startTime    |     | - roundNumber  |
-| - score        |     | - endTime      |     | FK: gameId     |
-| - isAI         |     | - status       |     | - startTime    |
-+-------+--------+     +-------+--------+     | - endTime      |
-        |                      | 1              +-------+--------+
-        | 2                    |                        | 1
-        |                      v                        |
-        |               +-----------------+             |
-        +-------------->|  PlayerInGame   |<------------+
-                        +-----------------+
-                        | PK: playerGameId|
-                        | FK: playerId    |
-                        | FK: gameId      |
-                        | - finalScore    |
-                        +-----------------+
+## 游戏核心实体关系
+
+```mermaid
+erDiagram
+    PLAYER {
+        int playerId PK
+        string name
+        int score
+        boolean isAI
+    }
+
+    GAME {
+        int gameId PK
+        datetime startTime
+        datetime endTime
+        string status
+    }
+
+    ROUND {
+        int roundId PK
+        int roundNumber
+        int gameId FK
+        datetime startTime
+        datetime endTime
+    }
+
+    PLAYER_IN_GAME {
+        int playerGameId PK
+        int playerId FK
+        int gameId FK
+        int finalScore
+    }
+
+    PLAYER ||--o{ PLAYER_IN_GAME : "参与"
+    GAME ||--o{ PLAYER_IN_GAME : "包含"
+    GAME ||--o{ ROUND : "包含"
+    ROUND ||--o{ PLAYER_IN_GAME : "关联"
 ```
 
-```
-+----------------+     +----------------+     +----------------+
-|      Card      |     |   PlayArea     |     |  SceneEffect   |
-+----------------+     +----------------+     +----------------+
-| PK: cardId     |     | PK: areaId     |     | PK: effectId   |
-| - suit         |     | - position     |     | - type         |
-| - rank         |     | - score        |     | - name         |
-| - value        |     | FK: gameId     |     | - description  |
-+-------+--------+     +-------+--------+     +-------+--------+
-        |                      | 1                     | 1
-        | *                    |                       |
-        v                      v                       |
-+----------------+     +----------------+              |
-|   CardInHand   |     |   CardInArea   |<-------------+
-+----------------+     +----------------+
-| PK: cardHandId |     | PK: cardAreaId |
-| FK: cardId     |     | FK: cardId     |
-| FK: playerId   |     | FK: areaId     |
-| FK: gameId     |     | - position     |
-| - position     |     | - isPublic     |
-+----------------+     +----------------+
+## 卡牌与场地关系
+
+```mermaid
+erDiagram
+    CARD {
+        int cardId PK
+        string suit
+        int rank
+        int value
+    }
+
+    PLAY_AREA {
+        int areaId PK
+        int position
+        int score
+        int gameId FK
+    }
+
+    SCENE_EFFECT {
+        int effectId PK
+        string type
+        string name
+        string description
+    }
+
+    CARD_IN_HAND {
+        int cardHandId PK
+        int cardId FK
+        int playerId FK
+        int gameId FK
+        int position
+    }
+
+    CARD_IN_AREA {
+        int cardAreaId PK
+        int cardId FK
+        int areaId FK
+        int position
+        boolean isPublic
+    }
+
+    CARD ||--o{ CARD_IN_HAND : "持有"
+    CARD ||--o{ CARD_IN_AREA : "放置"
+    PLAY_AREA ||--o{ CARD_IN_AREA : "包含"
+    PLAY_AREA ||--|| SCENE_EFFECT : "应用"
 ```
 
-```
-+----------------+     +----------------+
-| SpecialHand    |     | SpecialHandType|
-+----------------+     +----------------+
-| PK: handId     |     | PK: typeId     |
-| FK: areaId     |     | - name         |
-| FK: typeId     |     | - description  |
-| - bonusPoints  |     | - baseBonus    |
-+----------------+     +----------------+
+## 特殊牌型关系
+
+```mermaid
+erDiagram
+    SPECIAL_HAND {
+        int handId PK
+        int areaId FK
+        int typeId FK
+        int bonusPoints
+    }
+
+    SPECIAL_HAND_TYPE {
+        int typeId PK
+        string name
+        string description
+        int baseBonus
+    }
+
+    PLAY_AREA ||--o{ SPECIAL_HAND : "形成"
+    SPECIAL_HAND_TYPE ||--o{ SPECIAL_HAND : "定义"
 ```
 
 ## 实体关系说明

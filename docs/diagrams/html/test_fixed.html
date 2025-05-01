@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>修复后的Mermaid测试</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    .mermaid {
+      background-color: white;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .success {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>修复后的Mermaid测试</h1>
+    
+    <div class="test-section">
+      <h2>流程图测试</h2>
+      <pre>
+flowchart TD
+    A[开始] --> B{是否有错误?}
+    B -- 是 --> C[修复错误]
+    B -- 否 --> D[继续]
+    C --> D
+    D --> E[结束]
+    
+    classDef start fill:#9f9,stroke:#333,stroke-width:2px
+    %% 这是一个注释，用于分隔两个classDef语句
+    classDef end fill:#f99,stroke:#933,stroke-width:1px
+    
+    class A start
+    class E end
+      </pre>
+      <div class="mermaid">
+
+
+flowchart TD
+A[开始] --> B{是否有错误?}
+B -- 是 --> C[修复错误]
+B -- 否 --> D[继续]
+C --> D
+D --> E[结束]
+
+%% 这是一个注释，用于分隔两个classDef语句
+
+
+
+style A fill:#9f9,stroke:#333,stroke-width:2px
+style E fill:#f99,stroke:#933,stroke-width:1px
+</div>
+    </div>
+    
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultDiv = document.getElementById('result');
+      
+      // 使用mermaid.run()渲染图表
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).then(() => {
+          resultDiv.innerHTML = '<p class="success">图表渲染成功!</p>';
+        }).catch(error => {
+          resultDiv.innerHTML = `<p class="error">图表渲染错误: ${error.message}</p>`;
+          console.error('Mermaid运行错误:', error);
+        });
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">图表处理错误: ${error.message}</p>`;
+        console.error('Mermaid处理错误:', error);
+      }
+    });
+  </script>
+</body>
+</html>

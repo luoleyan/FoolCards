@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entity Relationship - FoolCards 项目分析文档</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
+  <script>
+    // 确保highlight.js正确加载
+    window.onload = function() {
+      if (typeof hljs === 'undefined') {
+        console.warn('highlight.js未加载，尝试重新加载...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js';
+        script.onload = function() {
+          console.log('highlight.js已重新加载');
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== "undefined") { hljs.highlightBlock(block); }
+            });
+          }
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+  </script></head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <a href="../index.html">FoolCards 项目分析</a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="../structure.html">结构图</a></li>
+          <li><a href="../er.html">实体关系图</a></li>
+          <li><a href="../flowcharts.html">流程图</a></li>
+          <li><a href="../ui.html">UI设计图</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>实体关系图</h3>
+      <ul>
+        <li><a href="er/entity_relationship.html">Entity Relationship</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="content">
+      <h1>Entity Relationship</h1>
+      <div class="content-body">
+        <h1 id="foolcards-实体关系图">FoolCards 实体关系图</h1>
+<h2 id="游戏核心实体关系">游戏核心实体关系</h2>
+        <div class="mermaid">
+
+erDiagram
+    PLAYER {
+    int playerId PK
+    string name
+    int score
+    boolean isAI
+    }
+    GAME {
+    int gameId PK
+    datetime startTime
+    datetime endTime
+    string status
+    }
+    ROUND {
+    int roundId PK
+    int roundNumber
+    int gameId FK
+    datetime startTime
+    datetime endTime
+    }
+    PLAYER_IN_GAME {
+    int playerGameId PK
+    int playerId FK
+    int gameId FK
+    int finalScore
+    }
+    PLAYER ||--o{ PLAYER_IN_GAME : "参与"
+    GAME ||--o{ PLAYER_IN_GAME : "包含"
+    GAME ||--o{ ROUND : "包含"
+    ROUND ||--o{ PLAYER_IN_GAME : "关联"
+
+</div>
+
+<h2 id="卡牌与场地关系">卡牌与场地关系</h2>
+        <div class="mermaid">
+
+erDiagram
+    CARD {
+    int cardId PK
+    string suit
+    int rank
+    int value
+    }
+    PLAY_AREA {
+    int areaId PK
+    int position
+    int score
+    int gameId FK
+    }
+    SCENE_EFFECT {
+    int effectId PK
+    string type
+    string name
+    string description
+    }
+    CARD_IN_HAND {
+    int cardHandId PK
+    int cardId FK
+    int playerId FK
+    int gameId FK
+    int position
+    }
+    CARD_IN_AREA {
+    int cardAreaId PK
+    int cardId FK
+    int areaId FK
+    int position
+    boolean isPublic
+    }
+    CARD ||--o{ CARD_IN_HAND : "持有"
+    CARD ||--o{ CARD_IN_AREA : "放置"
+    PLAY_AREA ||--o{ CARD_IN_AREA : "包含"
+    PLAY_AREA ||--|| SCENE_EFFECT : "应用"
+
+</div>
+
+<h2 id="特殊牌型关系">特殊牌型关系</h2>
+        <div class="mermaid">
+
+erDiagram
+    SPECIAL_HAND {
+    int handId PK
+    int areaId FK
+    int typeId FK
+    int bonusPoints
+    }
+    SPECIAL_HAND_TYPE {
+    int typeId PK
+    string name
+    string description
+    int baseBonus
+    }
+    PLAY_AREA ||--o{ SPECIAL_HAND : "形成"
+    SPECIAL_HAND_TYPE ||--o{ SPECIAL_HAND : "定义"
+
+</div>
+
+<h2 id="实体关系说明">实体关系说明</h2>
+<h3 id="主要实体">主要实体</h3>
+<ol>
+<li><p><strong>Player</strong>: 玩家实体，表示游戏中的玩家</p>
+<ul>
+<li>包含玩家ID、名称、分数和是否为AI等属性</li>
+</ul>
+</li>
+<li><p><strong>Game</strong>: 游戏实体，表示一局游戏</p>
+<ul>
+<li>包含游戏ID、开始时间、结束时间和状态等属性</li>
+</ul>
+</li>
+<li><p><strong>Round</strong>: 回合实体，表示游戏中的一个回合</p>
+<ul>
+<li>包含回合ID、回合编号、游戏ID、开始时间和结束时间等属性</li>
+</ul>
+</li>
+<li><p><strong>Card</strong>: 卡牌实体，表示游戏中的一张卡牌</p>
+<ul>
+<li>包含卡牌ID、花色、点数和价值等属性</li>
+</ul>
+</li>
+<li><p><strong>PlayArea</strong>: 场地实体，表示游戏中的一个场地</p>
+<ul>
+<li>包含场地ID、位置、分数和游戏ID等属性</li>
+</ul>
+</li>
+<li><p><strong>SceneEffect</strong>: 场景效果实体，表示场地的特殊效果</p>
+<ul>
+<li>包含效果ID、类型、名称和描述等属性</li>
+</ul>
+</li>
+<li><p><strong>SpecialHand</strong>: 特殊牌型实体，表示场地中形成的特殊牌型</p>
+<ul>
+<li>包含牌型ID、场地ID、类型ID和额外分数等属性</li>
+</ul>
+</li>
+<li><p><strong>SpecialHandType</strong>: 特殊牌型类型实体，表示特殊牌型的类型</p>
+<ul>
+<li>包含类型ID、名称、描述和基础加分等属性</li>
+</ul>
+</li>
+</ol>
+<h3 id="关系">关系</h3>
+<ol>
+<li><p><strong>PlayerInGame</strong>: 玩家与游戏的多对多关系</p>
+<ul>
+<li>一个游戏可以有多个玩家，一个玩家可以参与多个游戏</li>
+</ul>
+</li>
+<li><p><strong>CardInHand</strong>: 卡牌与玩家的多对多关系</p>
+<ul>
+<li>一个玩家可以有多张卡牌，一张卡牌可以属于多个玩家（在不同游戏中）</li>
+</ul>
+</li>
+<li><p><strong>CardInArea</strong>: 卡牌与场地的多对多关系</p>
+<ul>
+<li>一个场地可以有多张卡牌，一张卡牌可以放置在多个场地（在不同游戏中）</li>
+</ul>
+</li>
+<li><p><strong>SceneEffect与PlayArea</strong>: 一对一关系</p>
+<ul>
+<li>一个场地有一个场景效果，一个场景效果属于一个场地</li>
+</ul>
+</li>
+<li><p><strong>SpecialHand与PlayArea</strong>: 多对一关系</p>
+<ul>
+<li>一个场地可以有多个特殊牌型，一个特殊牌型属于一个场地</li>
+</ul>
+</li>
+<li><p><strong>SpecialHand与SpecialHandType</strong>: 多对一关系</p>
+<ul>
+<li>一个特殊牌型类型可以有多个特殊牌型实例，一个特殊牌型实例属于一个类型</li>
+</ul>
+</li>
+</ol>
+
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2023 FoolCards 项目团队. 保留所有权利.</p>
+  </footer>
+
+        <script>
+    // 初始化Mermaid
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      er: {
+        useMaxWidth: true
+      },
+      sequence: {
+        useMaxWidth: true
+      },
+      classDiagram: {
+        useMaxWidth: true
+      },
+      stateDiagram: {
+        useMaxWidth: true
+      }
+    });
+
+    // 处理页面加载完成后的操作
+    document.addEventListener('DOMContentLoaded', function() {
+      // 查找所有代码块并应用语法高亮
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightBlock(block);
+        });
+      } else {
+        console.warn('highlight.js未加载，代码高亮功能不可用');
+      }
+
+      // 使用mermaid.run()而不是手动渲染
+      try {
+        mermaid.run({
+          querySelector: '.mermaid'
+        }).catch(error => {
+          console.error('Mermaid运行错误:', error);
+          document.querySelectorAll('.mermaid').forEach(el => {
+            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid处理错误:', error);
+        document.querySelectorAll('.mermaid').forEach(el => {
+          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
+        });
+      }
+    });
+  </script>
+</body>
+</html>
