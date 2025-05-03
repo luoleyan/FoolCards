@@ -37,6 +37,38 @@
 
       <h3>文档功能增强</h3>
 
+      <h4>优化图表查看和保存功能 (2023-12-15)</h4>
+
+      <p><strong>改进图表查看大图功能</strong>：</p>
+      <ul>
+        <li>解决大型图表在模态框中被裁剪的问题</li>
+        <li>优化SVG渲染和显示逻辑，确保完整显示图表</li>
+        <li>改进缩放功能，直接应用于SVG元素而非容器</li>
+        <li>添加滚动位置自动调整，保持图表在视图中居中</li>
+      </ul>
+
+      <p><strong>增强保存图表为图片功能</strong>：</p>
+      <ul>
+        <li>重写图片保存逻辑，确保保存的图表文件完整无裁剪</li>
+        <li>优化SVG尺寸和视口设置，保持图表比例</li>
+        <li>提高导出图片的分辨率和质量</li>
+        <li>添加加载提示，提供更好的用户反馈</li>
+      </ul>
+
+      <p><strong>技术改进</strong>：</p>
+      <ul>
+        <li>优化html2canvas配置，提高图片质量和完整性</li>
+        <li>增强错误处理和加载超时处理</li>
+        <li>添加备用SVG保存方法，提高兼容性</li>
+        <li>改进UI样式和交互体验，添加动画效果</li>
+      </ul>
+
+      <p><strong>受影响文件</strong>：</p>
+      <ul>
+        <li><code>docs/diagrams/html/css/modal.css</code></li>
+        <li><code>docs/diagrams/html/js/diagram-modal.js</code></li>
+      </ul>
+
       <h4>添加图表交互功能 (2023-12-10)</h4>
 
       <p><strong>新增功能</strong>：</p>
