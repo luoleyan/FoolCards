@@ -1,7 +1,7 @@
-import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Camera, Label, Button, Layout, Color } from 'cc';
+import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Label, Button, Layout, Color, Graphics } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { tween } from 'cc';
-import { SpecialHandsManager, SpecialHand, SpecialHandType } from './SpecialHands';
+import { SpecialHandsManager, SpecialHandType } from './SpecialHands';
 import { SceneEffect, SceneEffectType } from './SceneEffect';
 import { PlatformAdapter } from './PlatformAdapter';
 import { SpecialHandsPopup } from './SpecialHandsPopup';
@@ -65,8 +65,9 @@ export class GameManager extends Component {
     public specialHandsManager: SpecialHandsManager;
     private playerScore: number = 0;
     private opponentScore: number = 0;
-    private areaScores: number[] = [0, 0, 0];  // 每个场地的分数
+    private areaScores: number[] = [0, 0, 0];  // 每个场地的玩家分数
     private areaScoreDetails: string[] = ['', '', ''];  // 每个场地的分数详情
+    private aiAreaScores: number[] = [0, 0, 0];  // 每个场地的AI对手分数
 
     private sameColorRequirement: number = 5;  // 默认需要5张同色牌
     private sequenceRequirement: number = 5;   // 默认需要5张牌组成序列
@@ -78,6 +79,9 @@ export class GameManager extends Component {
 
     // 记录已翻开的场地区域
     private revealedAreas: boolean[] = [];
+
+    // 记录玩家是否在每个区域出过牌
+    private playerPlayedInArea: boolean[] = [];
 
     // 每回合出牌次数限制
     private maxCardsPerTurn: number = 2;
@@ -101,6 +105,9 @@ export class GameManager extends Component {
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
+
+        // 初始化玩家出牌区域跟踪数组
+        this.playerPlayedInArea = new Array(this.playAreas.length).fill(false);
 
         // 初始化特殊牌型管理器
         this.specialHandsManager = SpecialHandsManager.getInstance();
@@ -171,6 +178,9 @@ export class GameManager extends Component {
 
             // 初始化AI对手
             this.initAIOpponent();
+
+            // 初始化场地高亮边框
+            this.initPlayAreaHighlights();
 
             // 初始化游戏
             this.initGame();
@@ -641,6 +651,40 @@ export class GameManager extends Component {
         }
     }
 
+    // 初始化场地高亮边框
+    private initPlayAreaHighlights() {
+        console.log("初始化场地高亮边框 - 直接使用场地区域");
+
+        // 不再使用场地高亮管理器
+        // 遍历所有场地区域，确保它们有正确的组件
+        for (let i = 0; i < this.playAreas.length; i++) {
+            const playArea = this.playAreas[i];
+            if (!playArea) continue;
+
+            // 确保场地区域可见
+            playArea.active = true;
+
+            // 检查是否有Sprite组件
+            const sprite = playArea.getComponent(Sprite);
+            if (sprite) {
+                // 保存原始颜色
+                playArea['originalColor'] = sprite.color.clone();
+                console.log(`场地${i+1}原始颜色已保存`);
+            } else {
+                console.log(`场地${i+1}没有Sprite组件`);
+            }
+        }
+    }
+
+    // 重置所有场地的高亮效果
+    private resetAllPlayAreaHighlights() {
+        console.log("重置所有场地的高亮效果");
+        // 遍历所有场地区域
+        for (let i = 0; i < this.playAreas.length; i++) {
+            this.removeHighlightFromPlayArea(i);
+        }
+    }
+
     // 开始新回合
     public startNewRound() {
         // 检查是否达到最大回合数
@@ -671,6 +715,9 @@ export class GameManager extends Component {
         if (this.aiOpponent) {
             this.aiOpponent.clearPlayedCardsRecord();
         }
+
+        // 重置所有场地的高亮效果
+        this.resetAllPlayAreaHighlights();
 
         // 卡牌宽度（实际宽度乘以缩放比例）
         const cardWidth = 120 * 0.25;
@@ -1475,6 +1522,16 @@ export class GameManager extends Component {
         const playArea = this.playAreas[areaIndex];
         if (!playArea) return;
 
+        // 检查玩家是否在该区域出过牌，如果没有则不计算分数
+        if (!this.playerPlayedInArea[areaIndex]) {
+            // 重置该区域的分数和详情
+            this.areaScores[areaIndex] = 0;
+            this.areaScoreDetails[areaIndex] = '';
+            // 更新分数显示
+            this.updateAreaScoreLabel(areaIndex);
+            return;
+        }
+
         // 重置该区域的分数和详情
         this.areaScores[areaIndex] = 0;
         this.areaScoreDetails[areaIndex] = '';
@@ -1825,6 +1882,9 @@ export class GameManager extends Component {
         }
         this.currentTurnPlayedCards.get(areaIndex)?.push(card);
 
+        // 标记玩家已在该区域出牌
+        this.playerPlayedInArea[areaIndex] = true;
+
         // 添加点击事件监听器
         card.node.on(Node.EventType.TOUCH_START, () => {
             this.onCardClicked(card, areaIndex);
@@ -1875,6 +1935,16 @@ export class GameManager extends Component {
 
         // 重新排列玩家手牌
         this.arrangePlayerHand();
+
+        // 检查该区域是否还有玩家出的牌
+        const remainingPlayerCards = this.playAreas[areaIndex].children
+            .filter(child => child.name === 'PlayerCard')
+            .length;
+
+        // 如果没有玩家出的牌了，标记该区域为未出牌
+        if (remainingPlayerCards === 0) {
+            this.playerPlayedInArea[areaIndex] = false;
+        }
 
         // 重新计算场地区域的分数
         this.calculateAreaScore(areaIndex);
@@ -1971,15 +2041,337 @@ export class GameManager extends Component {
         console.log("AI对手初始化完成");
     }
 
+    // 计算AI对手在指定场地的分数
+    private calculateAIAreaScore(areaIndex: number): number {
+        if (!this.aiOpponent) return 0;
+
+        // 获取该区域的AI卡牌
+        const aiPlayedCards = this.aiOpponent.getPlayedCards();
+        const areaCards = aiPlayedCards.get(areaIndex) || [];
+
+        // 如果AI没有在该区域出牌，则不计算分数
+        if (areaCards.length === 0) return 0;
+
+        // 获取场地中的公共牌
+        const sceneEffect = this.sceneEffects[areaIndex];
+        const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+
+        // 合并AI出的牌和公共牌
+        const allCards = [...publicCards, ...areaCards];
+
+        // 计算基础点数
+        let areaScore = 0;
+        allCards.forEach(card => {
+            areaScore += this.getCardValue(card.rank);
+        });
+
+        // 检查是否有特殊牌型
+        const specialHand = this.specialHandsManager.checkSpecialHand(allCards);
+        if (specialHand) {
+            // 根据特殊牌型类型添加分数
+            switch (specialHand.type) {
+                case SpecialHandType.ROYAL_FLUSH:
+                    areaScore += 150;
+                    break;
+                case SpecialHandType.PERFECT_STRAIGHT:
+                    areaScore += 135;
+                    break;
+                case SpecialHandType.STRAIGHT_FLUSH:
+                    areaScore += 120;
+                    break;
+                case SpecialHandType.FOUR_OF_A_KIND:
+                    areaScore += 80;
+                    break;
+                case SpecialHandType.FLUSH:
+                    areaScore += 60;
+                    break;
+                case SpecialHandType.STRAIGHT:
+                    areaScore += 60;
+                    break;
+                case SpecialHandType.FULL_HOUSE:
+                    areaScore += 55;
+                    break;
+                case SpecialHandType.THREE_OF_A_KIND:
+                    areaScore += 30;
+                    break;
+                case SpecialHandType.TWO_PAIRS:
+                    areaScore += 30;
+                    break;
+                case SpecialHandType.PAIR:
+                    areaScore += 15;
+                    break;
+            }
+        }
+
+        // 应用场景效果（如果有）
+        if (sceneEffect && sceneEffect.isRevealed) {
+            // 根据场景效果类型添加额外分数
+            // 这里只处理简单的花色和点数奖励，复杂的效果在applyEffect方法中处理
+            const effectType = sceneEffect.effectType;
+
+            // 处理花色奖励
+            if (effectType === SceneEffectType.HeartBonus) {
+                allCards.forEach(card => {
+                    if (card.suit === CardSuit.Heart) {
+                        areaScore += 15; // 红桃奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.SpadeBonus) {
+                allCards.forEach(card => {
+                    if (card.suit === CardSuit.Spade) {
+                        areaScore += 15; // 黑桃奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.DiamondBonus) {
+                allCards.forEach(card => {
+                    if (card.suit === CardSuit.Diamond) {
+                        areaScore += 15; // 方块奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.ClubBonus) {
+                allCards.forEach(card => {
+                    if (card.suit === CardSuit.Club) {
+                        areaScore += 15; // 梅花奖励
+                    }
+                });
+            }
+
+            // 处理点数奖励
+            else if (effectType === SceneEffectType.EvenBonus) {
+                allCards.forEach(card => {
+                    if ([CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1) {
+                        areaScore += 15; // 偶数奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.OddBonus) {
+                allCards.forEach(card => {
+                    if ([CardRank.Ace, CardRank.Three, CardRank.Five, CardRank.Seven, CardRank.Nine].indexOf(card.rank) !== -1) {
+                        areaScore += 15; // 奇数奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.JQKBonus) {
+                allCards.forEach(card => {
+                    if ([CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1) {
+                        areaScore += 15; // JQK奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.A2358Bonus) {
+                allCards.forEach(card => {
+                    if ([CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Five, CardRank.Eight].indexOf(card.rank) !== -1) {
+                        areaScore += 15; // A2358奖励
+                    }
+                });
+            } else if (effectType === SceneEffectType.KBonus) {
+                allCards.forEach(card => {
+                    if (card.rank === CardRank.King) {
+                        areaScore += 25; // K奖励
+                    }
+                });
+            }
+
+            // 处理特殊牌型奖励
+            else if (effectType === SceneEffectType.EvenStarBonus) {
+                // 检查是否有特殊牌型
+                if (specialHand && specialHand.type === SpecialHandType.PAIR) {
+                    areaScore += 15; // 对子奖励
+                }
+                // 检查是否包含偶数牌（2、4、6、8、10）
+                const hasEvenCard = allCards.some(card =>
+                    [CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1);
+                if (hasEvenCard) {
+                    areaScore += 15; // 偶数牌奖励
+                }
+            }
+        }
+
+        return areaScore;
+    }
+
+    // 比较场地分数并添加高亮效果
+    private compareAreaScoresAndHighlight() {
+        console.log("=================== 回合结束场地分数比较 ===================");
+        console.log("比较场地分数并添加高亮效果");
+
+        // 记录需要高亮的场地
+        const highlightedAreas: number[] = [];
+
+        // 遍历所有已揭示效果的场地
+        for (let i = 0; i < this.playAreas.length; i++) {
+            // 检查场地效果是否已揭示
+            if (this.sceneEffects[i] && this.sceneEffects[i].isRevealed) {
+                // 获取场地效果信息
+                const effectInfo = this.getEffectInfo(this.sceneEffects[i].effectType);
+
+                // 获取玩家和AI在该场地的分数
+                const playerScore = this.playerPlayedInArea[i] ? this.areaScores[i] : 0;
+                const aiScore = this.aiAreaScores[i];
+
+                console.log(`场地${i+1} (${effectInfo.name}) - 玩家: ${playerScore}分 (已出牌: ${this.playerPlayedInArea[i]}), AI: ${aiScore}分`);
+
+                // 如果玩家分数大于AI分数，添加高亮效果
+                if (playerScore > 0 && playerScore > aiScore) {
+                    console.log(`场地${i+1}玩家分数大于AI，添加高亮效果`);
+                    this.addHighlightToPlayArea(i);
+                    highlightedAreas.push(i+1); // 记录需要高亮的场地编号（从1开始）
+                } else {
+                    console.log(`场地${i+1}玩家分数不大于AI，移除高亮效果`);
+                    this.removeHighlightFromPlayArea(i);
+                }
+            } else {
+                console.log(`场地${i+1}效果未揭示，不比较分数`);
+            }
+        }
+
+        // 输出需要高亮的场地总结
+        if (highlightedAreas.length > 0) {
+            console.log(`本回合需要高亮的场地: ${highlightedAreas.join(', ')}`);
+        } else {
+            console.log("本回合没有需要高亮的场地");
+        }
+
+        console.log("=================== 回合结束场地分数比较 ===================");
+    }
+
+    // 为场地添加高亮边框和阴影
+    private addHighlightToPlayArea(areaIndex: number) {
+        const playArea = this.playAreas[areaIndex];
+        if (!playArea) return;
+
+        console.log(`为场地${areaIndex+1}添加高亮效果 - 直接修改背景颜色`);
+
+        // 保存原始颜色（如果尚未保存）
+        if (!playArea['originalColor']) {
+            // 获取场地区域的背景颜色
+            const originalColor = playArea.getComponent(Sprite)?.color || new Color(100, 100, 100, 255);
+            playArea['originalColor'] = originalColor.clone();
+        }
+
+        // 设置高亮颜色 - 青绿色 (#39C5BB)
+        const sprite = playArea.getComponent(Sprite);
+        if (sprite) {
+            sprite.color = new Color(57, 197, 187, 255);
+            console.log(`场地${areaIndex+1}背景颜色已修改为高亮色`);
+        } else {
+            console.log(`场地${areaIndex+1}没有Sprite组件，尝试添加边框`);
+
+            // 如果没有Sprite组件，尝试添加边框
+            console.log(`为场地${areaIndex+1}创建边框`);
+
+            // 移除旧的边框（如果存在）
+            let borderNode = playArea.getChildByName('HighlightBorder');
+            if (borderNode) {
+                borderNode.destroy();
+            }
+
+            // 创建新的边框节点
+            borderNode = new Node('HighlightBorder');
+            playArea.addChild(borderNode);
+
+            // 确保边框在最底层显示
+            borderNode.setSiblingIndex(0);
+
+            // 添加UITransform组件
+            const areaTransform = playArea.getComponent(UITransform);
+            if (areaTransform) {
+                const borderTransform = borderNode.addComponent(UITransform);
+                // 边框与场地区域大小相同
+                borderTransform.setContentSize(
+                    areaTransform.width,
+                    areaTransform.height
+                );
+
+                // 添加Graphics组件来绘制边框
+                const graphics = borderNode.addComponent(Graphics);
+
+                // 设置线条颜色为青绿色 (#39C5BB)
+                graphics.strokeColor = new Color(57, 197, 187, 255);
+                graphics.fillColor = new Color(57, 197, 187, 50); // 半透明填充
+
+                // 设置线条宽度
+                graphics.lineWidth = 10;
+
+                // 绘制矩形边框
+                const x = -areaTransform.width / 2;
+                const y = -areaTransform.height / 2;
+                const width = areaTransform.width;
+                const height = areaTransform.height;
+
+                graphics.rect(x, y, width, height);
+                graphics.stroke();
+                graphics.fill();
+
+                console.log(`创建了边框，尺寸: ${width}x${height}`);
+
+                // 确保边框可见
+                borderNode.active = true;
+            }
+        }
+
+        // 添加脉动动画
+        this.addPulsingAnimation(playArea);
+    }
+
+    // 添加脉动动画
+    private addPulsingAnimation(node: Node) {
+        // 停止可能已经存在的动画
+        tween(node).stop();
+
+        // 重置缩放
+        node.scale = new Vec3(1, 1, 1);
+
+        // 创建脉动动画
+        tween(node)
+            .to(0.5, { scale: new Vec3(1.05, 1.05, 1) })
+            .to(0.5, { scale: new Vec3(1, 1, 1) })
+            .union()
+            .repeatForever()
+            .start();
+    }
+
+    // 移除场地的高亮效果
+    private removeHighlightFromPlayArea(areaIndex: number) {
+        const playArea = this.playAreas[areaIndex];
+        if (!playArea) return;
+
+        // 停止动画
+        tween(playArea).stop();
+
+        // 恢复原始颜色
+        const sprite = playArea.getComponent(Sprite);
+        if (sprite && playArea['originalColor']) {
+            sprite.color = playArea['originalColor'];
+            console.log(`场地${areaIndex+1}背景颜色已恢复为原始颜色`);
+        }
+
+        // 移除边框（如果存在）
+        const borderNode = playArea.getChildByName('HighlightBorder');
+        if (borderNode) {
+            borderNode.destroy();
+        }
+
+        // 重置缩放
+        playArea.scale = new Vec3(1, 1, 1);
+    }
+
     // 结束当前回合
     public endTurn() {
-        console.log("结束当前回合");
+        console.log("=================== 回合结束处理开始 ===================");
+        console.log(`当前回合: ${this._currentRound}/${this.maxRounds}`);
         this.stopTurnTimer();
 
         // 重置回合状态
         this.resetCardPlayCount();
 
+        // 记录玩家在各场地的出牌情况
+        console.log("玩家在各场地的出牌情况:");
+        for (let i = 0; i < this.playAreas.length; i++) {
+            const hasPlayed = this.playerPlayedInArea[i];
+            const cardCount = hasPlayed ? this.playAreas[i].children.filter(child => child.name === 'PlayerCard').length : 0;
+            console.log(`- 场地${i+1}: ${hasPlayed ? '已出牌' : '未出牌'} (${cardCount}张)`);
+        }
+
         // AI机器人出牌
+        console.log("AI机器人开始出牌");
         if (this.aiOpponent) {
             this.aiOpponent.playCards(this.maxCardsPerTurn);
             // AI出牌信息现在直接由AIOpponent类显示，不需要再调用displayAIPlayedCards
@@ -1988,9 +2380,23 @@ export class GameManager extends Component {
         }
 
         // 计算所有场地的分数
+        console.log("计算所有场地的分数:");
         for (let i = 0; i < this.playAreas.length; i++) {
+            console.log(`计算场地${i+1}的分数:`);
+
+            // 计算玩家分数
+            const oldPlayerScore = this.areaScores[i];
             this.calculateAreaScore(i);
+            console.log(`- 玩家分数: ${oldPlayerScore} -> ${this.areaScores[i]}`);
+
+            // 计算AI对手分数
+            const oldAIScore = this.aiAreaScores[i];
+            this.aiAreaScores[i] = this.calculateAIAreaScore(i);
+            console.log(`- AI分数: ${oldAIScore} -> ${this.aiAreaScores[i]}`);
         }
+
+        // 比较场地分数并添加高亮效果
+        this.compareAreaScoresAndHighlight();
 
         // 直接开始新回合，不需要延迟
         // 因为AI打出的牌会常驻显示在场地上
@@ -1998,6 +2404,8 @@ export class GameManager extends Component {
 
         // 重置并启动计时器
         this.startNewTurn();
+
+        console.log("=================== 回合结束处理完成 ===================");
     }
 
     // 注意：displayAIPlayedCards方法已被移除，AI出牌信息现在直接由AIOpponent类显示
@@ -2121,7 +2529,7 @@ export class GameManager extends Component {
      * 显示游戏结束弹窗
      */
     private showGameOver() {
-        console.log("显示游戏结束弹窗");
+        console.log("=================== 游戏结束分数计算 ===================");
         console.log(`基础分数 - 玩家: ${this.playerScore}, 对手: ${this.opponentScore}`);
 
         // 计算最终分数（包括所有场地分数）
@@ -2130,6 +2538,7 @@ export class GameManager extends Component {
 
         // 计算AI对手的分数 - 从每个场地区域获取AI卡牌并计算分数
         if (this.aiOpponent) {
+            console.log("\n【AI对手得分明细】");
             const aiPlayedCards = this.aiOpponent.getPlayedCards();
 
             // 遍历每个场地区域
@@ -2137,66 +2546,244 @@ export class GameManager extends Component {
                 // 获取该区域的AI卡牌
                 const areaCards = aiPlayedCards.get(i) || [];
 
+                console.log(`\n场地${i+1}:`);
                 if (areaCards.length > 0) {
-                    // 计算基础点数
-                    let areaScore = 0;
+                    // 获取场地中的公共牌
+                    const sceneEffect = this.sceneEffects[i];
+                    const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+
+                    // 输出该区域AI出的牌
+                    console.log(`- AI出牌(${areaCards.length}张):`);
                     areaCards.forEach(card => {
-                        areaScore += this.getCardValue(card.rank);
+                        console.log(`  * ${card.getSuit()} ${card.getRank()}`);
                     });
 
+                    // 如果有公共牌，输出公共牌
+                    if (publicCards.length > 0) {
+                        console.log(`- 公共牌(${publicCards.length}张):`);
+                        publicCards.forEach(card => {
+                            console.log(`  * ${card.getSuit()} ${card.getRank()}`);
+                        });
+                    }
+
+                    // 合并AI出的牌和公共牌
+                    const allCards = [...publicCards, ...areaCards];
+
+                    // 计算基础点数
+                    let areaScore = 0;
+                    let pointScore = 0;
+                    allCards.forEach(card => {
+                        const value = this.getCardValue(card.rank);
+                        pointScore += value;
+                    });
+                    areaScore += pointScore;
+                    console.log(`- 基础点数: ${pointScore}分`);
+
                     // 检查是否有特殊牌型
-                    const specialHand = this.specialHandsManager.checkSpecialHand(areaCards);
+                    const specialHand = this.specialHandsManager.checkSpecialHand(allCards);
                     if (specialHand) {
+                        let specialHandScore = 0;
+                        let specialHandName = "";
+
                         // 根据特殊牌型类型添加分数
                         switch (specialHand.type) {
                             case SpecialHandType.ROYAL_FLUSH:
-                                areaScore += 150;
+                                specialHandScore = 150;
+                                specialHandName = "完美同色序列";
                                 break;
                             case SpecialHandType.PERFECT_STRAIGHT:
-                                areaScore += 135;
+                                specialHandScore = 135;
+                                specialHandName = "完美序列";
                                 break;
                             case SpecialHandType.STRAIGHT_FLUSH:
-                                areaScore += 120;
+                                specialHandScore = 120;
+                                specialHandName = "同色序列";
                                 break;
                             case SpecialHandType.FOUR_OF_A_KIND:
-                                areaScore += 80;
+                                specialHandScore = 80;
+                                specialHandName = "四骑士";
                                 break;
                             case SpecialHandType.FLUSH:
-                                areaScore += 60;
+                                specialHandScore = 60;
+                                specialHandName = "同色";
                                 break;
                             case SpecialHandType.STRAIGHT:
-                                areaScore += 60;
+                                specialHandScore = 60;
+                                specialHandName = "序列";
                                 break;
                             case SpecialHandType.FULL_HOUSE:
-                                areaScore += 55;
+                                specialHandScore = 55;
+                                specialHandName = "满座";
                                 break;
                             case SpecialHandType.THREE_OF_A_KIND:
-                                areaScore += 30;
+                                specialHandScore = 30;
+                                specialHandName = "三贤者";
                                 break;
                             case SpecialHandType.TWO_PAIRS:
-                                areaScore += 30;
+                                specialHandScore = 30;
+                                specialHandName = "双偶星";
                                 break;
                             case SpecialHandType.PAIR:
-                                areaScore += 15;
+                                specialHandScore = 15;
+                                specialHandName = "偶星";
                                 break;
                         }
+
+                        areaScore += specialHandScore;
+                        console.log(`- 特殊牌型(${specialHandName}): ${specialHandScore}分`);
+                    } else {
+                        console.log(`- 特殊牌型: 无`);
+                    }
+
+                    // 应用场景效果（如果有）
+                    if (sceneEffect && sceneEffect.isRevealed) {
+                        // 获取场景效果信息
+                        const effectInfo = this.getEffectInfo(sceneEffect.effectType);
+                        console.log(`- 场地效果: ${effectInfo.name} (${effectInfo.description})`);
+
+                        // 这里只处理简单的花色和点数奖励
+                        const effectType = sceneEffect.effectType;
+                        let effectScore = 0;
+
+                        // 处理花色奖励
+                        if (effectType === SceneEffectType.HeartBonus) {
+                            const heartCount = allCards.filter(card => card.suit === CardSuit.Heart).length;
+                            if (heartCount > 0) {
+                                effectScore += heartCount * 15;
+                                console.log(`  * 红桃奖励: +${heartCount * 15}分 (${heartCount}张红桃)`);
+                            }
+                        } else if (effectType === SceneEffectType.SpadeBonus) {
+                            const spadeCount = allCards.filter(card => card.suit === CardSuit.Spade).length;
+                            if (spadeCount > 0) {
+                                effectScore += spadeCount * 15;
+                                console.log(`  * 黑桃奖励: +${spadeCount * 15}分 (${spadeCount}张黑桃)`);
+                            }
+                        } else if (effectType === SceneEffectType.DiamondBonus) {
+                            const diamondCount = allCards.filter(card => card.suit === CardSuit.Diamond).length;
+                            if (diamondCount > 0) {
+                                effectScore += diamondCount * 15;
+                                console.log(`  * 方块奖励: +${diamondCount * 15}分 (${diamondCount}张方块)`);
+                            }
+                        } else if (effectType === SceneEffectType.ClubBonus) {
+                            const clubCount = allCards.filter(card => card.suit === CardSuit.Club).length;
+                            if (clubCount > 0) {
+                                effectScore += clubCount * 15;
+                                console.log(`  * 梅花奖励: +${clubCount * 15}分 (${clubCount}张梅花)`);
+                            }
+                        }
+
+                        // 处理点数奖励
+                        else if (effectType === SceneEffectType.EvenBonus) {
+                            const evenCount = allCards.filter(card =>
+                                [CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1).length;
+                            if (evenCount > 0) {
+                                effectScore += evenCount * 15;
+                                console.log(`  * 偶数奖励: +${evenCount * 15}分 (${evenCount}张偶数牌)`);
+                            }
+                        } else if (effectType === SceneEffectType.OddBonus) {
+                            const oddCount = allCards.filter(card =>
+                                [CardRank.Ace, CardRank.Three, CardRank.Five, CardRank.Seven, CardRank.Nine].indexOf(card.rank) !== -1).length;
+                            if (oddCount > 0) {
+                                effectScore += oddCount * 15;
+                                console.log(`  * 奇数奖励: +${oddCount * 15}分 (${oddCount}张奇数牌)`);
+                            }
+                        } else if (effectType === SceneEffectType.JQKBonus) {
+                            const jqkCount = allCards.filter(card =>
+                                [CardRank.Jack, CardRank.Queen, CardRank.King].indexOf(card.rank) !== -1).length;
+                            if (jqkCount > 0) {
+                                effectScore += jqkCount * 15;
+                                console.log(`  * JQK奖励: +${jqkCount * 15}分 (${jqkCount}张JQK)`);
+                            }
+                        } else if (effectType === SceneEffectType.A2358Bonus) {
+                            const a2358Count = allCards.filter(card =>
+                                [CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Five, CardRank.Eight].indexOf(card.rank) !== -1).length;
+                            if (a2358Count > 0) {
+                                effectScore += a2358Count * 15;
+                                console.log(`  * A2358奖励: +${a2358Count * 15}分 (${a2358Count}张A2358)`);
+                            }
+                        } else if (effectType === SceneEffectType.KBonus) {
+                            const kCount = allCards.filter(card => card.rank === CardRank.King).length;
+                            if (kCount > 0) {
+                                effectScore += kCount * 25;
+                                console.log(`  * K奖励: +${kCount * 25}分 (${kCount}张K)`);
+                            }
+                        }
+
+                        // 处理特殊牌型奖励
+                        else if (effectType === SceneEffectType.EvenStarBonus) {
+                            if (specialHand && specialHand.type === SpecialHandType.PAIR) {
+                                effectScore += 15;
+                                console.log(`  * 偶星奖励(对子): +15分`);
+                            }
+                            const hasEvenCard = allCards.some(card =>
+                                [CardRank.Two, CardRank.Four, CardRank.Six, CardRank.Eight, CardRank.Ten].indexOf(card.rank) !== -1);
+                            if (hasEvenCard) {
+                                effectScore += 15;
+                                console.log(`  * 偶星奖励(偶数牌): +15分`);
+                            }
+                        }
+
+                        areaScore += effectScore;
                     }
 
                     // 将该区域的分数加到对手总分中
                     finalOpponentScore += areaScore;
-                    console.log(`AI在场地${i+1}的分数: ${areaScore}`);
+                    console.log(`- 场地${i+1}总分: ${areaScore}分`);
+                } else {
+                    console.log(`- AI未在此区域出牌`);
                 }
             }
         }
 
         // 将场地分数加到玩家总分中
-        console.log("场地分数详情:");
+        console.log("\n【玩家得分明细】");
         for (let i = 0; i < this.areaScores.length; i++) {
-            console.log(`场地${i+1}: ${this.areaScores[i]}分`);
-            finalPlayerScore += this.areaScores[i];
+            console.log(`\n场地${i+1}:`);
+
+            // 只计算玩家出过牌的区域分数
+            if (this.playerPlayedInArea[i]) {
+                // 获取该区域的玩家卡牌
+                const playerCards = this.playAreas[i].children
+                    .filter(child => child.name === 'PlayerCard')
+                    .map(container => container.getComponentInChildren(Card))
+                    .filter(card => card !== null);
+
+                // 获取该区域的公共牌
+                const sceneEffect = this.sceneEffects[i];
+                const publicCards = sceneEffect && sceneEffect.isRevealed ? sceneEffect.publicCards : [];
+
+                // 输出该区域玩家出的牌
+                console.log(`- 玩家出牌(${playerCards.length}张):`);
+                playerCards.forEach(card => {
+                    console.log(`  * ${card.getSuit()} ${card.getRank()}`);
+                });
+
+                // 输出该区域的公共牌
+                console.log(`- 公共牌(${publicCards.length}张):`);
+                publicCards.forEach(card => {
+                    console.log(`  * ${card.getSuit()} ${card.getRank()}`);
+                });
+
+                // 输出分数详情
+                console.log(`- 分数详情:`);
+                const details = this.areaScoreDetails[i].split('\n');
+                details.forEach(detail => {
+                    if (detail.trim() !== '') {
+                        console.log(`  * ${detail}`);
+                    }
+                });
+
+                console.log(`- 场地${i+1}总分: ${this.areaScores[i]}分 (玩家已出牌)`);
+                finalPlayerScore += this.areaScores[i];
+            } else {
+                console.log(`- 玩家未在此区域出牌，不计分`);
+            }
         }
 
-        console.log(`最终分数 - 玩家: ${finalPlayerScore}, 对手: ${finalOpponentScore}`);
+        console.log("\n【最终得分】");
+        console.log(`- 玩家: ${finalPlayerScore}分`);
+        console.log(`- 对手: ${finalOpponentScore}分`);
+        console.log("=================== 游戏结束分数计算 ===================");
 
         // 确定游戏结果
         let result = "平局！";
