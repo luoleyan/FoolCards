@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game State - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="../css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="js/diagram-modal.js" defer></script>
+  <script src="../js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,8 +52,8 @@
     <aside class="sidebar">
       <h3>流程图</h3>
       <ul>
-        <li><a href="flowcharts/game_flow.html">Game Flow</a></li>
-<li><a href="flowcharts/game_state.html">Game State</a></li>
+        <li><a href="game_flow.html">Game Flow</a></li>
+<li><a href="game_state.html">Game State</a></li>
 
       </ul>
     </aside>
@@ -68,12 +68,12 @@
     [*] --> 初始状态
     初始状态 --> 加载状态: 游戏启动
     加载状态 --> 主菜单状态: 资源加载完成
-    主菜单状态 --> 游戏准备: 点击"开始游戏"
+    主菜单状态 --> 游戏准备: 点击开始游戏
     游戏准备 --> 游戏中: 初始化完成
     游戏中 --> 游戏结束: 达到5回合
     游戏结束 --> 结算状态: 显示结果
-    结算状态 --> 游戏中: 选择"再来一局"
-    结算状态 --> 主菜单状态: 选择"返回主菜单"
+    结算状态 --> 游戏中: 选择再来一局
+    结算状态 --> 主菜单状态: 选择返回主菜单
 
     state 游戏中 {
     [*] --> 回合开始
@@ -175,12 +175,12 @@
     subgraph 主游戏状态转换
         Initial["初始状态"] -->|游戏启动| Loading["加载状态"]
         Loading -->|资源加载完成| MainMenu["主菜单状态"]
-        MainMenu -->|点击"开始游戏"| GamePrep["游戏准备"]
+        MainMenu -->|点击开始游戏| GamePrep["游戏准备"]
         GamePrep -->|初始化完成| GamePlaying["游戏中"]
         GamePlaying -->|达到5回合| GameOver["游戏结束"]
         GameOver -->|显示结果| Settlement["结算状态"]
-        Settlement -->|选择"再来一局"| GamePrep
-        Settlement -->|选择"返回主菜单"| MainMenu
+        Settlement -->|选择再来一局| GamePrep
+        Settlement -->|选择返回主菜单| MainMenu
     end
 
     subgraph 回合内状态转换

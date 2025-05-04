@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Error Handling - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="../css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="js/diagram-modal.js" defer></script>
+  <script src="../js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,12 +52,12 @@
     <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
-<li><a href="structure/architecture.html">Architecture</a></li>
-<li><a href="structure/class_diagram.html">Class Diagram</a></li>
-<li><a href="structure/component_interaction.html">Component Interaction</a></li>
-<li><a href="structure/error_handling.html">Error Handling</a></li>
-<li><a href="structure/project_structure.html">Project Structure</a></li>
+        <li><a href="ai_opponent.html">Ai Opponent</a></li>
+<li><a href="architecture.html">Architecture</a></li>
+<li><a href="class_diagram.html">Class Diagram</a></li>
+<li><a href="component_interaction.html">Component Interaction</a></li>
+<li><a href="error_handling.html">Error Handling</a></li>
+<li><a href="project_structure.html">Project Structure</a></li>
 
       </ul>
     </aside>
@@ -84,19 +84,19 @@
         <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;参数1为空&quot;</span>);
         <span class="hljs-keyword">return</span>;
     }
-    
+
     <span class="hljs-keyword">if</span> (!param2) {
         <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;参数2为空&quot;</span>);
         <span class="hljs-keyword">return</span>;
     }
-    
+
     <span class="hljs-comment">// 继续初始化...</span>
 }
 </code></pre>
 <h3 id="节点有效性检查">节点有效性检查</h3>
 <div class="mermaid">
     flowchart TD
-  node3["if (!this.node  !this.isValid) {"]
+  node3["if (!this.node || !this.isValid) {"]
 
 </div>
 
@@ -109,7 +109,7 @@
             <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(<span class="hljs-string">&quot;组件已销毁，取消后续操作&quot;</span>);
             <span class="hljs-keyword">return</span>;
         }
-        
+
         <span class="hljs-comment">// 处理结果...</span>
     })
     .<span class="hljs-title function_">catch</span>(<span class="hljs-function"><span class="hljs-params">error</span> =&gt;</span> {
@@ -133,9 +133,9 @@
 <ol>
 <li><strong>节点有效性检查</strong>：<div class="mermaid">
     flowchart TD
-  node2["if (!cardClone  !cardClone.isValid) {"]</li>
+  node2["if (!cardClone || !cardClone.isValid) {"]
+</div></li>
 </ol>
-</div>
 
 <ol start="2">
 <li><p><strong>组件创建保护</strong>：</p>
@@ -157,9 +157,9 @@
 <li><p><strong>异步操作链中的安全检查</strong>：</p>
 <div class="mermaid">
     flowchart TD
-  node4["if (!cardClone  !cardClone.isValid  !cardComp  !cardComp.isValid) {"]</li>
+  node4["if (!cardClone || !cardClone.isValid || !cardComp || !cardComp.isValid) {"]
+</div></li>
 </ol>
-</div>
 
 <ol start="4">
 <li><strong>回调函数中的安全检查</strong>：<pre><code class="language-typescript">.<span class="hljs-title function_">call</span>(<span class="hljs-function">() =&gt;</span> {
@@ -177,9 +177,9 @@
 <ol>
 <li><strong>节点有效性检查</strong>：<div class="mermaid">
     flowchart TD
-  node2["if (!this.node  !this.isValid) {"]</li>
+  node2["if (!this.node || !this.isValid) {"]
+</div></li>
 </ol>
-</div>
 
 <ol start="2">
 <li><strong>组件重建保护</strong>：<pre><code class="language-typescript"><span class="hljs-keyword">try</span> {

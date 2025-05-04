@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Structure - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="../css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="js/diagram-modal.js" defer></script>
+  <script src="../js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -68,119 +68,82 @@
         <h1 id="foolcards-项目结构图">FoolCards 项目结构图</h1>
 <h2 id="文件目录结构">文件目录结构</h2>
 <div class="mermaid">
-    flowchart TD
-    Root["FoolCards/"] --> Assets["assets/"]
-    Root --> Docs["docs/"]
-    Root --> GitIgnore[".gitignore"]
-    Root --> License["LICENSE"]
-    Root --> Readme["README.md"]
-    Root --> ProjectJson["project.json"]
+graph TD
+    A["FoolCards/"] --> B["assets/"]
+    A --> C["docs/"]
+    A --> D[".gitignore"]
+    A --> E["LICENSE"]
+    A --> F["README.md"]
+    A --> G["project.json"]
 
-    %% Assets 子目录
-    Assets --> AssetDocs["docs/"]
-    Assets --> Prefabs["prefabs/"]
-    Assets --> Resources["resources/"]
-    Assets --> Scenes["scenes/"]
-    Assets --> Scripts["scripts/"]
+    B --> H["docs/"]
+    B --> I["prefabs/"]
+    B --> J["resources/"]
+    B --> K["scenes/"]
+    B --> L["scripts/"]
 
-    %% Prefabs 子目录
-    Prefabs --> CardPrefab["Card.prefab"]
-    Prefabs --> GameOverPopupPrefab["GameOverPopup.prefab"]
-    Prefabs --> SceneEffectPrefab["SceneEffect.prefab"]
+    I --> M["Card.prefab"]
+    I --> N["GameOverPopup.prefab"]
+    I --> O["SceneEffect.prefab"]
 
-    %% Resources 子目录
-    Resources --> Background["background/"]
-    Resources --> Cards["cards/"]
-    Resources --> Menu["menu/"]
-    Resources --> UiAssets["ui-assets/"]
+    J --> P["background/"]
+    J --> Q["cards/"]
+    J --> R["menu/"]
+    J --> S["ui-assets/"]
 
-    %% UI Assets 子目录
-    UiAssets --> Buttons["Buttons/"]
-    UiAssets --> Cursors["Cursors/"]
-    UiAssets --> GenUI["Gen UI/"]
-    UiAssets --> SymbolsText["Symbols & Text/"]
+    S --> T["Buttons/"]
+    S --> U["Cursors/"]
+    S --> V["Gen UI/"]
+    S --> W["Symbols & Text/"]
 
-    %% Scenes 子目录
-    Scenes --> GameScene["Game.scene"]
-    Scenes --> LoadingScene["Loading.scene"]
-    Scenes --> MainMenuScene["MainMenu.scene"]
+    K --> X["Game.scene"]
+    K --> Y["Loading.scene"]
+    K --> Z["MainMenu.scene"]
 
-    %% Scripts 子目录
-    Scripts --> AIOpponent["AIOpponent.ts"]
-    Scripts --> Card["Card.ts"]
-    Scripts --> GameLauncher["GameLauncher.ts"]
-    Scripts --> GameManager["GameManager.ts"]
-    Scripts --> GameOverPopup["GameOverPopup.ts"]
-    Scripts --> LoadingSceneScript["LoadingScene.ts"]
-    Scripts --> MainMenu["MainMenu.ts"]
-    Scripts --> PlatformAdapter["PlatformAdapter.ts"]
-    Scripts --> SceneEffect["SceneEffect.ts"]
-    Scripts --> SpecialHands["SpecialHands.ts"]
-    Scripts --> SpecialHandsPopup["SpecialHandsPopup.ts"]
+    L --> AA["AIOpponent.ts"]
+    L --> AB["Card.ts"]
+    L --> AC["GameLauncher.ts"]
+    L --> AD["GameManager.ts"]
+    L --> AE["GameOverPopup.ts"]
+    L --> AF["LoadingScene.ts"]
+    L --> AG["MainMenu.ts"]
+    L --> AH["PlatformAdapter.ts"]
+    L --> AI["SceneEffect.ts"]
+    L --> AJ["SpecialHands.ts"]
+    L --> AK["SpecialHandsPopup.ts"]
 
-    %% Docs 子目录
-    Docs --> DiagramsDir["diagrams/"]
-
-    %% Diagrams 子目录
-    DiagramsDir --> StructureDir["structure/"]
-    DiagramsDir --> ERDir["er/"]
-    DiagramsDir --> FlowchartsDir["flowcharts/"]
-    DiagramsDir --> UIDir["ui/"]
-
-    %% 样式设置
-    classDef rootNode fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef mainDir fill:#bbf,stroke:#33f,stroke-width:1px;
-    classDef subDir fill:#ddf,stroke:#33f,stroke-width:1px;
-    classDef file fill:#fff,stroke:#999,stroke-width:1px;
-
-    class Root rootNode;
-    class Assets,Docs mainDir;
-    class AssetDocs,Prefabs,Resources,Scenes,Scripts,DiagramsDir,StructureDir,ERDir,FlowchartsDir,UIDir,UiAssets subDir;
-    class CardPrefab,GameOverPopupPrefab,SceneEffectPrefab,GameScene,LoadingScene,MainMenuScene,AIOpponent,Card,GameLauncher,GameManager,GameOverPopup,LoadingSceneScript,MainMenu,PlatformAdapter,SceneEffect,SpecialHands,SpecialHandsPopup,GitIgnore,License,Readme,ProjectJson,Background,Cards,Menu,Buttons,Cursors,GenUI,SymbolsText file;
-
+    C --> AL["diagrams/"]
+    AL --> AM["structure/"]
+    AL --> AN["er/"]
+    AL --> AO["flowcharts/"]
+    AL --> AP["ui/"]
 </div>
 
 <h2 id="核心组件关系图">核心组件关系图</h2>
 <div class="mermaid">
-    flowchart TB
-    GameManager["GameManager.ts"] --> Card["Card.ts"]
-    GameManager --> AIOpponent["AIOpponent.ts"]
-    GameManager --> PlayArea["PlayArea"]
-    GameManager --> SpecialHands["SpecialHands.ts"]
-    GameManager --> GameOverPopup["GameOverPopup.ts"]
+graph TB
+    A["GameManager.ts"] --> B["Card.ts"]
+    A --> C["AIOpponent.ts"]
+    A --> D["PlayArea"]
+    A --> E["SpecialHands.ts"]
+    A --> F["GameOverPopup.ts"]
 
-    Card --> SceneEffect["SceneEffect.ts"]
-    PlayArea --> SceneEffect
+    B --> G["SceneEffect.ts"]
+    D --> G
 
-    AIOpponent --> Card
-    SpecialHands --> Card
-
-    classDef core fill:#f96,stroke:#333,stroke-width:2px;
-    classDef component fill:#9cf,stroke:#36c,stroke-width:1px;
-
-    class GameManager core;
-    class Card,AIOpponent,PlayArea,SpecialHands,SceneEffect,GameOverPopup component;
-
+    C --> B
+    E --> B
 </div>
 
 <h2 id="游戏流程图">游戏流程图</h2>
 <div class="mermaid">
-    flowchart LR
-    GameLauncher["GameLauncher.ts"] --> LoadingScene["LoadingScene.ts"]
-    LoadingScene --> MainMenu["MainMenu.ts"]
-    MainMenu --> GameManager["GameManager.ts"]
-    GameManager --> GameOverPopup["GameOverPopup.ts"]
-    GameOverPopup --> |重新开始| GameManager
-    GameOverPopup --> |返回主菜单| MainMenu
-
-    classDef start fill:#9f9,stroke:#333,stroke-width:2px;
-    classDef scene fill:#ff9,stroke:#993,stroke-width:1px;
-    classDef end fill:#f99,stroke:#933,stroke-width:1px;
-
-    class GameLauncher start;
-    class LoadingScene,MainMenu,GameManager scene;
-    class GameOverPopup end;
-
+graph LR
+    A["GameLauncher.ts"] --> B["LoadingScene.ts"]
+    B --> C["MainMenu.ts"]
+    C --> D["GameManager.ts"]
+    D --> E["GameOverPopup.ts"]
+    E -->|重新开始| D
+    E -->|返回主菜单| C
 </div>
 
 <h2 id="项目结构说明">项目结构说明</h2>
@@ -329,25 +292,13 @@
         <script>
     // 初始化Mermaid
     mermaid.initialize({
-      startOnLoad: false,
+      startOnLoad: true,
       theme: 'neutral',
       securityLevel: 'loose',
       flowchart: {
         useMaxWidth: true,
         htmlLabels: true,
-        curve: 'basis'
-      },
-      er: {
-        useMaxWidth: true
-      },
-      sequence: {
-        useMaxWidth: true
-      },
-      classDiagram: {
-        useMaxWidth: true
-      },
-      stateDiagram: {
-        useMaxWidth: true
+        curve: 'linear'
       }
     });
 
@@ -360,23 +311,6 @@
         });
       } else {
         console.warn('highlight.js未加载，代码高亮功能不可用');
-      }
-
-      // 使用mermaid.run()而不是手动渲染
-      try {
-        mermaid.run({
-          querySelector: '.mermaid'
-        }).catch(error => {
-          console.error('Mermaid运行错误:', error);
-          document.querySelectorAll('.mermaid').forEach(el => {
-            el.innerHTML = '<div class="error-message"><h3>图表渲染错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
-          });
-        });
-      } catch (error) {
-        console.error('Mermaid处理错误:', error);
-        document.querySelectorAll('.mermaid').forEach(el => {
-          el.innerHTML = '<div class="error-message"><h3>图表处理错误</h3><p>' + error.message + '</p><pre>' + el.textContent + '</pre></div>';
-        });
       }
     });
   </script>
