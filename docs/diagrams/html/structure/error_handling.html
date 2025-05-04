@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Error Handling - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -49,15 +49,16 @@
   </header>
 
   <div class="container">
-        <aside class="sidebar">
+    <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="../structure/ai_opponent.html">Ai Opponent</a></li>
-        <li><a href="../structure/architecture.html">Architecture</a></li>
-        <li><a href="../structure/class_diagram.html">Class Diagram</a></li>
-        <li><a href="../structure/component_interaction.html">Component Interaction</a></li>
-        <li><a href="../structure/error_handling.html">Error Handling</a></li>
-        <li><a href="../structure/project_structure.html">Project Structure</a></li>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
       </ul>
     </aside>
 
@@ -83,19 +84,20 @@
         <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;参数1为空&quot;</span>);
         <span class="hljs-keyword">return</span>;
     }
-
+    
     <span class="hljs-keyword">if</span> (!param2) {
         <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&quot;参数2为空&quot;</span>);
         <span class="hljs-keyword">return</span>;
     }
-
+    
     <span class="hljs-comment">// 继续初始化...</span>
 }
 </code></pre>
 <h3 id="节点有效性检查">节点有效性检查</h3>
-        <div class="mermaid">
-flowchart TD
-    node3["if (!this.node || !this.isValid) {"]
+<div class="mermaid">
+    flowchart TD
+  node3["if (!this.node  !this.isValid) {"]
+
 </div>
 
 <h3 id="异步操作保护">异步操作保护</h3>
@@ -107,7 +109,7 @@ flowchart TD
             <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(<span class="hljs-string">&quot;组件已销毁，取消后续操作&quot;</span>);
             <span class="hljs-keyword">return</span>;
         }
-
+        
         <span class="hljs-comment">// 处理结果...</span>
     })
     .<span class="hljs-title function_">catch</span>(<span class="hljs-function"><span class="hljs-params">error</span> =&gt;</span> {
@@ -129,13 +131,13 @@ flowchart TD
 <p>最近，我们在AI对手卡牌显示过程中发现了&quot;Cannot read properties of null (reading &#39;getComponent&#39;)&quot;错误。这个问题出现在异步加载卡牌精灵时，节点可能在加载完成前被销毁。</p>
 <h4 id="修复策略">修复策略</h4>
 <ol>
-<li><strong>节点有效性检查</strong>：
-<div class="mermaid">
-flowchart TD
-    node2["if (!cardClone || !cardClone.isValid) {"]
+<li><strong>节点有效性检查</strong>：<div class="mermaid">
+    flowchart TD
+  node2["if (!cardClone  !cardClone.isValid) {"]</li>
+</ol>
 </div>
-</li>
 
+<ol start="2">
 <li><p><strong>组件创建保护</strong>：</p>
 <pre><code class="language-typescript"><span class="hljs-comment">// 使用try-catch包装组件创建</span>
 <span class="hljs-keyword">let</span> <span class="hljs-attr">cardComp</span>: <span class="hljs-title class_">Card</span> = <span class="hljs-literal">null</span>;
@@ -152,14 +154,12 @@ flowchart TD
 }
 </code></pre>
 </li>
-
 <li><p><strong>异步操作链中的安全检查</strong>：</p>
 <div class="mermaid">
-flowchart TD
-    node4["if (!cardClone || !cardClone.isValid || !cardComp || !cardComp.isValid) {"]
-</div>
-</li>
+    flowchart TD
+  node4["if (!cardClone  !cardClone.isValid  !cardComp  !cardComp.isValid) {"]</li>
 </ol>
+</div>
 
 <ol start="4">
 <li><strong>回调函数中的安全检查</strong>：<pre><code class="language-typescript">.<span class="hljs-title function_">call</span>(<span class="hljs-function">() =&gt;</span> {
@@ -175,15 +175,14 @@ flowchart TD
 <h3 id="card组件错误处理改进">Card组件错误处理改进</h3>
 <p>Card组件也进行了类似的改进，特别是在异步加载卡牌精灵的过程中：</p>
 <ol>
-<li><strong>节点有效性检查</strong>：
-<div class="mermaid">
-flowchart TD
-    node2["if (!this.node || !this.isValid) {"]
+<li><strong>节点有效性检查</strong>：<div class="mermaid">
+    flowchart TD
+  node2["if (!this.node  !this.isValid) {"]</li>
+</ol>
 </div>
-</li>
 
-<li><strong>组件重建保护</strong>：
-<pre><code class="language-typescript"><span class="hljs-keyword">try</span> {
+<ol start="2">
+<li><strong>组件重建保护</strong>：<pre><code class="language-typescript"><span class="hljs-keyword">try</span> {
     <span class="hljs-variable language_">this</span>.<span class="hljs-property">cardSprite</span> = <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">getComponent</span>(<span class="hljs-title class_">Sprite</span>);
     <span class="hljs-keyword">if</span> (!<span class="hljs-variable language_">this</span>.<span class="hljs-property">cardSprite</span>) {
         <span class="hljs-variable language_">this</span>.<span class="hljs-property">cardSprite</span> = <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">addComponent</span>(<span class="hljs-title class_">Sprite</span>);

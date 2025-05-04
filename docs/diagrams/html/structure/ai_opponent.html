@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ai Opponent - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,12 +52,13 @@
     <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="../structure/ai_opponent.html">Ai Opponent</a></li>
-        <li><a href="../structure/architecture.html">Architecture</a></li>
-        <li><a href="../structure/class_diagram.html">Class Diagram</a></li>
-        <li><a href="../structure/component_interaction.html">Component Interaction</a></li>
-        <li><a href="../structure/error_handling.html">Error Handling</a></li>
-        <li><a href="../structure/project_structure.html">Project Structure</a></li>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
       </ul>
     </aside>
 
@@ -68,15 +69,14 @@
 <h2 id="概述">概述</h2>
 <p>AI对手组件(AIOpponent)是FoolCards游戏中负责模拟对手行为的核心组件。它管理对手的卡牌选择、出牌策略和卡牌显示逻辑，为玩家提供一个完整的游戏体验。</p>
 <h2 id="组件结构">组件结构</h2>
-        <div class="mermaid">
-
-flowchart TD
-    node1["AIOpponent"]
-    node3["- opponentHand"]
-    node4["- playAreas"]
-    node5["- aiPlayedCards"]
-    node6["- aiCardContainers"]
-    node7["- gameManager"]
+<div class="mermaid">
+    flowchart TD
+  node1["AIOpponent"]
+  node3["- opponentHand"]
+  node4["- playAreas"]
+  node5["- aiPlayedCards"]
+  node6["- aiCardContainers"]
+  node7["- gameManager"]
 
 </div>
 
@@ -175,7 +175,27 @@ flowchart TD
 </li>
 </ol>
 <h2 id="最近修复">最近修复</h2>
-<p>最近对AIOpponent组件进行了以下改进，以解决卡牌显示过程中的错误：</p>
+<h3 id="2023年12月更新：游戏结束时的卡牌显示和得分问题">2023年12月更新：游戏结束时的卡牌显示和得分问题</h3>
+<p>最近对AIOpponent组件进行了以下改进，以解决游戏结束时的卡牌显示和得分问题：</p>
+<ol>
+<li><p><strong>卡牌记录管理改进</strong>：</p>
+<ul>
+<li>修改了<code>clearPlayedCardsRecord</code>方法的实现</li>
+<li>不再简单清空内部记录，而是保存所有已显示卡牌的信息</li>
+<li>确保在回合切换时不丢失已显示卡牌的数据</li>
+</ul>
+</li>
+<li><p><strong>游戏结束时的卡牌显示</strong>：</p>
+<ul>
+<li>修改了游戏结束时的卡牌清理逻辑</li>
+<li>保留所有回合AI打出的卡牌显示，使玩家可以看到完整的对战过程</li>
+<li>确保对手得分计算正确反映所有已打出的卡牌</li>
+</ul>
+</li>
+</ol>
+<p>这些改进确保了游戏结束时能够正确显示所有AI打出的卡牌，并且对手的得分能够正确计算和显示。</p>
+<h3 id="2023年11月更新：卡牌显示错误修复">2023年11月更新：卡牌显示错误修复</h3>
+<p>之前对AIOpponent组件进行了以下改进，以解决卡牌显示过程中的错误：</p>
 <ol>
 <li><p><strong>节点有效性检查</strong>：</p>
 <ul>

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Class Diagram - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -49,15 +49,16 @@
   </header>
 
   <div class="container">
-        <aside class="sidebar">
+    <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="../structure/ai_opponent.html">Ai Opponent</a></li>
-        <li><a href="../structure/architecture.html">Architecture</a></li>
-        <li><a href="../structure/class_diagram.html">Class Diagram</a></li>
-        <li><a href="../structure/component_interaction.html">Component Interaction</a></li>
-        <li><a href="../structure/error_handling.html">Error Handling</a></li>
-        <li><a href="../structure/project_structure.html">Project Structure</a></li>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
       </ul>
     </aside>
 
@@ -66,87 +67,8 @@
       <div class="content-body">
         <h1 id="foolcards-类图">FoolCards 类图</h1>
 <h2 id="核心类关系">核心类关系</h2>
-        <div class="mermaid">
-classDiagram
-    class GameManager {
-        -playerScore: number
-        -opponentScore: number
-        -areaScores: number[]
-        -currentRound: number
-        -maxRounds: number
-        -playAreas: PlayArea[]
-        -aiOpponent: AIOpponent
-        +playCard(card, area) void
-        +calculateScore() number
-        +showGameOver() void
-    }
-
-    class Card {
-        -suit: string
-        -rank: number
-        -value: number
-        -isRevealed: boolean
-        +getFullName() string
-        +showCardFace() void
-    }
-
-    class AIOpponent {
-        -opponentHand: Card[]
-        -playAreas: PlayArea[]
-        -aiPlayedCards: Card[]
-        -aiCardContainers: Node[]
-        +init() void
-        +playCards() void
-        +showCardInPlayArea(card, area) void
-        +arrangeAICardsInPlayArea() void
-    }
-
-    class PlayArea {
-        -cards: Card[]
-        -maxCards: number
-        +addCard(card) void
-        +getScore() number
-    }
-
-    class SceneEffect {
-        -type: string
-        -name: string
-        -description: string
-        -publicCards: Card[]
-        +reveal() void
-        +apply() void
-    }
-
-    class SpecialHands {
-        -specialHands: object[]
-        +checkSpecialHand(cards) boolean
-        +getHandBonus(cards) number
-    }
-
-    class GameOverPopup {
-        -popupNode: Node
-        -resultLabel: Label
-        -playerScoreLabel: Label
-        -opponentScoreLabel: Label
-        -returnButton: Button
-        +showPopup(playerScore, opponentScore) void
-        +hidePopup() void
-    }
-
-    class MainMenu {
-        -startButton: Button
-        -settingsButton: Button
-        +onStartClicked() void
-        +onSettingsClicked() void
-    }
-
-    class LoadingScene {
-        -progressBar: ProgressBar
-        -loadingText: Label
-        +loadResources() void
-        +updateProgress(progress) void
-    }
-
+<div class="mermaid">
+    classDiagram
     GameManager "1" --> "*" Card : 管理
     GameManager "1" --> "1" AIOpponent : 控制
     GameManager "1" --> "*" PlayArea : 管理
@@ -154,76 +76,154 @@ classDiagram
     GameManager ..> GameOverPopup : 显示
     GameManager ..> MainMenu : 控制
     GameManager ..> LoadingScene : 控制
+
     Card "*" --o "1" PlayArea : 属于
     PlayArea "1" --> "1" SceneEffect : 应用
+
     AIOpponent ..> Card : 使用
     SpecialHands ..> Card : 检测
+
+    class GameManager {
+    -playerScore: number
+    -opponentScore: number
+    -areaScores: number[]
+    -currentRound: number
+    -maxRounds: number
+    -playAreas: PlayArea[]
+    -aiOpponent: AIOpponent
+    +playCard(card: Card, area: PlayArea): void
+    +calculateScore(): number
+    +showGameOver(): void
+}
+
+    class Card {
+    -suit: string
+    -rank: number
+    -value: number
+    -isRevealed: boolean
+    +getFullName(): string
+    +showCardFace(): void
+}
+
+    class AIOpponent {
+    -opponentHand: Card[]
+    -playAreas: PlayArea[]
+    -aiPlayedCards: Card[]
+    -aiCardContainers: Node[]
+    +init(): void
+    +playCards(): void
+    +showCardInPlayArea(card: Card, area: PlayArea): void
+    +arrangeAICardsInPlayArea(): void
+}
+
+    class SceneEffect {
+    -type: string
+    -name: string
+    -description: string
+    -publicCards: Card[]
+    +reveal(): void
+    +apply(): void
+}
+
+    class SpecialHands {
+    -specialHands: object[]
+    +checkSpecialHand(cards: Card[]): boolean
+    +getHandBonus(cards: Card[]): number
+}
+
+    class GameOverPopup {
+    -popupNode: Node
+    -resultLabel: Label
+    -playerScoreLabel: Label
+    -opponentScoreLabel: Label
+    -returnButton: Button
+    +showPopup(playerScore: number, opponentScore: number): void
+    +hidePopup(): void
+}
+
+    class MainMenu {
+    -startButton: Button
+    -settingsButton: Button
+    +onStartClicked(): void
+    +onSettingsClicked(): void
+}
+
+    class LoadingScene {
+    -progressBar: ProgressBar
+    -loadingText: Label
+    +loadResources(): void
+    +updateProgress(progress: number): void
+}
+
 </div>
 
 <h2 id="组件继承关系">组件继承关系</h2>
-        <div class="mermaid">
-classDiagram
-    class Component {
-        +node: Node
-        +enabled: boolean
-        +onLoad() void
-        +start() void
-        +update(dt) void
-    }
-
-    class UIComponent {
-        +opacity: number
-        +visible: boolean
-        +setPosition(x, y) void
-        +setScale(x, y) void
-    }
-
-    class GameComponent {
-        +gameManager: GameManager
-        +init(gameManager) void
-        +reset() void
-    }
-
-    class Button {
-        +onClick: Function
-        +interactable: boolean
-    }
-
-    class Label {
-        +string: string
-        +fontSize: number
-        +color: Color
-    }
-
-    class ProgressBar {
-        +progress: number
-        +totalLength: number
-    }
-
-    class Card {
-        -suit: string
-        -rank: number
-        -value: number
-    }
-
-    class PlayArea {
-        -cards: Card[]
-        -maxCards: number
-    }
-
-    class SceneEffect {
-        -type: string
-        -name: string
-    }
-
+<div class="mermaid">
+    classDiagram
     Component <|-- UIComponent
     Component <|-- GameComponent
+
     UIComponent <|-- Button
     UIComponent <|-- Label
     UIComponent <|-- ProgressBar
+
     GameComponent <|-- Card
     GameComponent <|-- PlayArea
     GameComponent <|-- SceneEffect
+
+    class Component {
+    +node: Node
+    +enabled: boolean
+    +onLoad(): void
+    +start(): void
+    +update(dt: number): void
+}
+
+    class UIComponent {
+    +opacity: number
+    +visible: boolean
+    +setPosition(x: number, y: number): void
+    +setScale(x: number, y: number): void
+}
+
+    class GameComponent {
+    +gameManager: GameManager
+    +init(gameManager: GameManager): void
+    +reset(): void
+}
+
+    class Button {
+    +onClick: Function
+    +interactable: boolean
+}
+
+    class Label {
+    +string: string
+    +fontSize: number
+    +color: Color
+}
+
+    class ProgressBar {
+    +progress: number
+    +totalLength: number
+}
+
+    class Card {
+    -suit: string
+    -rank: number
+    -value: number
+}
+
+    class PlayArea {
+    -cards: Card[]
+    -maxCards: number
+}
+
+    class SceneEffect {
+    -type: string
+    -name: string
+}
+
 </div>
 
 <h2 id="类关系说明">类关系说明</h2>

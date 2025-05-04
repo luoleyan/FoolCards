@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ui Layout - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -69,13 +69,12 @@
       <div class="content-body">
         <h1 id="foolcards-ui布局设计">FoolCards UI布局设计</h1>
 <h2 id="游戏主界面布局">游戏主界面布局</h2>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node4["玩家手牌区域           对手手牌区域"]
-    node10["场地区域1      场地区域2      场地区域3"]
-    node16["换牌区域                       计时器"]
-    node21["结束回合"]
+  node4["玩家手牌区域           对手手牌区域"]
+  node10["场地区域1      场地区域2      场地区域3"]
+  node16["换牌区域                       计时器"]
+  node21["结束回合"]
 
 </div>
 
@@ -126,24 +125,22 @@ flowchart TD
 </ol>
 <h2 id="弹窗设计">弹窗设计</h2>
 <h3 id="游戏结束弹窗">游戏结束弹窗</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["游戏结束"]
-    node6["最终得分"]
-    node8["玩家: XX分   对手: XX分"]
-    node14["返回主菜单      再来一局"]
+  node2["游戏结束"]
+  node6["最终得分"]
+  node8["玩家: XX分   对手: XX分"]
+  node14["返回主菜单      再来一局"]
 
 </div>
 
 <h3 id="特殊牌型弹窗">特殊牌型弹窗</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["特殊牌型!"]
-    node6["[牌型名称]"]
-    node8["[牌型描述和加分]"]
-    node14["确定"]
+  node2["特殊牌型!"]
+  node6["[牌型名称]"]
+  node8["[牌型描述和加分]"]
+  node14["确定"]
 
 </div>
 

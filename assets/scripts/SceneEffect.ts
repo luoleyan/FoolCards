@@ -151,6 +151,7 @@ export class SceneEffect extends Component {
                             card.showCardFace()
                                 .catch(err => {
                                     console.error('Error showing card face:', err);
+                                    // 错误已被记录，不需要进一步处理
                                 });
                         }
                     }
@@ -394,6 +395,7 @@ export class SceneEffect extends Component {
                                             card.showCardFace()
                                                 .catch(err => {
                                                     console.error('Error showing card face in animation:', err);
+                                                    // 错误已被记录，不需要进一步处理
                                                 });
                                         }
                                     }

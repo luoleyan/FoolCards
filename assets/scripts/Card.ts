@@ -47,6 +47,9 @@ export class Card extends Component {
     private _dragOffset: Vec3 = new Vec3();
     private _originalIndex: number;
 
+    // 添加状态标志，用于跟踪卡牌是否正在进行异步操作
+    private _isProcessing: boolean = false;
+
     // 静态变量，存储预加载的卡牌背面图像
     private static cardBackSprite: SpriteFrame = null;
 
@@ -167,8 +170,11 @@ export class Card extends Component {
         console.log(`Initializing card: ${suit} ${rank}`);
         if (!suit || !rank) {
             console.error(`Invalid card parameters: suit=${suit}, rank=${rank}`);
-            return;
+            return Promise.reject(new Error('Invalid card parameters'));
         }
+
+        // 设置处理标志，防止在异步操作过程中被销毁
+        this._isProcessing = true;
 
         this._suit = suit;
         this._rank = rank;
@@ -185,6 +191,7 @@ export class Card extends Component {
         // 如果是万能牌，不需要加载新资源
         if (suit === CardSuit.Joker) {
             console.log('Initializing Joker card without loading new resources');
+            this._isProcessing = false;
             return Promise.resolve();
         }
 
@@ -194,13 +201,25 @@ export class Card extends Component {
         }
 
         return new Promise<void>((resolve, reject) => {
+            // 再次检查节点是否有效
+            if (!this.node || !this.isValid) {
+                console.error('Card node became invalid during initialization');
+                this._isProcessing = false;
+                reject(new Error('Card node is invalid'));
+                return;
+            }
+
             this.updateCardSprite()
                 .then(() => {
                     console.log(`Card ${suit} ${rank} initialized successfully`);
+                    // 清除处理标志
+                    this._isProcessing = false;
                     resolve();
                 })
                 .catch((error) => {
                     console.error(`Failed to initialize card ${suit} ${rank}:`, error);
+                    // 清除处理标志
+                    this._isProcessing = false;
                     reject(error);
                 });
         });
@@ -209,32 +228,68 @@ export class Card extends Component {
     // 修改更新卡牌图片方法
     private updateCardSprite(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            // 首先检查节点是否有效
+            if (!this.node || !this.isValid) {
+                console.error('Card node is invalid in updateCardSprite');
+                reject(new Error('Card node is invalid'));
+                return;
+            }
+
             if (!this.cardSprite) {
                 reject(new Error('Card sprite component is missing!'));
                 return;
             }
+
+            // 设置处理标志
+            this._isProcessing = true;
 
             if (this._isFaceUp) {
                 // 如果是万能牌，加载对应的万能牌图像
                 if (this._suit === CardSuit.Joker) {
                     const jokerPath = `cards/JOKER-${this._rank}/spriteFrame`;
                     resources.load(jokerPath, SpriteFrame, (err, spriteFrame) => {
+                        // 再次检查节点是否有效
+                        if (!this.node || !this.isValid) {
+                            console.error('Card node became invalid during joker sprite loading');
+                            this._isProcessing = false;
+                            reject(new Error('Card node is invalid'));
+                            return;
+                        }
+
                         if (err) {
                             console.error('Failed to load joker sprite:', err);
+                            this._isProcessing = false;
                             reject(err);
                             return;
                         }
                         // 如果Sprite组件丢失，尝试重新添加
                         if (!this.cardSprite) {
                             console.warn('Card sprite component is missing after loading joker sprite, trying to recreate it');
-                            this.cardSprite = this.getComponent(Sprite);
-                            if (!this.cardSprite) {
-                                this.cardSprite = this.addComponent(Sprite);
-                                console.log('Created new Sprite component for joker card');
+
+                            // 再次检查节点是否有效
+                            if (!this.node || !this.isValid) {
+                                console.error('Card node is invalid, cannot recreate sprite component');
+                                this._isProcessing = false;
+                                reject(new Error('Card node is invalid'));
+                                return;
+                            }
+
+                            try {
+                                this.cardSprite = this.getComponent(Sprite);
+                                if (!this.cardSprite) {
+                                    this.cardSprite = this.addComponent(Sprite);
+                                    console.log('Created new Sprite component for joker card');
+                                }
+                            } catch (error) {
+                                console.error('Error recreating sprite component for joker:', error);
+                                this._isProcessing = false;
+                                reject(error);
+                                return;
                             }
                         }
 
                         this.cardSprite.spriteFrame = spriteFrame;
+                        this._isProcessing = false;
                         resolve();
                     });
                     return;
@@ -243,8 +298,17 @@ export class Card extends Component {
                 // 加载普通卡牌正面图片
                 let path = `cards/${this._suit}${this._rank}/spriteFrame`;
                 resources.load(path, SpriteFrame, (err, spriteFrame) => {
+                    // 再次检查节点是否有效
+                    if (!this.node || !this.isValid) {
+                        console.error('Card node became invalid during card sprite loading');
+                        this._isProcessing = false;
+                        reject(new Error('Card node is invalid'));
+                        return;
+                    }
+
                     if (err) {
                         console.error('Failed to load card sprite:', err);
+                        this._isProcessing = false;
                         reject(err);
                         return;
                     }
@@ -254,6 +318,7 @@ export class Card extends Component {
                         // 检查节点是否有效
                         if (!this.node || !this.isValid) {
                             console.error('Card node is invalid, cannot recreate sprite component');
+                            this._isProcessing = false;
                             reject(new Error('Card node is invalid'));
                             return;
                         }
@@ -266,6 +331,7 @@ export class Card extends Component {
                             }
                         } catch (error) {
                             console.error('Error recreating sprite component:', error);
+                            this._isProcessing = false;
                             reject(error);
                             return;
                         }
@@ -274,40 +340,70 @@ export class Card extends Component {
                     // 再次检查cardSprite是否有效
                     if (!this.cardSprite) {
                         console.error('Failed to recreate sprite component');
+                        this._isProcessing = false;
                         reject(new Error('Failed to recreate sprite component'));
                         return;
                     }
 
                     this.cardSprite.spriteFrame = spriteFrame;
+                    this._isProcessing = false;
                     resolve();
                 });
             } else {
                 // 显示背面
                 if (Card.cardBackSprite) {
                     this.cardSprite.spriteFrame = Card.cardBackSprite;
+                    this._isProcessing = false;
                     resolve();
                 } else if (this.cardBack) {
                     this.cardSprite.spriteFrame = this.cardBack;
+                    this._isProcessing = false;
                     resolve();
                 } else {
                     resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                        // 再次检查节点是否有效
+                        if (!this.node || !this.isValid) {
+                            console.error('Card node became invalid during card back loading');
+                            this._isProcessing = false;
+                            reject(new Error('Card node is invalid'));
+                            return;
+                        }
+
                         if (err) {
                             console.error('Failed to load card back sprite:', err);
+                            this._isProcessing = false;
                             reject(err);
                             return;
                         }
                         // 如果Sprite组件丢失，尝试重新添加
                         if (!this.cardSprite) {
                             console.warn('Card sprite component is missing when showing back, trying to recreate it');
-                            this.cardSprite = this.getComponent(Sprite);
-                            if (!this.cardSprite) {
-                                this.cardSprite = this.addComponent(Sprite);
-                                console.log('Created new Sprite component for card back');
+
+                            // 再次检查节点是否有效
+                            if (!this.node || !this.isValid) {
+                                console.error('Card node is invalid, cannot recreate sprite component for back');
+                                this._isProcessing = false;
+                                reject(new Error('Card node is invalid'));
+                                return;
+                            }
+
+                            try {
+                                this.cardSprite = this.getComponent(Sprite);
+                                if (!this.cardSprite) {
+                                    this.cardSprite = this.addComponent(Sprite);
+                                    console.log('Created new Sprite component for card back');
+                                }
+                            } catch (error) {
+                                console.error('Error recreating sprite component for back:', error);
+                                this._isProcessing = false;
+                                reject(error);
+                                return;
                             }
                         }
 
                         this.cardSprite.spriteFrame = spriteFrame;
                         Card.cardBackSprite = spriteFrame;
+                        this._isProcessing = false;
                         resolve();
                     });
                 }
@@ -323,6 +419,51 @@ export class Card extends Component {
             return Promise.reject(new Error('Card node is invalid'));
         }
 
+        // 如果卡牌已经是正面朝上，直接返回成功
+        if (this._isFaceUp) {
+            console.log('Card is already face up, no action needed');
+            return Promise.resolve();
+        }
+
+        // 如果正在处理中，返回一个等待的Promise
+        if (this._isProcessing) {
+            console.warn('Card is already being processed in showCardFace, waiting...');
+            // 创建一个延迟检查的Promise，每100ms检查一次处理状态
+            return new Promise<void>((resolve, reject) => {
+                const checkInterval = 100; // 毫秒
+                const maxWaitTime = 3000; // 最长等待3秒
+                let waitedTime = 0;
+
+                const checkProcessing = () => {
+                    if (!this._isProcessing) {
+                        // 处理完成，现在可以显示卡牌正面
+                        if (this._isFaceUp) {
+                            // 如果已经是正面朝上，直接返回成功
+                            resolve();
+                        } else {
+                            // 递归调用自身，但不会再次进入等待逻辑
+                            this.showCardFace()
+                                .then(resolve)
+                                .catch(reject);
+                        }
+                    } else if (waitedTime >= maxWaitTime) {
+                        // 超时，返回错误
+                        reject(new Error('Timeout waiting for card processing to complete'));
+                    } else {
+                        // 继续等待
+                        waitedTime += checkInterval;
+                        setTimeout(checkProcessing, checkInterval);
+                    }
+                };
+
+                // 开始检查
+                setTimeout(checkProcessing, checkInterval);
+            });
+        }
+
+        // 设置处理标志
+        this._isProcessing = true;
+
         // 如果Sprite组件丢失，尝试重新添加
         if (!this.cardSprite) {
             console.warn('Card sprite component is missing, trying to recreate it');
@@ -334,6 +475,7 @@ export class Card extends Component {
                 }
             } catch (error) {
                 console.error('Error recreating sprite component in showCardFace:', error);
+                this._isProcessing = false;
                 return Promise.reject(error);
             }
         }
@@ -341,74 +483,180 @@ export class Card extends Component {
         // 再次检查cardSprite是否有效
         if (!this.cardSprite) {
             console.error('Failed to recreate sprite component in showCardFace');
+            this._isProcessing = false;
             return Promise.reject(new Error('Failed to recreate sprite component'));
         }
 
         this._isFaceUp = true;
-        return this.updateCardSprite();
+
+        // 使用updateCardSprite并确保在完成时清除处理标志
+        return this.updateCardSprite()
+            .catch(error => {
+                this._isProcessing = false;
+                return Promise.reject(error);
+            });
     }
 
     // 显示卡牌背面
     public showCardBack(): Promise<void> {
+        // 检查节点是否有效
+        if (!this.node || !this.isValid) {
+            console.error('Card node is invalid in showCardBack');
+            return Promise.reject(new Error('Card node is invalid'));
+        }
+
+        // 如果卡牌已经是背面朝上，直接返回成功
+        if (!this._isFaceUp) {
+            console.log('Card is already face down, no action needed');
+            return Promise.resolve();
+        }
+
+        // 如果正在处理中，返回一个等待的Promise
+        if (this._isProcessing) {
+            console.warn('Card is already being processed in showCardBack, waiting...');
+            // 创建一个延迟检查的Promise，每100ms检查一次处理状态
+            return new Promise<void>((resolve, reject) => {
+                const checkInterval = 100; // 毫秒
+                const maxWaitTime = 3000; // 最长等待3秒
+                let waitedTime = 0;
+
+                const checkProcessing = () => {
+                    if (!this._isProcessing) {
+                        // 处理完成，现在可以显示卡牌背面
+                        if (!this._isFaceUp) {
+                            // 如果已经是背面朝上，直接返回成功
+                            resolve();
+                        } else {
+                            // 递归调用自身，但不会再次进入等待逻辑
+                            this.showCardBack()
+                                .then(resolve)
+                                .catch(reject);
+                        }
+                    } else if (waitedTime >= maxWaitTime) {
+                        // 超时，返回错误
+                        reject(new Error('Timeout waiting for card processing to complete'));
+                    } else {
+                        // 继续等待
+                        waitedTime += checkInterval;
+                        setTimeout(checkProcessing, checkInterval);
+                    }
+                };
+
+                // 开始检查
+                setTimeout(checkProcessing, checkInterval);
+            });
+        }
+
         if (!this.cardSprite) {
             return Promise.reject(new Error('Cannot show card back: sprite component is missing!'));
         }
+
+        // 设置处理标志
+        this._isProcessing = true;
+
         this._isFaceUp = false;
-        return this.updateCardSprite();
+
+        // 使用updateCardSprite并确保在完成时清除处理标志
+        return this.updateCardSprite()
+            .catch(error => {
+                this._isProcessing = false;
+                return Promise.reject(error);
+            });
     }
 
     // 同步显示卡牌背面
     public showCardBackSync() {
-        // 如果Sprite组件丢失，尝试重新添加
-        if (!this.cardSprite) {
-            console.warn('Card sprite component is missing in showCardBackSync, trying to recreate it');
-            this.cardSprite = this.getComponent(Sprite);
-            if (!this.cardSprite) {
-                this.cardSprite = this.addComponent(Sprite);
-                console.log('Created new Sprite component for card back sync');
-            }
+        // 检查节点是否有效
+        if (!this.node || !this.isValid) {
+            console.error('Card node is invalid in showCardBackSync');
+            return;
         }
 
-        this._isFaceUp = false;
-
-        // 设置卡牌缩放和尺寸
-        if (this.node) {
-            this.node.setScale(0.25, 0.25, 1);
-            const uiTransform = this.node.getComponent(UITransform);
-            if (uiTransform) {
-                uiTransform.setContentSize(120, 180);
-            }
+        // 如果正在处理中，直接返回
+        if (this._isProcessing) {
+            console.warn('Card is already being processed in showCardBackSync');
+            return;
         }
+
+        // 设置处理标志
+        this._isProcessing = true;
 
         try {
+            // 如果Sprite组件丢失，尝试重新添加
+            if (!this.cardSprite) {
+                console.warn('Card sprite component is missing in showCardBackSync, trying to recreate it');
+                this.cardSprite = this.getComponent(Sprite);
+                if (!this.cardSprite) {
+                    this.cardSprite = this.addComponent(Sprite);
+                    console.log('Created new Sprite component for card back sync');
+                }
+            }
+
+            this._isFaceUp = false;
+
+            // 设置卡牌缩放和尺寸
+            if (this.node) {
+                this.node.setScale(0.25, 0.25, 1);
+                const uiTransform = this.node.getComponent(UITransform);
+                if (uiTransform) {
+                    uiTransform.setContentSize(120, 180);
+                }
+            }
+
             // 使用预加载的背面图片
             if (Card.cardBackSprite) {
                 this.cardSprite.spriteFrame = Card.cardBackSprite;
+                this._isProcessing = false;
             } else if (this.cardBack) {
                 this.cardSprite.spriteFrame = this.cardBack;
+                this._isProcessing = false;
             } else {
                 resources.load('cards/Background/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                    // 再次检查节点是否有效
+                    if (!this.node || !this.isValid) {
+                        console.error('Card node became invalid during card back loading in showCardBackSync');
+                        this._isProcessing = false;
+                        return;
+                    }
+
                     if (err) {
                         console.error('Failed to load card back sprite:', err);
+                        this._isProcessing = false;
                         return;
                     }
 
                     // 再次检查Sprite组件是否存在
                     if (!this.cardSprite) {
                         console.warn('Card sprite component is missing after loading back sprite, trying to recreate it');
-                        this.cardSprite = this.getComponent(Sprite);
-                        if (!this.cardSprite) {
-                            this.cardSprite = this.addComponent(Sprite);
-                            console.log('Created new Sprite component for card back after loading');
+
+                        // 再次检查节点是否有效
+                        if (!this.node || !this.isValid) {
+                            console.error('Card node is invalid, cannot recreate sprite component in showCardBackSync');
+                            this._isProcessing = false;
+                            return;
+                        }
+
+                        try {
+                            this.cardSprite = this.getComponent(Sprite);
+                            if (!this.cardSprite) {
+                                this.cardSprite = this.addComponent(Sprite);
+                                console.log('Created new Sprite component for card back after loading');
+                            }
+                        } catch (error) {
+                            console.error('Error recreating sprite component in showCardBackSync:', error);
+                            this._isProcessing = false;
+                            return;
                         }
                     }
 
                     this.cardSprite.spriteFrame = spriteFrame;
                     Card.cardBackSprite = spriteFrame;
+                    this._isProcessing = false;
                 });
             }
         } catch (error) {
             console.error('Error in showCardBackSync:', error);
+            this._isProcessing = false;
         }
     }
 

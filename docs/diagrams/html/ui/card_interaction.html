@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Card Interaction - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,14 +52,15 @@
     <aside class="sidebar">
       <h3>UI设计图</h3>
       <ul>
-        <li><a href="../ui/card_interaction.html">Card Interaction</a></li>
-        <li><a href="../ui/game_wireframe.html">Game Wireframe</a></li>
-        <li><a href="../ui/interaction_flow.html">Interaction Flow</a></li>
-        <li><a href="../ui/menu_wireframe.html">Menu Wireframe</a></li>
-        <li><a href="../ui/README.html">README</a></li>
-        <li><a href="../ui/ui_component_hierarchy.html">Ui Component Hierarchy</a></li>
-        <li><a href="../ui/ui_layout.html">Ui Layout</a></li>
-        <li><a href="../ui/ui_style_guide.html">Ui Style Guide</a></li>
+        <li><a href="ui/card_interaction.html">Card Interaction</a></li>
+<li><a href="ui/game_wireframe.html">Game Wireframe</a></li>
+<li><a href="ui/interaction_flow.html">Interaction Flow</a></li>
+<li><a href="ui/menu_wireframe.html">Menu Wireframe</a></li>
+<li><a href="ui/README.html">README</a></li>
+<li><a href="ui/ui_component_hierarchy.html">Ui Component Hierarchy</a></li>
+<li><a href="ui/ui_layout.html">Ui Layout</a></li>
+<li><a href="ui/ui_style_guide.html">Ui Style Guide</a></li>
+
       </ul>
     </aside>
 
@@ -68,18 +69,21 @@
       <div class="content-body">
         <h1 id="foolcards-卡牌交互流程">FoolCards 卡牌交互流程</h1>
 <h2 id="卡牌选择与打出流程">卡牌选择与打出流程</h2>
-        <div class="mermaid">
+<div class="mermaid">
 flowchart TD
-    A[点击手牌卡牌] --> B[卡牌高亮显示] --> C[点击目标场地]
-    C --> D[确认放置动画] --> E[卡牌移动到场地] --> F[特殊牌型检测]
-    F --> G["显示特殊牌型<br>更新场地分数"]
+    点击手牌卡牌   ---->  卡牌高亮显示   ---->  点击目标场地  
+    特殊牌型检测   <----  卡牌移动到场地 <----  确认放置动画  
+  node16["显示特殊牌型          更新场地分数"]
+    (如果有)      ---->                
+
 </div>
 
 <h2 id="换牌操作流程">换牌操作流程</h2>
-        <div class="mermaid">
+<div class="mermaid">
 flowchart TD
-    A1[点击换牌区域] --> B1[选择要换的卡牌] --> C1[点击确认按钮]
-    C1 --> D1[旧卡牌移除动画] --> E1[新卡牌发放动画] --> F1[更新换牌次数]
+    点击换牌区域   ---->  选择要换的卡牌 ---->  点击确认按钮  
+    更新换牌次数   <----  新卡牌发放动画 <----  旧卡牌移除动画 
+
 </div>
 
 <h2 id="卡牌视觉状态">卡牌视觉状态</h2>

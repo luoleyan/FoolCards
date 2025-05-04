@@ -15,6 +15,9 @@ export class AIOpponent extends Component {
     private aiPlayedCards: Map<number, Card[]> = new Map(); // 记录AI在每个场地区域打出的牌
     private aiCardContainers: Map<number, Node[]> = new Map(); // 记录AI在每个场地区域的卡牌容器
 
+    // 标记正在处理中的卡牌，防止重复操作或过早销毁
+    private processingCards: Set<string> = new Set(); // 使用卡牌ID（节点uuid）作为标识
+
     // 游戏管理器引用
     private gameManager: GameManager = null;
 
@@ -238,6 +241,10 @@ export class AIOpponent extends Component {
         // 设置卡牌缩放 - 与玩家卡牌完全一致
         cardClone.setScale(0.1, 0.1, 1); // 更小的缩放比例
 
+        // 记录卡牌ID，标记为正在处理中
+        const cardId = cardClone.uuid;
+        this.processingCards.add(cardId);
+
         // 初始化卡牌并等待完成后再显示正面
         cardComp.init(card.suit, card.rank)
             .then(() => {
@@ -245,6 +252,7 @@ export class AIOpponent extends Component {
                 // 检查节点和组件是否仍然有效
                 if (!cardClone || !cardClone.isValid || !cardComp || !cardComp.isValid) {
                     console.error('Card node or component became invalid after initialization');
+                    this.processingCards.delete(cardId);
                     return Promise.reject(new Error('Card node or component became invalid'));
                 }
                 // 显示卡牌正面
@@ -255,6 +263,7 @@ export class AIOpponent extends Component {
                 // 再次检查节点是否有效
                 if (!cardClone || !cardClone.isValid) {
                     console.error('Card node became invalid before animation');
+                    this.processingCards.delete(cardId);
                     return;
                 }
                 // 添加动画效果 - 与新的缩放比例一致
@@ -269,11 +278,15 @@ export class AIOpponent extends Component {
                             // 重新排列该区域的AI卡牌
                             this.arrangeAICardsInPlayArea(areaIndex);
                         }
+                        // 完成处理，从处理集合中移除
+                        this.processingCards.delete(cardId);
                     })
                     .start();
             })
             .catch(err => {
                 console.error('Error initializing or displaying AI card:', err);
+                // 发生错误时，确保从处理集合中移除
+                this.processingCards.delete(cardId);
             });
 
         console.log(`AI卡牌 ${card.getFullName()} 显示过程开始`);
@@ -354,7 +367,14 @@ export class AIOpponent extends Component {
 
             // 移除所有容器
             for (const container of containers) {
+                // 检查容器是否有效，以及其中的卡牌是否正在处理中
                 if (container && container.isValid) {
+                    // 获取容器中的卡牌节点
+                    const cardNode = container.getChildByName('Card');
+                    if (cardNode && this.processingCards.has(cardNode.uuid)) {
+                        console.log(`跳过正在处理中的卡牌: ${cardNode.uuid}`);
+                        continue; // 跳过正在处理中的卡牌
+                    }
                     container.destroy();
                 }
             }
@@ -365,12 +385,50 @@ export class AIOpponent extends Component {
 
         // 清空出牌记录
         this.aiPlayedCards.clear();
+
+        // 清空处理中的卡牌记录
+        this.processingCards.clear();
     }
 
     // 只清除内部记录，不清除显示的标签
     public clearPlayedCardsRecord() {
-        // 只清空内部记录，不影响显示
-        this.aiPlayedCards.clear();
+        // 创建一个新的Map来保存当前回合的卡牌记录
+        const currentRoundCards = new Map<number, Card[]>();
+
+        // 遍历所有场地区域
+        for (let areaIndex = 0; areaIndex < this.playAreas.length; areaIndex++) {
+            // 获取该区域的所有AI卡牌容器
+            const containers = this.aiCardContainers.get(areaIndex) || [];
+
+            // 如果该区域有AI卡牌容器，创建一个新的卡牌数组
+            if (containers.length > 0) {
+                currentRoundCards.set(areaIndex, []);
+            }
+
+            // 遍历该区域的所有AI卡牌容器
+            for (const container of containers) {
+                if (container && container.isValid) {
+                    // 获取容器中的卡牌节点
+                    const cardNode = container.getChildByName('Card');
+                    if (cardNode) {
+                        // 获取卡牌组件
+                        const card = cardNode.getComponent(Card);
+                        if (card) {
+                            // 将卡牌添加到当前回合的卡牌记录中
+                            const cards = currentRoundCards.get(areaIndex);
+                            if (cards) {
+                                cards.push(card);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 用当前回合的卡牌记录替换原有记录
+        this.aiPlayedCards = currentRoundCards;
+
+        console.log("AI卡牌记录已更新，保留了显示中的卡牌信息");
     }
 
 
@@ -410,6 +468,7 @@ export class AIOpponent extends Component {
         this.removeAllCardContainers();
         this.aiPlayedCards.clear();
         this.aiCardContainers.clear();
+        this.processingCards.clear();
     }
 
     // 获取AI出牌信息

@@ -1201,8 +1201,11 @@ export class GameManager extends Component {
                 const x = startX + index * spacing;
                 cardNode.setPosition(x, 0, 0);
 
-                // 确保卡牌显示正面
-                card.showCardFace();
+                // 确保卡牌显示正面，并处理可能的错误
+                card.showCardFace().catch(error => {
+                    console.warn(`显示卡牌正面时出错: ${error.message}`);
+                    // 错误已被记录，不需要进一步处理
+                });
             }
         });
 
@@ -2001,15 +2004,16 @@ export class GameManager extends Component {
 
     // 清除所有场地区域中的AI出牌信息（仅在游戏结束时使用）
     private clearAllAICards() {
-        console.log("开始清除所有AI卡牌");
+        console.log("游戏结束时不再清除AI卡牌，保留显示");
+        // 注释掉清除AI卡牌的代码，让AI卡牌在游戏结束时保持显示
+        // 这样玩家可以看到所有回合AI打出的牌
 
-        // 使用AIOpponent的方法清除所有AI卡牌容器
-        if (this.aiOpponent) {
-            this.aiOpponent.removeAllCardContainers();
-            console.log("已清除所有AI卡牌显示");
-        } else {
-            console.error("AI对手组件未初始化，无法清除AI卡牌显示");
-        }
+        // if (this.aiOpponent) {
+        //     this.aiOpponent.removeAllCardContainers();
+        //     console.log("已清除所有AI卡牌显示");
+        // } else {
+        //     console.error("AI对手组件未初始化，无法清除AI卡牌显示");
+        // }
     }
 
     // 结束回合按钮点击事件处理
@@ -2120,13 +2124,70 @@ export class GameManager extends Component {
         console.log("显示游戏结束弹窗");
         console.log(`基础分数 - 玩家: ${this.playerScore}, 对手: ${this.opponentScore}`);
 
-        // 清理AI卡牌
-        console.log("清理AI机器人卡牌");
-        this.clearAllAICards();
-
         // 计算最终分数（包括所有场地分数）
         let finalPlayerScore = this.playerScore;
         let finalOpponentScore = this.opponentScore;
+
+        // 计算AI对手的分数 - 从每个场地区域获取AI卡牌并计算分数
+        if (this.aiOpponent) {
+            const aiPlayedCards = this.aiOpponent.getPlayedCards();
+
+            // 遍历每个场地区域
+            for (let i = 0; i < this.playAreas.length; i++) {
+                // 获取该区域的AI卡牌
+                const areaCards = aiPlayedCards.get(i) || [];
+
+                if (areaCards.length > 0) {
+                    // 计算基础点数
+                    let areaScore = 0;
+                    areaCards.forEach(card => {
+                        areaScore += this.getCardValue(card.rank);
+                    });
+
+                    // 检查是否有特殊牌型
+                    const specialHand = this.specialHandsManager.checkSpecialHand(areaCards);
+                    if (specialHand) {
+                        // 根据特殊牌型类型添加分数
+                        switch (specialHand.type) {
+                            case SpecialHandType.ROYAL_FLUSH:
+                                areaScore += 150;
+                                break;
+                            case SpecialHandType.PERFECT_STRAIGHT:
+                                areaScore += 135;
+                                break;
+                            case SpecialHandType.STRAIGHT_FLUSH:
+                                areaScore += 120;
+                                break;
+                            case SpecialHandType.FOUR_OF_A_KIND:
+                                areaScore += 80;
+                                break;
+                            case SpecialHandType.FLUSH:
+                                areaScore += 60;
+                                break;
+                            case SpecialHandType.STRAIGHT:
+                                areaScore += 60;
+                                break;
+                            case SpecialHandType.FULL_HOUSE:
+                                areaScore += 55;
+                                break;
+                            case SpecialHandType.THREE_OF_A_KIND:
+                                areaScore += 30;
+                                break;
+                            case SpecialHandType.TWO_PAIRS:
+                                areaScore += 30;
+                                break;
+                            case SpecialHandType.PAIR:
+                                areaScore += 15;
+                                break;
+                        }
+                    }
+
+                    // 将该区域的分数加到对手总分中
+                    finalOpponentScore += areaScore;
+                    console.log(`AI在场地${i+1}的分数: ${areaScore}`);
+                }
+            }
+        }
 
         // 将场地分数加到玩家总分中
         console.log("场地分数详情:");
@@ -2161,6 +2222,10 @@ export class GameManager extends Component {
                 director.loadScene('MainMenu');
             }, 2);
         }
+
+        // 清理AI卡牌 - 移到最后，确保分数计算完成后再清理
+        console.log("清理AI机器人卡牌");
+        this.clearAllAICards();
 
         // 停止所有计时器和动画
         this.stopTurnTimer();

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Structure - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,12 +52,13 @@
     <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="../structure/ai_opponent.html">Ai Opponent</a></li>
-        <li><a href="../structure/architecture.html">Architecture</a></li>
-        <li><a href="../structure/class_diagram.html">Class Diagram</a></li>
-        <li><a href="../structure/component_interaction.html">Component Interaction</a></li>
-        <li><a href="../structure/error_handling.html">Error Handling</a></li>
-        <li><a href="../structure/project_structure.html">Project Structure</a></li>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
       </ul>
     </aside>
 
@@ -66,155 +67,120 @@
       <div class="content-body">
         <h1 id="foolcards-项目结构图">FoolCards 项目结构图</h1>
 <h2 id="文件目录结构">文件目录结构</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TD
+    Root["FoolCards/"] --> Assets["assets/"]
+    Root --> Docs["docs/"]
+    Root --> GitIgnore[".gitignore"]
+    Root --> License["LICENSE"]
+    Root --> Readme["README.md"]
+    Root --> ProjectJson["project.json"]
 
+    %% Assets 子目录
+    Assets --> AssetDocs["docs/"]
+    Assets --> Prefabs["prefabs/"]
+    Assets --> Resources["resources/"]
+    Assets --> Scenes["scenes/"]
+    Assets --> Scripts["scripts/"]
 
-flowchart TD
-Root["FoolCards/"] --> Assets["assets/"]
-Root --> Docs["docs/"]
-Root --> GitIgnore[".gitignore"]
-Root --> License["LICENSE"]
-Root --> Readme["README.md"]
-Root --> ProjectJson["project.json"]
-%%Assets 子目录
-Assets --> AssetDocs["docs/"]
-Assets --> Prefabs["prefabs/"]
-Assets --> Resources["resources/"]
-Assets --> Scenes["scenes/"]
-Assets --> Scripts["scripts/"]
-%%Prefabs 子目录
-Prefabs --> CardPrefab["Card.prefab"]
-Prefabs --> GameOverPopupPrefab["GameOverPopup.prefab"]
-Prefabs --> SceneEffectPrefab["SceneEffect.prefab"]
-%%Resources 子目录
-Resources --> Background["background/"]
-Resources --> Cards["cards/"]
-Resources --> Menu["menu/"]
-Resources --> UiAssets["ui-assets/"]
-%%UI Assets 子目录
-UiAssets --> Buttons["Buttons/"]
-UiAssets --> Cursors["Cursors/"]
-UiAssets --> GenUI["Gen UI/"]
-UiAssets --> SymbolsText["Symbols & Text/"]
-%%Scenes 子目录
-Scenes --> GameScene["Game.scene"]
-Scenes --> LoadingScene["Loading.scene"]
-Scenes --> MainMenuScene["MainMenu.scene"]
-%%Scripts 子目录
-Scripts --> AIOpponent["AIOpponent.ts"]
-Scripts --> Card["Card.ts"]
-Scripts --> GameLauncher["GameLauncher.ts"]
-Scripts --> GameManager["GameManager.ts"]
-Scripts --> GameOverPopup["GameOverPopup.ts"]
-Scripts --> LoadingSceneScript["LoadingScene.ts"]
-Scripts --> MainMenu["MainMenu.ts"]
-Scripts --> PlatformAdapter["PlatformAdapter.ts"]
-Scripts --> SceneEffect["SceneEffect.ts"]
-Scripts --> SpecialHands["SpecialHands.ts"]
-Scripts --> SpecialHandsPopup["SpecialHandsPopup.ts"]
-%%Docs 子目录
-Docs --> DiagramsDir["diagrams/"]
-%%Diagrams 子目录
-DiagramsDir --> StructureDir["structure/"]
-DiagramsDir --> ERDir["er/"]
-DiagramsDir --> FlowchartsDir["flowcharts/"]
-DiagramsDir --> UIDir["ui/"]
-%%样式设置
-%% 分隔classDef语句
-%% 分隔classDef语句
-%% 分隔classDef语句
+    %% Prefabs 子目录
+    Prefabs --> CardPrefab["Card.prefab"]
+    Prefabs --> GameOverPopupPrefab["GameOverPopup.prefab"]
+    Prefabs --> SceneEffectPrefab["SceneEffect.prefab"]
 
+    %% Resources 子目录
+    Resources --> Background["background/"]
+    Resources --> Cards["cards/"]
+    Resources --> Menu["menu/"]
+    Resources --> UiAssets["ui-assets/"]
 
-style Root fill:#f9f,stroke:#333,stroke-width:2px
-style Assets fill:#bbf,stroke:#33f,stroke-width:1px
-style Docs fill:#bbf,stroke:#33f,stroke-width:1px
-style AssetDocs fill:#ddf,stroke:#33f,stroke-width:1px
-style Prefabs fill:#ddf,stroke:#33f,stroke-width:1px
-style Resources fill:#ddf,stroke:#33f,stroke-width:1px
-style Scenes fill:#ddf,stroke:#33f,stroke-width:1px
-style Scripts fill:#ddf,stroke:#33f,stroke-width:1px
-style DiagramsDir fill:#ddf,stroke:#33f,stroke-width:1px
-style StructureDir fill:#ddf,stroke:#33f,stroke-width:1px
-style ERDir fill:#ddf,stroke:#33f,stroke-width:1px
-style FlowchartsDir fill:#ddf,stroke:#33f,stroke-width:1px
-style UIDir fill:#ddf,stroke:#33f,stroke-width:1px
-style UiAssets fill:#ddf,stroke:#33f,stroke-width:1px
-style CardPrefab fill:#fff,stroke:#999,stroke-width:1px
-style GameOverPopupPrefab fill:#fff,stroke:#999,stroke-width:1px
-style SceneEffectPrefab fill:#fff,stroke:#999,stroke-width:1px
-style GameScene fill:#fff,stroke:#999,stroke-width:1px
-style LoadingScene fill:#fff,stroke:#999,stroke-width:1px
-style MainMenuScene fill:#fff,stroke:#999,stroke-width:1px
-style AIOpponent fill:#fff,stroke:#999,stroke-width:1px
-style Card fill:#fff,stroke:#999,stroke-width:1px
-style GameLauncher fill:#fff,stroke:#999,stroke-width:1px
-style GameManager fill:#fff,stroke:#999,stroke-width:1px
-style GameOverPopup fill:#fff,stroke:#999,stroke-width:1px
-style LoadingSceneScript fill:#fff,stroke:#999,stroke-width:1px
-style MainMenu fill:#fff,stroke:#999,stroke-width:1px
-style PlatformAdapter fill:#fff,stroke:#999,stroke-width:1px
-style SceneEffect fill:#fff,stroke:#999,stroke-width:1px
-style SpecialHands fill:#fff,stroke:#999,stroke-width:1px
-style SpecialHandsPopup fill:#fff,stroke:#999,stroke-width:1px
-style GitIgnore fill:#fff,stroke:#999,stroke-width:1px
-style License fill:#fff,stroke:#999,stroke-width:1px
-style Readme fill:#fff,stroke:#999,stroke-width:1px
-style ProjectJson fill:#fff,stroke:#999,stroke-width:1px
-style Background fill:#fff,stroke:#999,stroke-width:1px
-style Cards fill:#fff,stroke:#999,stroke-width:1px
-style Menu fill:#fff,stroke:#999,stroke-width:1px
-style Buttons fill:#fff,stroke:#999,stroke-width:1px
-style Cursors fill:#fff,stroke:#999,stroke-width:1px
-style GenUI fill:#fff,stroke:#999,stroke-width:1px
-style SymbolsText fill:#fff,stroke:#999,stroke-width:1px
+    %% UI Assets 子目录
+    UiAssets --> Buttons["Buttons/"]
+    UiAssets --> Cursors["Cursors/"]
+    UiAssets --> GenUI["Gen UI/"]
+    UiAssets --> SymbolsText["Symbols & Text/"]
+
+    %% Scenes 子目录
+    Scenes --> GameScene["Game.scene"]
+    Scenes --> LoadingScene["Loading.scene"]
+    Scenes --> MainMenuScene["MainMenu.scene"]
+
+    %% Scripts 子目录
+    Scripts --> AIOpponent["AIOpponent.ts"]
+    Scripts --> Card["Card.ts"]
+    Scripts --> GameLauncher["GameLauncher.ts"]
+    Scripts --> GameManager["GameManager.ts"]
+    Scripts --> GameOverPopup["GameOverPopup.ts"]
+    Scripts --> LoadingSceneScript["LoadingScene.ts"]
+    Scripts --> MainMenu["MainMenu.ts"]
+    Scripts --> PlatformAdapter["PlatformAdapter.ts"]
+    Scripts --> SceneEffect["SceneEffect.ts"]
+    Scripts --> SpecialHands["SpecialHands.ts"]
+    Scripts --> SpecialHandsPopup["SpecialHandsPopup.ts"]
+
+    %% Docs 子目录
+    Docs --> DiagramsDir["diagrams/"]
+
+    %% Diagrams 子目录
+    DiagramsDir --> StructureDir["structure/"]
+    DiagramsDir --> ERDir["er/"]
+    DiagramsDir --> FlowchartsDir["flowcharts/"]
+    DiagramsDir --> UIDir["ui/"]
+
+    %% 样式设置
+    classDef rootNode fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef mainDir fill:#bbf,stroke:#33f,stroke-width:1px;
+    classDef subDir fill:#ddf,stroke:#33f,stroke-width:1px;
+    classDef file fill:#fff,stroke:#999,stroke-width:1px;
+
+    class Root rootNode;
+    class Assets,Docs mainDir;
+    class AssetDocs,Prefabs,Resources,Scenes,Scripts,DiagramsDir,StructureDir,ERDir,FlowchartsDir,UIDir,UiAssets subDir;
+    class CardPrefab,GameOverPopupPrefab,SceneEffectPrefab,GameScene,LoadingScene,MainMenuScene,AIOpponent,Card,GameLauncher,GameManager,GameOverPopup,LoadingSceneScript,MainMenu,PlatformAdapter,SceneEffect,SpecialHands,SpecialHandsPopup,GitIgnore,License,Readme,ProjectJson,Background,Cards,Menu,Buttons,Cursors,GenUI,SymbolsText file;
+
 </div>
 
 <h2 id="核心组件关系图">核心组件关系图</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TB
+    GameManager["GameManager.ts"] --> Card["Card.ts"]
+    GameManager --> AIOpponent["AIOpponent.ts"]
+    GameManager --> PlayArea["PlayArea"]
+    GameManager --> SpecialHands["SpecialHands.ts"]
+    GameManager --> GameOverPopup["GameOverPopup.ts"]
 
+    Card --> SceneEffect["SceneEffect.ts"]
+    PlayArea --> SceneEffect
 
-flowchart TB
-GameManager["GameManager.ts"] --> Card["Card.ts"]
-GameManager --> AIOpponent["AIOpponent.ts"]
-GameManager --> PlayArea["PlayArea"]
-GameManager --> SpecialHands["SpecialHands.ts"]
-GameManager --> GameOverPopup["GameOverPopup.ts"]
-Card --> SceneEffect["SceneEffect.ts"]
-PlayArea --> SceneEffect
-AIOpponent --> Card
-SpecialHands --> Card
-%% 分隔classDef语句
+    AIOpponent --> Card
+    SpecialHands --> Card
 
+    classDef core fill:#f96,stroke:#333,stroke-width:2px;
+    classDef component fill:#9cf,stroke:#36c,stroke-width:1px;
 
-style GameManager fill:#f96,stroke:#333,stroke-width:2px
-style Card fill:#9cf,stroke:#36c,stroke-width:1px
-style AIOpponent fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayArea fill:#9cf,stroke:#36c,stroke-width:1px
-style SpecialHands fill:#9cf,stroke:#36c,stroke-width:1px
-style SceneEffect fill:#9cf,stroke:#36c,stroke-width:1px
-style GameOverPopup fill:#9cf,stroke:#36c,stroke-width:1px
+    class GameManager core;
+    class Card,AIOpponent,PlayArea,SpecialHands,SceneEffect,GameOverPopup component;
+
 </div>
 
 <h2 id="游戏流程图">游戏流程图</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart LR
+    GameLauncher["GameLauncher.ts"] --> LoadingScene["LoadingScene.ts"]
+    LoadingScene --> MainMenu["MainMenu.ts"]
+    MainMenu --> GameManager["GameManager.ts"]
+    GameManager --> GameOverPopup["GameOverPopup.ts"]
+    GameOverPopup --> |重新开始| GameManager
+    GameOverPopup --> |返回主菜单| MainMenu
 
+    classDef start fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef scene fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:1px;
 
-flowchart LR
-GameLauncher["GameLauncher.ts"] --> LoadingScene["LoadingScene.ts"]
-LoadingScene --> MainMenu["MainMenu.ts"]
-MainMenu --> GameManager["GameManager.ts"]
-GameManager --> GameOverPopup["GameOverPopup.ts"]
-GameOverPopup --> |重新开始| GameManager
-GameOverPopup --> |返回主菜单| MainMenu
-%% 分隔classDef语句
-%% 分隔classDef语句
+    class GameLauncher start;
+    class LoadingScene,MainMenu,GameManager scene;
+    class GameOverPopup end;
 
-
-style GameLauncher fill:#9f9,stroke:#333,stroke-width:2px
-style LoadingScene fill:#ff9,stroke:#993,stroke-width:1px
-style MainMenu fill:#ff9,stroke:#993,stroke-width:1px
-style GameManager fill:#ff9,stroke:#993,stroke-width:1px
-style GameOverPopup fill:#f99,stroke:#933,stroke-width:1px
 </div>
 
 <h2 id="项目结构说明">项目结构说明</h2>

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Component Interaction - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -49,15 +49,16 @@
   </header>
 
   <div class="container">
-        <aside class="sidebar">
+    <aside class="sidebar">
       <h3>结构图</h3>
       <ul>
-        <li><a href="../structure/ai_opponent.html">Ai Opponent</a></li>
-        <li><a href="../structure/architecture.html">Architecture</a></li>
-        <li><a href="../structure/class_diagram.html">Class Diagram</a></li>
-        <li><a href="../structure/component_interaction.html">Component Interaction</a></li>
-        <li><a href="../structure/error_handling.html">Error Handling</a></li>
-        <li><a href="../structure/project_structure.html">Project Structure</a></li>
+        <li><a href="structure/ai_opponent.html">Ai Opponent</a></li>
+<li><a href="structure/architecture.html">Architecture</a></li>
+<li><a href="structure/class_diagram.html">Class Diagram</a></li>
+<li><a href="structure/component_interaction.html">Component Interaction</a></li>
+<li><a href="structure/error_handling.html">Error Handling</a></li>
+<li><a href="structure/project_structure.html">Project Structure</a></li>
+
       </ul>
     </aside>
 
@@ -66,95 +67,89 @@
       <div class="content-body">
         <h1 id="foolcards-组件交互图">FoolCards 组件交互图</h1>
 <h2 id="核心组件交互">核心组件交互</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TD
+    GameLauncher["GameLauncher"] --> LoadingScene["LoadingScene"]
+    LoadingScene --> MainMenu["MainMenu"]
 
+    MainMenu --> GameManager["GameManager"]
+    GameLauncher --> |初始化| PlatformAdapter["PlatformAdapter"]
+    GameManager --> |平台适配| PlatformAdapter
 
-flowchart TD
-GameLauncher["GameLauncher"] --> LoadingScene["LoadingScene"]
-LoadingScene --> MainMenu["MainMenu"]
-MainMenu --> GameManager["GameManager"]
-GameLauncher --> |初始化| PlatformAdapter["PlatformAdapter"]
-GameManager --> |平台适配| PlatformAdapter
-GameManager --> GameOverPopup["GameOverPopup"]
-GameManager --> Card["Card"]
-GameManager --> PlayArea1["PlayArea 1"]
-GameManager --> PlayArea2["PlayArea 2"]
-GameManager --> PlayArea3["PlayArea 3"]
-GameManager --> ExchangeArea["ExchangeArea"]
-Card --> SpecialHands["SpecialHands"]
-PlayArea1 --> SceneEffect["SceneEffect"]
-PlayArea2 --> SceneEffect
-PlayArea3 --> SceneEffect
-SpecialHands <--> SceneEffect
-%%样式定义
-%% 分隔classDef语句
-%% 分隔classDef语句
-%% 分隔classDef语句
-%% 分隔classDef语句
-%%应用样式
+    GameManager --> GameOverPopup["GameOverPopup"]
 
+    GameManager --> Card["Card"]
+    GameManager --> PlayArea1["PlayArea 1"]
+    GameManager --> PlayArea2["PlayArea 2"]
+    GameManager --> PlayArea3["PlayArea 3"]
+    GameManager --> ExchangeArea["ExchangeArea"]
 
-style GameLauncher fill:#9f9,stroke:#393,stroke-width:2px
-style GameManager fill:#f96,stroke:#933,stroke-width:2px
-style LoadingScene fill:#ff9,stroke:#993,stroke-width:1px
-style MainMenu fill:#ff9,stroke:#993,stroke-width:1px
-style Card fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayArea1 fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayArea2 fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayArea3 fill:#9cf,stroke:#36c,stroke-width:1px
-style ExchangeArea fill:#9cf,stroke:#36c,stroke-width:1px
-style SpecialHands fill:#9cf,stroke:#36c,stroke-width:1px
-style SceneEffect fill:#9cf,stroke:#36c,stroke-width:1px
-style PlatformAdapter fill:#9cf,stroke:#36c,stroke-width:1px
-style GameOverPopup fill:#f99,stroke:#933,stroke-width:1px
+    Card --> SpecialHands["SpecialHands"]
+    PlayArea1 --> SceneEffect["SceneEffect"]
+    PlayArea2 --> SceneEffect
+    PlayArea3 --> SceneEffect
+
+    SpecialHands <--> SceneEffect
+
+    %% 样式定义
+    classDef launcher fill:#9f9,stroke:#393,stroke-width:2px;
+    classDef manager fill:#f96,stroke:#933,stroke-width:2px;
+    classDef scene fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef component fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef popup fill:#f99,stroke:#933,stroke-width:1px;
+
+    %% 应用样式
+    class GameLauncher launcher;
+    class GameManager manager;
+    class LoadingScene,MainMenu scene;
+    class Card,PlayArea1,PlayArea2,PlayArea3,ExchangeArea,SpecialHands,SceneEffect,PlatformAdapter component;
+    class GameOverPopup popup;
+
 </div>
 
 <h2 id="数据流向">数据流向</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TD
+    UserInput["用户输入/交互"] --> GameManagerProcess["GameManager处理"]
+    GameManagerProcess --> UIUpdate["UI状态更新"]
 
+    GameManagerProcess --> GameStateUpdate["游戏状态更新"]
 
-flowchart TD
-UserInput["用户输入/交互"] --> GameManagerProcess["GameManager处理"]
-GameManagerProcess --> UIUpdate["UI状态更新"]
-GameManagerProcess --> GameStateUpdate["游戏状态更新"]
-GameStateUpdate --> CardStateUpdate["卡牌状态更新"]
-CardStateUpdate --> EffectProcess["特殊效果处理"]
-EffectProcess --> ScoreCalculation["分数计算"]
-%%样式定义
-%% 分隔classDef语句
-%% 分隔classDef语句
-%%应用样式
+    GameStateUpdate --> CardStateUpdate["卡牌状态更新"]
+    CardStateUpdate --> EffectProcess["特殊效果处理"]
+    EffectProcess --> ScoreCalculation["分数计算"]
 
+    %% 样式定义
+    classDef input fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef process fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef output fill:#9cf,stroke:#36c,stroke-width:1px;
 
-style UserInput fill:#bbf,stroke:#33f,stroke-width:2px
-style GameManagerProcess fill:#ff9,stroke:#993,stroke-width:1px
-style GameStateUpdate fill:#ff9,stroke:#993,stroke-width:1px
-style EffectProcess fill:#ff9,stroke:#993,stroke-width:1px
-style UIUpdate fill:#9cf,stroke:#36c,stroke-width:1px
-style CardStateUpdate fill:#9cf,stroke:#36c,stroke-width:1px
-style ScoreCalculation fill:#9cf,stroke:#36c,stroke-width:1px
+    %% 应用样式
+    class UserInput input;
+    class GameManagerProcess,GameStateUpdate,EffectProcess process;
+    class UIUpdate,CardStateUpdate,ScoreCalculation output;
+
 </div>
 
 <h2 id="事件传递机制">事件传递机制</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TD
+    SourceComponent["事件源组件"] -->|触发事件| EventSystem["事件系统"]
 
+    EventSystem -->|分发事件| Listener1["监听者组件 1"]
+    EventSystem -->|分发事件| Listener2["监听者组件 2"]
+    EventSystem -->|分发事件| Listener3["监听者组件 3"]
 
-flowchart TD
-SourceComponent["事件源组件"] -->|触发事件| EventSystem["事件系统"]
-EventSystem -->|分发事件| Listener1["监听者组件 1"]
-EventSystem -->|分发事件| Listener2["监听者组件 2"]
-EventSystem -->|分发事件| Listener3["监听者组件 3"]
-%%样式定义
-%% 分隔classDef语句
-%% 分隔classDef语句
-%%应用样式
+    %% 样式定义
+    classDef source fill:#f96,stroke:#933,stroke-width:2px;
+    classDef system fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef listener fill:#9cf,stroke:#36c,stroke-width:1px;
 
+    %% 应用样式
+    class SourceComponent source;
+    class EventSystem system;
+    class Listener1,Listener2,Listener3 listener;
 
-style SourceComponent fill:#f96,stroke:#933,stroke-width:2px
-style EventSystem fill:#bbf,stroke:#33f,stroke-width:2px
-style Listener1 fill:#9cf,stroke:#36c,stroke-width:1px
-style Listener2 fill:#9cf,stroke:#36c,stroke-width:1px
-style Listener3 fill:#9cf,stroke:#36c,stroke-width:1px
 </div>
 
 <h2 id="主要事件类型">主要事件类型</h2>

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Flow - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,8 +52,9 @@
     <aside class="sidebar">
       <h3>流程图</h3>
       <ul>
-        <li><a href="../flowcharts/game_flow.html">Game Flow</a></li>
-        <li><a href="../flowcharts/game_state.html">Game State</a></li>
+        <li><a href="flowcharts/game_flow.html">Game Flow</a></li>
+<li><a href="flowcharts/game_state.html">Game State</a></li>
+
       </ul>
     </aside>
 
@@ -62,168 +63,184 @@
       <div class="content-body">
         <h1 id="foolcards-游戏流程图">FoolCards 游戏流程图</h1>
 <h2 id="主要游戏流程">主要游戏流程</h2>
-        <div class="mermaid">
+<div class="mermaid">
+    flowchart TD
+    Start([启动游戏]) --> LoadResources[加载资源]
+    LoadResources --> ShowMainMenu[显示主菜单]
+    ShowMainMenu --> StartNewGame[开始新游戏]
+    StartNewGame --> GameLoop[游戏循环]
+    GameLoop --> GameOver[游戏结束]
+    GameOver --> ShowResults[显示结果]
+    ShowResults --> ReturnToMenu[返回主菜单]
+    ReturnToMenu --> ShowMainMenu
 
+    %% 样式定义
+    classDef start fill:#9f9,stroke:#393,stroke-width:2px;
+    classDef process fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef menu fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:2px;
 
-flowchart TD
-Start([启动游戏]) --> LoadResources[加载资源]
-LoadResources --> ShowMainMenu[显示主菜单]
-ShowMainMenu --> StartNewGame[开始新游戏]
-StartNewGame --> GameLoop[游戏循环]
-GameLoop --> GameOver[游戏结束]
-GameOver --> ShowResults[显示结果]
-ShowResults --> ReturnToMenu[返回主菜单]
-ReturnToMenu --> ShowMainMenu
-%%样式定义
-%% 分隔classDef语句
-%% 分隔classDef语句
-%% 分隔classDef语句
-%%应用样式
+    %% 应用样式
+    class Start start;
+    class LoadResources,GameLoop,StartNewGame process;
+    class ShowMainMenu,ReturnToMenu menu;
+    class GameOver,ShowResults end;
 
-
-style Start fill:#9f9,stroke:#393,stroke-width:2px
-style LoadResources fill:#9cf,stroke:#36c,stroke-width:1px
-style GameLoop fill:#9cf,stroke:#36c,stroke-width:1px
-style StartNewGame fill:#9cf,stroke:#36c,stroke-width:1px
-style ShowMainMenu fill:#ff9,stroke:#993,stroke-width:1px
-style ReturnToMenu fill:#ff9,stroke:#993,stroke-width:1px
-style GameOver fill:#f99,stroke:#933,stroke-width:2px
-style ShowResults fill:#f99,stroke:#933,stroke-width:2px
 </div>
 
 <h2 id="游戏循环详细流程">游戏循环详细流程</h2>
-        <div class="mermaid">
-flowchart TD
-StartRound[开始新回合] --> DealCards[发放卡牌]
-DealCards --> PlayerTurn[玩家回合]
-PlayerTurn --> AITurn[AI对手回合]
-AITurn --> EndRound[结束回合]
-EndRound --> CalculateScore[计算分数]
-CalculateScore --> CheckGameEnd{检查游戏结束}
-CheckGameEnd -->|是| GameOver["游戏结束(达到5回合)"]
-CheckGameEnd -->|否| StartRound
-GameOver --> ShowResults[显示结果]
+<div class="mermaid">
+    flowchart TD
+    StartRound[开始新回合] --> DealCards[发放卡牌]
+    DealCards --> PlayerTurn[玩家回合]
+    PlayerTurn --> AITurn[AI对手回合]
+    AITurn --> EndRound[结束回合]
+    EndRound --> CalculateScore[计算分数]
+    CalculateScore --> CheckGameEnd{检查游戏结束}
+    CheckGameEnd -->|是| GameOver[游戏结束\n(达到5回合)]
+    CheckGameEnd -->|否| StartRound
+    GameOver --> ShowResults[显示结果]
 
-style StartRound fill:#bbf,stroke:#33f,stroke-width:2px
-style EndRound fill:#bbf,stroke:#33f,stroke-width:2px
-style DealCards fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayerTurn fill:#9cf,stroke:#36c,stroke-width:1px
-style AITurn fill:#9cf,stroke:#36c,stroke-width:1px
-style CalculateScore fill:#9cf,stroke:#36c,stroke-width:1px
-style CheckGameEnd fill:#ff9,stroke:#993,stroke-width:1px
-style GameOver fill:#f99,stroke:#933,stroke-width:2px
-style ShowResults fill:#f99,stroke:#933,stroke-width:2px
+    %% 样式定义
+    classDef round fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef action fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef decision fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:2px;
+
+    %% 应用样式
+    class StartRound,EndRound round;
+    class DealCards,PlayerTurn,AITurn,CalculateScore action;
+    class CheckGameEnd decision;
+    class GameOver,ShowResults end;
+
 </div>
 
 <h2 id="玩家回合详细流程">玩家回合详细流程</h2>
-        <div class="mermaid">
-flowchart TD
-StartPlayerTurn[开始玩家回合] --> SelectCard[选择卡牌]
-SelectCard --> SelectArea[选择场地]
-SelectArea --> ConfirmChoice{确认选择?}
-ConfirmChoice -->|否| SelectCard
-ConfirmChoice -->|是| PlayCard[打出卡牌]
-PlayCard --> CheckSpecialHand[检查特殊牌型]
-CheckSpecialHand --> ApplyAreaEffect[应用场地效果]
-ApplyAreaEffect --> CalculateTempScore[计算临时分数]
-CalculateTempScore --> ContinueOrEnd{继续回合?}
-ContinueOrEnd -->|继续| ExchangeCards[交换卡牌]
-ContinueOrEnd -->|结束| EndPlayerTurn[结束玩家回合]
-ExchangeCards --> EndPlayerTurn
+<div class="mermaid">
+    flowchart TD
+    StartPlayerTurn[开始玩家回合] --> SelectCard[选择卡牌]
+    SelectCard --> SelectArea[选择场地]
+    SelectArea --> ConfirmChoice{确认选择?}
+    ConfirmChoice -->|否| SelectCard
+    ConfirmChoice -->|是| PlayCard[打出卡牌]
+    PlayCard --> CheckSpecialHand[检查特殊牌型]
+    CheckSpecialHand --> ApplyAreaEffect[应用场地效果]
+    ApplyAreaEffect --> CalculateTempScore[计算临时分数]
+    CalculateTempScore --> ContinueOrEnd{继续回合?}
+    ContinueOrEnd -->|继续| ExchangeCards[交换卡牌]
+    ContinueOrEnd -->|结束| EndPlayerTurn[结束玩家回合]
+    ExchangeCards --> EndPlayerTurn
 
-style StartPlayerTurn fill:#bbf,stroke:#33f,stroke-width:2px
-style SelectCard fill:#9cf,stroke:#36c,stroke-width:1px
-style SelectArea fill:#9cf,stroke:#36c,stroke-width:1px
-style PlayCard fill:#9cf,stroke:#36c,stroke-width:1px
-style CheckSpecialHand fill:#9cf,stroke:#36c,stroke-width:1px
-style ApplyAreaEffect fill:#9cf,stroke:#36c,stroke-width:1px
-style CalculateTempScore fill:#9cf,stroke:#36c,stroke-width:1px
-style ExchangeCards fill:#9cf,stroke:#36c,stroke-width:1px
-style ConfirmChoice fill:#ff9,stroke:#993,stroke-width:1px
-style ContinueOrEnd fill:#ff9,stroke:#993,stroke-width:1px
-style EndPlayerTurn fill:#f99,stroke:#933,stroke-width:2px
+    %% 样式定义
+    classDef start fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef action fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef decision fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:2px;
+
+    %% 应用样式
+    class StartPlayerTurn start;
+    class SelectCard,SelectArea,PlayCard,CheckSpecialHand,ApplyAreaEffect,CalculateTempScore,ExchangeCards action;
+    class ConfirmChoice,ContinueOrEnd decision;
+    class EndPlayerTurn end;
+
 </div>
 
 <h2 id="ai对手回合流程">AI对手回合流程</h2>
-        <div class="mermaid">
-flowchart TD
-StartAITurn[开始AI回合] --> AISelectCards[AI选择卡牌]
-AISelectCards --> AISelectAreas[AI选择场地]
-AISelectAreas --> AIPlayCards[AI打出卡牌]
-AIPlayCards --> DisplayAICards[显示AI打出的卡牌]
-DisplayAICards --> CheckAISpecialHand[检查AI特殊牌型]
-CheckAISpecialHand --> ApplyAIAreaEffect[应用AI场地效果]
-ApplyAIAreaEffect --> CalculateAITempScore[计算AI临时分数]
-CalculateAITempScore --> EndAITurn[结束AI回合]
+<div class="mermaid">
+    flowchart TD
+    StartAITurn[开始AI回合] --> AISelectCards[AI选择卡牌]
+    AISelectCards --> AISelectAreas[AI选择场地]
+    AISelectAreas --> AIPlayCards[AI打出卡牌]
+    AIPlayCards --> DisplayAICards[显示AI打出的卡牌]
+    DisplayAICards --> CheckAISpecialHand[检查AI特殊牌型]
+    CheckAISpecialHand --> ApplyAIAreaEffect[应用AI场地效果]
+    ApplyAIAreaEffect --> CalculateAITempScore[计算AI临时分数]
+    CalculateAITempScore --> EndAITurn[结束AI回合]
 
-style StartAITurn fill:#bbf,stroke:#33f,stroke-width:2px
-style AISelectCards fill:#9cf,stroke:#36c,stroke-width:1px
-style AISelectAreas fill:#9cf,stroke:#36c,stroke-width:1px
-style AIPlayCards fill:#9cf,stroke:#36c,stroke-width:1px
-style CheckAISpecialHand fill:#9cf,stroke:#36c,stroke-width:1px
-style ApplyAIAreaEffect fill:#9cf,stroke:#36c,stroke-width:1px
-style CalculateAITempScore fill:#9cf,stroke:#36c,stroke-width:1px
-style DisplayAICards fill:#ff9,stroke:#993,stroke-width:1px
-style EndAITurn fill:#f99,stroke:#933,stroke-width:2px
+    %% 样式定义
+    classDef start fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef action fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef display fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:2px;
+
+    %% 应用样式
+    class StartAITurn start;
+    class AISelectCards,AISelectAreas,AIPlayCards,CheckAISpecialHand,ApplyAIAreaEffect,CalculateAITempScore action;
+    class DisplayAICards display;
+    class EndAITurn end;
+
 </div>
 
 <h2 id="游戏结束条件">游戏结束条件</h2>
-        <div class="mermaid">
-flowchart TD
-CheckRounds{回合数 >= 5?} -->|是| GameOver[游戏结束]
-CheckRounds -->|否| ContinueGame[继续游戏]
+<div class="mermaid">
+    flowchart TD
+    CheckRounds{回合数 >= 5?} -->|是| GameOver[游戏结束]
+    CheckRounds -->|否| ContinueGame[继续游戏]
 
-style CheckRounds fill:#ff9,stroke:#993,stroke-width:1px
-style GameOver fill:#f99,stroke:#933,stroke-width:2px
-style ContinueGame fill:#9cf,stroke:#36c,stroke-width:1px
+    %% 样式定义
+    classDef decision fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef end fill:#f99,stroke:#933,stroke-width:2px;
+    classDef continue fill:#9cf,stroke:#36c,stroke-width:1px;
+
+    %% 应用样式
+    class CheckRounds decision;
+    class GameOver end;
+    class ContinueGame continue;
+
 </div>
 
 <h2 id="分数计算流程">分数计算流程</h2>
-        <div class="mermaid">
-flowchart TD
-Start[开始计算分数] --> BaseScore["计算基础分数(卡牌点数之和)"]
-BaseScore --> SpecialHandBonus["计算特殊牌型加分(对子、顺子等)"]
-SpecialHandBonus --> AreaEffectBonus["计算场地效果加分(花色奖励、点数奖励等)"]
-AreaEffectBonus --> FinalScore["计算最终分数(基础分数+特殊牌型加分+场地效果加分)"]
-FinalScore --> UpdateScore[更新玩家/AI分数]
+<div class="mermaid">
+    flowchart TD
+    Start[开始计算分数] --> BaseScore[计算基础分数\n卡牌点数之和]
+    BaseScore --> SpecialHandBonus[计算特殊牌型加分\n对子、顺子等]
+    SpecialHandBonus --> AreaEffectBonus[计算场地效果加分\n花色奖励、点数奖励等]
+    AreaEffectBonus --> FinalScore[计算最终分数\n基础分数 + 特殊牌型加分 + 场地效果加分]
+    FinalScore --> UpdateScore[更新玩家/AI分数]
 
-style Start fill:#bbf,stroke:#33f,stroke-width:2px
-style BaseScore fill:#9cf,stroke:#36c,stroke-width:1px
-style SpecialHandBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style AreaEffectBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style FinalScore fill:#9cf,stroke:#36c,stroke-width:1px
-style UpdateScore fill:#9f9,stroke:#393,stroke-width:2px
+    %% 样式定义
+    classDef start fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef calculation fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef result fill:#9f9,stroke:#393,stroke-width:2px;
+
+    %% 应用样式
+    class Start start;
+    class BaseScore,SpecialHandBonus,AreaEffectBonus,FinalScore calculation;
+    class UpdateScore result;
+
 </div>
 
 <h2 id="特殊牌型检测流程">特殊牌型检测流程</h2>
-        <div class="mermaid">
-flowchart TD
-Start[开始检测特殊牌型] --> CheckPair{是否有对子?}
-CheckPair -->|是| PairBonus[对子加分]
-CheckPair -->|否| CheckStraight{是否有顺子?}
-CheckStraight -->|是| StraightBonus[顺子加分]
-CheckStraight -->|否| CheckFlush{是否有同花?}
-CheckFlush -->|是| FlushBonus[同花加分]
-CheckFlush -->|否| CheckFullHouse{是否有葫芦?}
-CheckFullHouse -->|是| FullHouseBonus[葫芦加分]
-CheckFullHouse -->|否| NoSpecialHand[无特殊牌型]
-PairBonus --> TotalBonus[计算总加分]
-StraightBonus --> TotalBonus
-FlushBonus --> TotalBonus
-FullHouseBonus --> TotalBonus
-NoSpecialHand --> TotalBonus
+<div class="mermaid">
+    flowchart TD
+    Start[开始检测特殊牌型] --> CheckPair{是否有对子?}
+    CheckPair -->|是| PairBonus[对子加分]
+    CheckPair -->|否| CheckStraight{是否有顺子?}
+    CheckStraight -->|是| StraightBonus[顺子加分]
+    CheckStraight -->|否| CheckFlush{是否有同花?}
+    CheckFlush -->|是| FlushBonus[同花加分]
+    CheckFlush -->|否| CheckFullHouse{是否有葫芦?}
+    CheckFullHouse -->|是| FullHouseBonus[葫芦加分]
+    CheckFullHouse -->|否| NoSpecialHand[无特殊牌型]
 
-style Start fill:#bbf,stroke:#33f,stroke-width:2px
-style CheckPair fill:#ff9,stroke:#993,stroke-width:1px
-style CheckStraight fill:#ff9,stroke:#993,stroke-width:1px
-style CheckFlush fill:#ff9,stroke:#993,stroke-width:1px
-style CheckFullHouse fill:#ff9,stroke:#993,stroke-width:1px
-style PairBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style StraightBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style FlushBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style FullHouseBonus fill:#9cf,stroke:#36c,stroke-width:1px
-style NoSpecialHand fill:#9cf,stroke:#36c,stroke-width:1px
-style TotalBonus fill:#9f9,stroke:#393,stroke-width:2px
+    PairBonus --> TotalBonus[计算总加分]
+    StraightBonus --> TotalBonus
+    FlushBonus --> TotalBonus
+    FullHouseBonus --> TotalBonus
+    NoSpecialHand --> TotalBonus
+
+    %% 样式定义
+    classDef start fill:#bbf,stroke:#33f,stroke-width:2px;
+    classDef check fill:#ff9,stroke:#993,stroke-width:1px;
+    classDef bonus fill:#9cf,stroke:#36c,stroke-width:1px;
+    classDef result fill:#9f9,stroke:#393,stroke-width:2px;
+
+    %% 应用样式
+    class Start start;
+    class CheckPair,CheckStraight,CheckFlush,CheckFullHouse check;
+    class PairBonus,StraightBonus,FlushBonus,FullHouseBonus,NoSpecialHand bonus;
+    class TotalBonus result;
+
 </div>
 
       </div>

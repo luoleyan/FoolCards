@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ui Style Guide - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -70,42 +70,38 @@
         <h1 id="foolcards-ui-样式指南">FoolCards UI 样式指南</h1>
 <h2 id="颜色方案">颜色方案</h2>
 <h3 id="主要颜色">主要颜色</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["主色调 #1       主色调 #2       主色调 #3       主色调 #4"]
-    node3["#3A7BDA        #2C5BA6        #1D3C6E        #0F1E37"]
-    node4["蓝色            深蓝色          暗蓝色          深暗蓝色"]
+  node2["主色调 #1       主色调 #2       主色调 #3       主色调 #4"]
+  node3["#3A7BDA        #2C5BA6        #1D3C6E        #0F1E37"]
+  node4["蓝色            深蓝色          暗蓝色          深暗蓝色"]
 
 </div>
 
 <h3 id="强调色">强调色</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["强调色 #1       强调色 #2       强调色 #3       强调色 #4"]
-    node3["#E67E22        #D35400        #A04000        #6E2C00"]
-    node4["橙色            深橙色          暗橙色          棕色"]
+  node2["强调色 #1       强调色 #2       强调色 #3       强调色 #4"]
+  node3["#E67E22        #D35400        #A04000        #6E2C00"]
+  node4["橙色            深橙色          暗橙色          棕色"]
 
 </div>
 
 <h3 id="中性色">中性色</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["中性色 #1       中性色 #2       中性色 #3       中性色 #4"]
-    node3["#FFFFFF        #ECECEC        #BDBDBD        #757575"]
-    node4["白色            浅灰色          灰色            深灰色"]
+  node2["中性色 #1       中性色 #2       中性色 #3       中性色 #4"]
+  node3["#FFFFFF        #ECECEC        #BDBDBD        #757575"]
+  node4["白色            浅灰色          灰色            深灰色"]
 
 </div>
 
 <h3 id="功能色">功能色</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["成功色          警告色          错误色          信息色"]
-    node3["#2ECC71        #F1C40F        #E74C3C        #3498DB"]
-    node4["绿色            黄色            红色            蓝色"]
+  node2["成功色          警告色          错误色          信息色"]
+  node3["#2ECC71        #F1C40F        #E74C3C        #3498DB"]
+  node4["绿色            黄色            红色            蓝色"]
 
 </div>
 
@@ -154,47 +150,43 @@ flowchart TD
 </ul>
 <h2 id="按钮样式">按钮样式</h2>
 <h3 id="主要按钮">主要按钮</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["默认状态         悬停状态         按下状态"]
-    node4["背景: #3A7BDA    背景: #2C5BA6    背景: #1D3C6E"]
-    node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
-    node6["边框: 无         边框: 无         边框: 无"]
+  node2["默认状态         悬停状态         按下状态"]
+  node4["背景: #3A7BDA    背景: #2C5BA6    背景: #1D3C6E"]
+  node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
+  node6["边框: 无         边框: 无         边框: 无"]
 
 </div>
 
 <h3 id="次要按钮">次要按钮</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["默认状态         悬停状态         按下状态"]
-    node4["背景: #757575    背景: #BDBDBD    背景: #ECECEC"]
-    node5["文本: #FFFFFF    文本: #0F1E37    文本: #1D3C6E"]
-    node6["边框: 无         边框: 无         边框: 无"]
+  node2["默认状态         悬停状态         按下状态"]
+  node4["背景: #757575    背景: #BDBDBD    背景: #ECECEC"]
+  node5["文本: #FFFFFF    文本: #0F1E37    文本: #1D3C6E"]
+  node6["边框: 无         边框: 无         边框: 无"]
 
 </div>
 
 <h3 id="强调按钮">强调按钮</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["默认状态         悬停状态         按下状态"]
-    node4["背景: #E67E22    背景: #D35400    背景: #A04000"]
-    node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
-    node6["边框: 无         边框: 无         边框: 无"]
+  node2["默认状态         悬停状态         按下状态"]
+  node4["背景: #E67E22    背景: #D35400    背景: #A04000"]
+  node5["文本: #FFFFFF    文本: #FFFFFF    文本: #ECECEC"]
+  node6["边框: 无         边框: 无         边框: 无"]
 
 </div>
 
 <h3 id="禁用按钮">禁用按钮</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["禁用状态"]
-    node4["背景: #BDBDBD"]
-    node5["文本: #757575"]
-    node6["边框: 无"]
-    node7["透明度: 50%"]
+  node2["禁用状态"]
+  node4["背景: #BDBDBD"]
+  node5["文本: #757575"]
+  node6["边框: 无"]
+  node7["透明度: 50%"]
 
 </div>
 
@@ -207,13 +199,12 @@ flowchart TD
 <li><strong>阴影</strong>: 0px 4px 8px rgba(0, 0, 0, 0.5)</li>
 </ul>
 <h3 id="卡牌状态">卡牌状态</h3>
-        <div class="mermaid">
-
+<div class="mermaid">
 flowchart TD
-    node2["普通状态         选中状态         不可用状态       打出状态"]
-    node4["边框: #FFFFFF    边框: #E67E22    边框: #BDBDBD    边框: #2ECC71"]
-    node5["阴影: 标准       阴影: 增强       透明度: 50%      发光效果"]
-    node6["位置: 正常       位置: 上浮       位置: 正常       位置: 目标区域"]
+  node2["普通状态         选中状态         不可用状态       打出状态"]
+  node4["边框: #FFFFFF    边框: #E67E22    边框: #BDBDBD    边框: #2ECC71"]
+  node5["阴影: 标准       阴影: 增强       透明度: 50%      发光效果"]
+  node6["位置: 正常       位置: 上浮       位置: 正常       位置: 目标区域"]
 
 </div>
 

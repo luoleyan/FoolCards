@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Entity Relationship - FoolCards 项目分析文档</title>
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.0/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
-  <script src="../js/diagram-modal.js" defer></script>
+  <script src="js/diagram-modal.js" defer></script>
   <script>
     // 确保highlight.js正确加载
     window.onload = function() {
@@ -52,7 +52,8 @@
     <aside class="sidebar">
       <h3>实体关系图</h3>
       <ul>
-        <li><a href="../er/entity_relationship.html">Entity Relationship</a></li>
+        <li><a href="er/entity_relationship.html">Entity Relationship</a></li>
+
       </ul>
     </aside>
 
@@ -61,34 +62,37 @@
       <div class="content-body">
         <h1 id="foolcards-实体关系图">FoolCards 实体关系图</h1>
 <h2 id="游戏核心实体关系">游戏核心实体关系</h2>
-        <div class="mermaid">
-
-erDiagram
+<div class="mermaid">
+    erDiagram
     PLAYER {
-    int playerId PK
-    string name
-    int score
-    boolean isAI
+        int playerId PK
+        string name
+        int score
+        boolean isAI
     }
+
     GAME {
     int gameId PK
     datetime startTime
     datetime endTime
     string status
-    }
+}
+
     ROUND {
     int roundId PK
     int roundNumber
     int gameId FK
     datetime startTime
     datetime endTime
-    }
+}
+
     PLAYER_IN_GAME {
     int playerGameId PK
     int playerId FK
     int gameId FK
     int finalScore
-    }
+}
+
     PLAYER ||--o{ PLAYER_IN_GAME : "参与"
     GAME ||--o{ PLAYER_IN_GAME : "包含"
     GAME ||--o{ ROUND : "包含"
@@ -97,41 +101,45 @@ erDiagram
 </div>
 
 <h2 id="卡牌与场地关系">卡牌与场地关系</h2>
-        <div class="mermaid">
-
-erDiagram
+<div class="mermaid">
+    erDiagram
     CARD {
-    int cardId PK
-    string suit
-    int rank
-    int value
+        int cardId PK
+        string suit
+        int rank
+        int value
     }
+
     PLAY_AREA {
     int areaId PK
     int position
     int score
     int gameId FK
-    }
+}
+
     SCENE_EFFECT {
     int effectId PK
     string type
     string name
     string description
-    }
+}
+
     CARD_IN_HAND {
     int cardHandId PK
     int cardId FK
     int playerId FK
     int gameId FK
     int position
-    }
+}
+
     CARD_IN_AREA {
     int cardAreaId PK
     int cardId FK
     int areaId FK
     int position
     boolean isPublic
-    }
+}
+
     CARD ||--o{ CARD_IN_HAND : "持有"
     CARD ||--o{ CARD_IN_AREA : "放置"
     PLAY_AREA ||--o{ CARD_IN_AREA : "包含"
@@ -140,21 +148,22 @@ erDiagram
 </div>
 
 <h2 id="特殊牌型关系">特殊牌型关系</h2>
-        <div class="mermaid">
-
-erDiagram
+<div class="mermaid">
+    erDiagram
     SPECIAL_HAND {
-    int handId PK
-    int areaId FK
-    int typeId FK
-    int bonusPoints
+        int handId PK
+        int areaId FK
+        int typeId FK
+        int bonusPoints
     }
+
     SPECIAL_HAND_TYPE {
     int typeId PK
     string name
     string description
     int baseBonus
-    }
+}
+
     PLAY_AREA ||--o{ SPECIAL_HAND : "形成"
     SPECIAL_HAND_TYPE ||--o{ SPECIAL_HAND : "定义"
 
