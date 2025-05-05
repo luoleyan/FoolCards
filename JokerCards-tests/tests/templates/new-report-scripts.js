@@ -127,6 +127,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 渲染热力图（如果有数据）
     renderDefectHeatmapChart();
+
+    // 渲染决策表
+    renderDecisionTable();
+
+    // 渲染需求追踪矩阵
+    renderRequirementMatrix();
+
+    // 渲染缺陷跟踪表
+    renderDefectTrackingTable();
   }
 
   // 初始化模态框
@@ -471,6 +480,116 @@ document.addEventListener('DOMContentLoaded', () => {
     if (testCases.priority) {
       renderTestCasesPriorityChart();
     }
+
+    // 渲染测试用例表
+    renderTestCasesTable();
+  }
+
+  // 渲染测试用例表
+  function renderTestCasesTable() {
+    if (!reportData.testCasesTable || reportData.testCasesTable.length === 0) {
+      const container = document.querySelector('.test-cases-table-container');
+      if (container) {
+        container.style.display = 'none';
+      }
+      return;
+    }
+
+    const tableBody = document.getElementById('test-cases-table-body');
+    if (!tableBody) {
+      return;
+    }
+
+    // 清空表格
+    tableBody.innerHTML = '';
+
+    // 填充表格数据
+    for (const testCase of reportData.testCasesTable) {
+      const row = document.createElement('tr');
+
+      // ID列
+      const idCell = document.createElement('td');
+      idCell.textContent = testCase.id;
+      row.appendChild(idCell);
+
+      // 名称列
+      const nameCell = document.createElement('td');
+      nameCell.textContent = testCase.name;
+      row.appendChild(nameCell);
+
+      // 描述列
+      const descCell = document.createElement('td');
+      descCell.textContent = testCase.description;
+      row.appendChild(descCell);
+
+      // 预期结果列
+      const expectedCell = document.createElement('td');
+      expectedCell.textContent = testCase.expectedResult;
+      row.appendChild(expectedCell);
+
+      // 实际结果列
+      const actualCell = document.createElement('td');
+      actualCell.textContent = testCase.actualResult;
+      row.appendChild(actualCell);
+
+      // 状态列
+      const statusCell = document.createElement('td');
+      statusCell.textContent = testCase.status === 'passed' ? '通过' :
+                              testCase.status === 'failed' ? '失败' :
+                              testCase.status === 'pending' ? '待定' : '未知';
+      statusCell.className = `status-${testCase.status}`;
+      row.appendChild(statusCell);
+
+      tableBody.appendChild(row);
+    }
+
+    // 初始化筛选功能
+    initTestCaseFilter();
+  }
+
+  // 初始化测试用例筛选功能
+  function initTestCaseFilter() {
+    const filterInput = document.getElementById('test-case-filter');
+    const statusFilter = document.getElementById('test-case-status-filter');
+    const filterButton = document.getElementById('test-case-filter-button');
+
+    if (!filterInput || !statusFilter || !filterButton) {
+      return;
+    }
+
+    filterButton.addEventListener('click', () => {
+      const filterText = filterInput.value.toLowerCase();
+      const statusValue = statusFilter.value;
+
+      const rows = document.querySelectorAll('#test-cases-table-body tr');
+
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const id = cells[0].textContent.toLowerCase();
+        const name = cells[1].textContent.toLowerCase();
+        const description = cells[2].textContent.toLowerCase();
+        const expectedResult = cells[3].textContent.toLowerCase();
+        const actualResult = cells[4].textContent.toLowerCase();
+        const status = cells[5].className.replace('status-', '');
+
+        const textMatch = id.includes(filterText) ||
+                         name.includes(filterText) ||
+                         description.includes(filterText) ||
+                         expectedResult.includes(filterText) ||
+                         actualResult.includes(filterText);
+
+        const statusMatch = statusValue === 'all' || status === statusValue;
+
+        row.style.display = textMatch && statusMatch ? '' : 'none';
+      });
+    });
+
+    // 回车键触发筛选
+    filterInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        filterButton.click();
+      }
+    });
   }
 
   // 填充测试执行记录
@@ -2012,5 +2131,382 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('渲染缺陷热力图时出错:', error);
     }
+  }
+
+  // 渲染决策表
+  function renderDecisionTable() {
+    try {
+      if (!reportData.decisionTable || !reportData.decisionTable.headers || !reportData.decisionTable.scenarios) {
+        const container = document.getElementById('decision-table');
+        if (container) {
+          container.style.display = 'none';
+        }
+        return;
+      }
+
+      const headers = reportData.decisionTable.headers;
+      const scenarios = reportData.decisionTable.scenarios;
+
+      // 设置表头
+      const headerRow = document.getElementById('decision-table-headers');
+      if (!headerRow) {
+        return;
+      }
+
+      // 清空表头
+      headerRow.innerHTML = '';
+
+      // 添加条件表头
+      for (let i = 0; i < headers.conditions.length; i++) {
+        const th = document.createElement('th');
+        th.textContent = headers.conditions[i];
+        headerRow.appendChild(th);
+      }
+
+      // 添加动作表头
+      for (let i = 0; i < headers.actions.length; i++) {
+        const th = document.createElement('th');
+        th.textContent = headers.actions[i];
+        headerRow.appendChild(th);
+      }
+
+      // 添加结果表头
+      for (let i = 0; i < headers.results.length; i++) {
+        const th = document.createElement('th');
+        th.textContent = headers.results[i];
+        headerRow.appendChild(th);
+      }
+
+      // 填充表格数据
+      const tableBody = document.getElementById('decision-table-body');
+      if (!tableBody) {
+        return;
+      }
+
+      // 清空表格
+      tableBody.innerHTML = '';
+
+      // 添加场景行
+      for (const scenario of scenarios) {
+        const row = document.createElement('tr');
+
+        // 场景名称
+        const nameCell = document.createElement('td');
+        nameCell.textContent = scenario.name;
+        row.appendChild(nameCell);
+
+        // 条件单元格
+        for (let i = 0; i < scenario.conditions.length; i++) {
+          const cell = document.createElement('td');
+          cell.textContent = scenario.conditions[i] ? '是' : '否';
+          cell.className = scenario.conditions[i] ? 'condition-true' : 'condition-false';
+          row.appendChild(cell);
+        }
+
+        // 动作单元格
+        for (let i = 0; i < scenario.actions.length; i++) {
+          const cell = document.createElement('td');
+          cell.textContent = scenario.actions[i] ? '是' : '否';
+          cell.className = scenario.actions[i] ? 'action-yes' : 'action-no';
+          row.appendChild(cell);
+        }
+
+        // 结果单元格
+        for (let i = 0; i < scenario.results.length; i++) {
+          const cell = document.createElement('td');
+          cell.textContent = scenario.results[i] ? '是' : '否';
+          cell.className = scenario.results[i] ? 'result-pass' : 'result-fail';
+          row.appendChild(cell);
+        }
+
+        tableBody.appendChild(row);
+      }
+
+      console.log('决策表渲染成功');
+    } catch (error) {
+      console.error('渲染决策表时出错:', error);
+    }
+  }
+
+  // 渲染需求追踪矩阵
+  function renderRequirementMatrix() {
+    try {
+      if (!reportData.requirementMatrix || reportData.requirementMatrix.length === 0) {
+        const container = document.getElementById('requirement-traceability');
+        if (container) {
+          container.style.display = 'none';
+        }
+        return;
+      }
+
+      const tableBody = document.getElementById('requirement-matrix-body');
+      if (!tableBody) {
+        return;
+      }
+
+      // 清空表格
+      tableBody.innerHTML = '';
+
+      // 填充表格数据
+      for (const requirement of reportData.requirementMatrix) {
+        const row = document.createElement('tr');
+
+        // 需求ID列
+        const idCell = document.createElement('td');
+        idCell.textContent = requirement.id;
+        idCell.className = 'requirement-id';
+        row.appendChild(idCell);
+
+        // 需求描述列
+        const descCell = document.createElement('td');
+        descCell.textContent = requirement.description;
+        row.appendChild(descCell);
+
+        // 优先级列
+        const priorityCell = document.createElement('td');
+        priorityCell.textContent = requirement.priority;
+        row.appendChild(priorityCell);
+
+        // 关联测试用例列
+        const testCasesCell = document.createElement('td');
+        if (requirement.testCases && requirement.testCases.length > 0) {
+          for (let i = 0; i < requirement.testCases.length; i++) {
+            const testCaseLink = document.createElement('span');
+            testCaseLink.textContent = requirement.testCases[i];
+            testCaseLink.className = 'test-case-link';
+            testCaseLink.setAttribute('data-test-case', requirement.testCases[i]);
+            testCaseLink.addEventListener('click', () => {
+              // 滚动到测试用例表并高亮对应的行
+              const testCasesTable = document.getElementById('test-cases-table');
+              if (testCasesTable) {
+                testCasesTable.scrollIntoView({ behavior: 'smooth' });
+
+                // 高亮对应的行
+                const rows = document.querySelectorAll('#test-cases-table-body tr');
+                rows.forEach(row => {
+                  const idCell = row.querySelector('td:first-child');
+                  if (idCell && idCell.textContent === requirement.testCases[i]) {
+                    // 移除所有高亮
+                    rows.forEach(r => r.classList.remove('highlighted-row'));
+                    // 添加高亮
+                    row.classList.add('highlighted-row');
+                  }
+                });
+              }
+            });
+            testCasesCell.appendChild(testCaseLink);
+
+            if (i < requirement.testCases.length - 1) {
+              testCasesCell.appendChild(document.createTextNode(', '));
+            }
+          }
+        } else {
+          testCasesCell.textContent = '无';
+        }
+        row.appendChild(testCasesCell);
+
+        // 覆盖状态列
+        const coverageCell = document.createElement('td');
+        coverageCell.textContent = requirement.coverage === 'covered' ? '已覆盖' :
+                                  requirement.coverage === 'partial' ? '部分覆盖' :
+                                  requirement.coverage === 'not-covered' ? '未覆盖' : '未知';
+        coverageCell.className = requirement.coverage === 'covered' ? 'coverage-full' :
+                                requirement.coverage === 'partial' ? 'coverage-partial' :
+                                requirement.coverage === 'not-covered' ? 'coverage-none' : '';
+        row.appendChild(coverageCell);
+
+        // 测试结果列
+        const resultCell = document.createElement('td');
+        resultCell.textContent = requirement.result === 'passed' ? '通过' :
+                                requirement.result === 'failed' ? '失败' :
+                                requirement.result === 'pending' ? '待定' : '未知';
+        resultCell.className = requirement.result === 'passed' ? 'status-passed' :
+                              requirement.result === 'failed' ? 'status-failed' :
+                              requirement.result === 'pending' ? 'status-pending' : '';
+        row.appendChild(resultCell);
+
+        tableBody.appendChild(row);
+      }
+
+      // 初始化筛选功能
+      initRequirementFilter();
+
+      console.log('需求追踪矩阵渲染成功');
+    } catch (error) {
+      console.error('渲染需求追踪矩阵时出错:', error);
+    }
+  }
+
+  // 初始化需求筛选功能
+  function initRequirementFilter() {
+    const filterInput = document.getElementById('requirement-filter');
+    const coverageFilter = document.getElementById('requirement-coverage-filter');
+    const filterButton = document.getElementById('requirement-filter-button');
+
+    if (!filterInput || !coverageFilter || !filterButton) {
+      return;
+    }
+
+    filterButton.addEventListener('click', () => {
+      const filterText = filterInput.value.toLowerCase();
+      const coverageValue = coverageFilter.value;
+
+      const rows = document.querySelectorAll('#requirement-matrix-body tr');
+
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const id = cells[0].textContent.toLowerCase();
+        const description = cells[1].textContent.toLowerCase();
+        const priority = cells[2].textContent.toLowerCase();
+        const testCases = cells[3].textContent.toLowerCase();
+        const coverage = cells[4].className.includes('coverage-full') ? 'covered' :
+                        cells[4].className.includes('coverage-partial') ? 'partial' :
+                        cells[4].className.includes('coverage-none') ? 'not-covered' : '';
+
+        const textMatch = id.includes(filterText) ||
+                         description.includes(filterText) ||
+                         priority.includes(filterText) ||
+                         testCases.includes(filterText);
+
+        const coverageMatch = coverageValue === 'all' || coverage === coverageValue;
+
+        row.style.display = textMatch && coverageMatch ? '' : 'none';
+      });
+    });
+
+    // 回车键触发筛选
+    filterInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        filterButton.click();
+      }
+    });
+  }
+
+  // 渲染缺陷跟踪表
+  function renderDefectTrackingTable() {
+    try {
+      if (!reportData.defectTrackingTable || reportData.defectTrackingTable.length === 0) {
+        const container = document.getElementById('defect-tracking');
+        if (container) {
+          container.style.display = 'none';
+        }
+        return;
+      }
+
+      const tableBody = document.getElementById('defect-tracking-body');
+      if (!tableBody) {
+        return;
+      }
+
+      // 清空表格
+      tableBody.innerHTML = '';
+
+      // 填充表格数据
+      for (const defect of reportData.defectTrackingTable) {
+        const row = document.createElement('tr');
+
+        // ID列
+        const idCell = document.createElement('td');
+        idCell.textContent = defect.id;
+        idCell.className = 'defect-id';
+        row.appendChild(idCell);
+
+        // 描述列
+        const descCell = document.createElement('td');
+        descCell.textContent = defect.description;
+        row.appendChild(descCell);
+
+        // 严重性列
+        const severityCell = document.createElement('td');
+        severityCell.textContent = defect.severity === 'critical' ? '严重' :
+                                  defect.severity === 'high' ? '高' :
+                                  defect.severity === 'medium' ? '中' :
+                                  defect.severity === 'low' ? '低' : '未知';
+        severityCell.className = `severity-${defect.severity}`;
+        row.appendChild(severityCell);
+
+        // 状态列
+        const statusCell = document.createElement('td');
+        statusCell.textContent = defect.status === 'open' ? '未解决' :
+                                defect.status === 'in-progress' ? '处理中' :
+                                defect.status === 'fixed' ? '已修复' :
+                                defect.status === 'closed' ? '已关闭' : '未知';
+        statusCell.className = `status-${defect.status}`;
+        row.appendChild(statusCell);
+
+        // 报告日期列
+        const dateCell = document.createElement('td');
+        dateCell.textContent = defect.reportDate;
+        row.appendChild(dateCell);
+
+        // 关联测试用例列
+        const testCaseCell = document.createElement('td');
+        testCaseCell.textContent = defect.testCase || '无';
+        row.appendChild(testCaseCell);
+
+        // 解决方案列
+        const solutionCell = document.createElement('td');
+        solutionCell.textContent = defect.solution || '无';
+        row.appendChild(solutionCell);
+
+        tableBody.appendChild(row);
+      }
+
+      // 初始化筛选功能
+      initDefectFilter();
+
+      console.log('缺陷跟踪表渲染成功');
+    } catch (error) {
+      console.error('渲染缺陷跟踪表时出错:', error);
+    }
+  }
+
+  // 初始化缺陷筛选功能
+  function initDefectFilter() {
+    const filterInput = document.getElementById('defect-filter');
+    const statusFilter = document.getElementById('defect-status-filter');
+    const severityFilter = document.getElementById('defect-severity-filter');
+    const filterButton = document.getElementById('defect-filter-button');
+
+    if (!filterInput || !statusFilter || !severityFilter || !filterButton) {
+      return;
+    }
+
+    filterButton.addEventListener('click', () => {
+      const filterText = filterInput.value.toLowerCase();
+      const statusValue = statusFilter.value;
+      const severityValue = severityFilter.value;
+
+      const rows = document.querySelectorAll('#defect-tracking-body tr');
+
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const id = cells[0].textContent.toLowerCase();
+        const description = cells[1].textContent.toLowerCase();
+        const severity = cells[2].className.replace('severity-', '');
+        const status = cells[3].className.replace('status-', '');
+        const date = cells[4].textContent.toLowerCase();
+        const testCase = cells[5].textContent.toLowerCase();
+        const solution = cells[6].textContent.toLowerCase();
+
+        const textMatch = id.includes(filterText) ||
+                         description.includes(filterText) ||
+                         date.includes(filterText) ||
+                         testCase.includes(filterText) ||
+                         solution.includes(filterText);
+
+        const statusMatch = statusValue === 'all' || status === statusValue;
+        const severityMatch = severityValue === 'all' || severity === severityValue;
+
+        row.style.display = textMatch && statusMatch && severityMatch ? '' : 'none';
+      });
+    });
+
+    // 回车键触发筛选
+    filterInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        filterButton.click();
+      }
+    });
   }
 });
