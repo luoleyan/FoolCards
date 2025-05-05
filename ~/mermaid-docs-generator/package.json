@@ -41,7 +41,8 @@
     "highlight.js": "^11.8.0",
     "html2canvas": "^1.4.1",
     "marked": "^5.1.0",
-    "mermaid": "^10.6.1"
+    "mermaid": "^10.6.1",
+    "mermaid-docs-generator": "file:"
   },
   "engines": {
     "node": ">=14.0.0"

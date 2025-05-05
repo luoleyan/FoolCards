@@ -122,7 +122,8 @@ function generateTestReport(type, options = {}) {
     const processor = new TestResultsProcessor();
     processor.process(testResults, {
       testType: type,
-      generatePdf: options.generatePdf || false
+      generatePdf: options.generatePdf || false,
+      useECharts: options.useECharts || false
     });
 
     console.log(`\n✅ ${getTestTypeName(type)}测试报告生成完成\n`);
@@ -150,11 +151,13 @@ function showHelp() {
   console.log(`  compatibility - 准备兼容性测试`);
   console.log(`  ${TEST_TYPES.ALL}          - 运行所有测试`);
   console.log('\n可用的选项:');
-  console.log('  --pdf, -p    - 生成PDF报告');
+  console.log('  --pdf, -p       - 生成PDF报告');
+  console.log('  --echarts, -e   - 使用ECharts生成图表');
   console.log('\n示例:');
   console.log('  node run-tests.js unit     # 运行单元测试');
   console.log('  node run-tests.js all      # 运行所有测试');
   console.log('  node run-tests.js unit -p  # 运行单元测试并生成PDF报告');
+  console.log('  node run-tests.js all -e   # 运行所有测试并使用ECharts生成图表');
 }
 
 // 主函数
@@ -170,10 +173,13 @@ function main() {
   // 解析参数
   let testType = null;
   let generatePdf = false;
+  let useECharts = false;
 
   for (const arg of args) {
     if (arg === '--pdf' || arg === '-p') {
       generatePdf = true;
+    } else if (arg === '--echarts' || arg === '-e') {
+      useECharts = true;
     } else if (arg === 'compatibility') {
       testType = arg;
     } else if (Object.values(TEST_TYPES).includes(arg.toLowerCase())) {
@@ -196,7 +202,7 @@ function main() {
   if (testType === 'compatibility') {
     runCompatibilityTest();
   } else {
-    runTests(testType, { generatePdf });
+    runTests(testType, { generatePdf, useECharts });
   }
 }
 

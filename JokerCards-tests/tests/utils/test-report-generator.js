@@ -64,15 +64,18 @@ class TestReportGenerator {
       options
     });
 
+    // 确定使用哪种图表库
+    const useECharts = options.useECharts || false;
+
     // 生成HTML报告
-    const htmlReport = this._generateHtmlReport(reportData);
+    const htmlReport = this._generateHtmlReport(reportData, useECharts);
 
     // 保存HTML报告
     const reportFilePath = path.join(this.reportDir, `${testType}-report.html`);
     fs.writeFileSync(reportFilePath, htmlReport, 'utf8');
 
     // 复制静态资源
-    this._copyStaticAssets();
+    this._copyStaticAssets(useECharts);
 
     // 生成PDF报告（如果需要）
     if (options.generatePdf) {
@@ -93,6 +96,19 @@ class TestReportGenerator {
   _prepareReportData(testResults, testType, analysisData = {}) {
     const now = new Date();
     const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    // 如果testResults为undefined或null，使用默认值
+    if (!testResults) {
+      testResults = {
+        testResults: [],
+        numPassedTests: 0,
+        numFailedTests: 0,
+        numPendingTests: 0,
+        numTotalTests: 0,
+        startTime: Date.now() - 1000,
+        endTime: Date.now()
+      };
+    }
 
     // 解析测试结果
     const testSuites = testResults.testResults || [];
@@ -125,13 +141,19 @@ class TestReportGenerator {
     const suites = [];
 
     for (const suite of testSuites) {
-      if (!suite.testResults) {
-        console.warn(`套件 ${suite.testFilePath} 没有测试结果数据`);
+      if (!suite || !suite.testResults) {
+        if (suite && suite.testFilePath) {
+          console.warn(`套件 ${suite.testFilePath} 没有测试结果数据`);
+        } else {
+          console.warn(`套件没有测试结果数据`);
+        }
         continue;
       }
 
       const tests = [];
       for (const test of suite.testResults) {
+        if (!test) continue;
+
         tests.push({
           title: test.title || '未命名测试',
           status: test.status || 'unknown',
@@ -278,18 +300,20 @@ class TestReportGenerator {
   /**
    * 生成HTML报告
    * @param {Object} reportData - 报告数据
+   * @param {boolean} useECharts - 是否使用ECharts
    * @returns {string} HTML报告内容
    */
-  _generateHtmlReport(reportData) {
+  _generateHtmlReport(reportData, useECharts = false) {
     // 读取HTML模板
-    const templatePath = path.join(this.templateDir, 'report-template.html');
+    const templateName = 'new-report-template.html'; // 始终使用新模板
+    const templatePath = path.join(this.templateDir, templateName);
     let template = '';
 
     try {
       template = fs.readFileSync(templatePath, 'utf8');
     } catch (error) {
       console.warn(`模板文件不存在: ${templatePath}, 使用默认模板`);
-      template = this._getDefaultTemplate();
+      template = this._getDefaultEChartsTemplate(); // 始终使用ECharts模板
     }
 
     // 替换模板变量
@@ -308,13 +332,14 @@ class TestReportGenerator {
 
   /**
    * 复制静态资源
+   * @param {boolean} useECharts - 是否使用ECharts
    */
-  _copyStaticAssets() {
+  _copyStaticAssets(useECharts = false) {
     const cssPath = path.join(this.templateDir, 'report-styles.css');
-    const jsPath = path.join(this.templateDir, 'report-scripts.js');
+    const jsPath = path.join(this.templateDir, 'new-report-scripts.js'); // 始终使用新脚本
 
     const targetCssPath = path.join(this.reportDir, 'report-styles.css');
-    const targetJsPath = path.join(this.reportDir, 'report-scripts.js');
+    const targetJsPath = path.join(this.reportDir, 'new-report-scripts.js'); // 始终使用新脚本
 
     // 确保assets目录存在
     const assetsDir = path.join(this.reportDir, 'assets');
@@ -337,16 +362,19 @@ class TestReportGenerator {
       if (fs.existsSync(jsPath)) {
         fs.copyFileSync(jsPath, targetJsPath);
       } else {
-        fs.writeFileSync(targetJsPath, this._getDefaultScripts(), 'utf8');
+        // 始终使用ECharts脚本
+        const defaultScripts = this._getDefaultEChartsScripts();
+        fs.writeFileSync(targetJsPath, defaultScripts, 'utf8');
       }
     } catch (error) {
       console.warn('无法复制JS文件:', error.message);
-      fs.writeFileSync(targetJsPath, this._getDefaultScripts(), 'utf8');
+      // 始终使用ECharts脚本
+      const defaultScripts = this._getDefaultEChartsScripts();
+      fs.writeFileSync(targetJsPath, defaultScripts, 'utf8');
     }
 
-    // 复制库文件
+    // 复制PDF生成相关库文件
     const libFiles = [
-      { src: path.join(this.reportDir, 'assets', 'chart.min.js'), dest: path.join(assetsDir, 'chart.min.js') },
       { src: path.join(this.reportDir, 'assets', 'jspdf.min.js'), dest: path.join(assetsDir, 'jspdf.min.js') },
       { src: path.join(this.reportDir, 'assets', 'html2canvas.min.js'), dest: path.join(assetsDir, 'html2canvas.min.js') },
       { src: path.join(this.reportDir, 'assets', 'html2pdf.min.js'), dest: path.join(assetsDir, 'html2pdf.min.js') }
@@ -355,7 +383,10 @@ class TestReportGenerator {
     for (const file of libFiles) {
       try {
         if (fs.existsSync(file.src)) {
-          fs.copyFileSync(file.src, file.dest);
+          // 如果源文件和目标文件不同，才复制
+          if (file.src !== file.dest) {
+            fs.copyFileSync(file.src, file.dest);
+          }
         } else {
           console.warn(`库文件不存在: ${file.src}`);
         }
@@ -395,9 +426,13 @@ class TestReportGenerator {
 
   /**
    * 获取默认HTML模板
+   * @param {boolean} useECharts - 是否使用ECharts
    * @returns {string} 默认HTML模板
    */
-  _getDefaultTemplate() {
+  _getDefaultTemplate(useECharts = false) {
+    if (useECharts) {
+      return this._getDefaultEChartsTemplate();
+    }
     return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1658,6 +1693,18 @@ document.addEventListener('contextmenu', function(e) {
    * @private
    */
   _getTestCases(results) {
+    if (!results) {
+      // 如果results为undefined或null，返回默认值
+      return {
+        total: 0,
+        automated: 0,
+        manual: 0,
+        coverage: 0,
+        distribution: [],
+        priority: { high: 0, medium: 0, low: 0 }
+      };
+    }
+
     const testResults = results.testResults || [];
     let totalTests = 0;
     let automatedTests = 0;
@@ -1665,7 +1712,7 @@ document.addEventListener('contextmenu', function(e) {
 
     // 计算测试用例数量
     for (const suite of testResults) {
-      if (suite.testResults) {
+      if (suite && suite.testResults) {
         totalTests += suite.testResults.length;
         automatedTests += suite.testResults.length;
       }
@@ -1947,6 +1994,754 @@ document.addEventListener('contextmenu', function(e) {
     } catch (error) {
       console.error(`生成PDF报告失败: ${error.message}`);
     }
+  }
+
+  /**
+   * 获取默认ECharts HTML模板
+   * @returns {string} 默认ECharts HTML模板
+   */
+  _getDefaultEChartsTemplate() {
+    return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <link rel="stylesheet" href="report-styles.css">
+  <style>
+    /* 图表容器样式 */
+    .chart-container {
+      height: 300px;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    /* 错误消息样式 */
+    .error-message {
+      padding: 15px;
+      background-color: #ffebee;
+      color: #c62828;
+      border-radius: 4px;
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    /* 加载提示样式 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .loading-spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+    }
+    .loading-text {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #333;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 模态框样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 800px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .modal-footer {
+      margin-top: 20px;
+      text-align: right;
+    }
+    #save-image-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #save-image-button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>{{TITLE}}</h1>
+      <div class="report-meta">
+        <div class="report-meta-item">
+          <span class="meta-label">报告编号:</span>
+          <span class="meta-value" id="report-id">{{REPORT_ID}}</span>
+        </div>
+        <div class="report-meta-item">
+          <span class="meta-label">文档版本:</span>
+          <span class="meta-value" id="doc-version">{{DOC_VERSION}}</span>
+        </div>
+        <div class="report-meta-item">
+          <span class="meta-label">测试日期:</span>
+          <span class="meta-value" id="test-date">{{TEST_DATE}}</span>
+        </div>
+        <div class="report-meta-item">
+          <span class="meta-label">软件版本:</span>
+          <span class="meta-value" id="software-version">{{SOFTWARE_VERSION}}</span>
+        </div>
+      </div>
+      <p class="timestamp">生成时间: {{TIMESTAMP}}</p>
+      <div class="header-actions">
+        <button id="export-pdf-button" class="action-button" type="button">导出PDF</button>
+        <button id="print-report-button" class="action-button" type="button">打印报告</button>
+      </div>
+    </header>
+
+    <!-- 软件信息 -->
+    <div id="software-info" class="section">
+      <h2>软件信息</h2>
+      <div class="info-group">
+        <div class="info-item">
+          <span class="label">描述:</span>
+          <span class="value" id="software-description"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">功能:</span>
+          <ul id="software-features" class="feature-list"></ul>
+        </div>
+        <div class="info-item">
+          <span class="label">版本号:</span>
+          <span class="value" id="version-number"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">构建日期:</span>
+          <span class="value" id="build-date"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">发布类型:</span>
+          <span class="value" id="release-type"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 测试摘要 -->
+    <div id="summary" class="section">
+      <h2>测试摘要</h2>
+      <div class="summary-info">
+        <div class="summary-item">
+          <span class="label">总测试数:</span>
+          <span class="value" id="total-tests"></span>
+        </div>
+        <div class="summary-item">
+          <span class="label">通过:</span>
+          <span class="value passed" id="passed-tests"></span>
+        </div>
+        <div class="summary-item">
+          <span class="label">失败:</span>
+          <span class="value failed" id="failed-tests"></span>
+        </div>
+        <div class="summary-item">
+          <span class="label">待定:</span>
+          <span class="value pending" id="pending-tests"></span>
+        </div>
+        <div class="summary-item">
+          <span class="label">执行时间:</span>
+          <span class="value" id="test-duration"></span>
+        </div>
+        <div class="summary-item">
+          <span class="label">状态:</span>
+          <span class="value" id="test-status"></span>
+        </div>
+      </div>
+
+      <div id="summary-charts">
+        <div class="chart-container" id="results-chart-container"></div>
+        <div class="chart-container" id="coverage-chart-container"></div>
+      </div>
+    </div>
+
+    <!-- 测试元数据 -->
+    <div id="test-metadata" class="section">
+      <h2>测试元数据</h2>
+      <div class="info-group">
+        <div class="info-item">
+          <span class="label">测试目的:</span>
+          <span class="value" id="test-purpose"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">测试范围:</span>
+          <span class="value" id="test-scope"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">测试方法:</span>
+          <span class="value" id="test-methods"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">硬件环境:</span>
+          <span class="value" id="test-hardware"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">软件环境:</span>
+          <span class="value" id="test-software"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">依赖项:</span>
+          <span class="value" id="test-dependencies"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史趋势 -->
+    <div id="history-trend" class="section">
+      <h2>历史趋势</h2>
+      <div id="history-trend-container" class="chart-container"></div>
+    </div>
+
+    <!-- 图表模态框 -->
+    <div id="image-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <div id="modal-chart-container" style="width: 100%; height: 500px;"></div>
+        <div class="modal-footer">
+          <button id="save-image-button" type="button">保存图表</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入ECharts库 -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <script>
+    // 测试报告数据
+    const reportData = {{REPORT_DATA}};
+  </script>
+  <script src="echarts-report-scripts.js"></script>
+</body>
+</html>`;
+  }
+
+  _getDefaultEChartsScripts() {
+    return `// 测试报告脚本 - ECharts版本
+document.addEventListener('DOMContentLoaded', function() {
+  // 格式化持续时间
+  function formatDuration(seconds) {
+    if (seconds < 60) {
+      return \`\${seconds}秒\`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return \`\${minutes}分\${remainingSeconds}秒\`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+      return \`\${hours}时\${minutes}分\${remainingSeconds}秒\`;
+    }
+  }
+
+  // 填充报告元数据
+  function fillReportMetadata() {
+    document.getElementById('report-id').textContent = reportData.reportId || 'N/A';
+    document.getElementById('doc-version').textContent = reportData.docVersion || 'N/A';
+    document.getElementById('test-date').textContent = reportData.testDate || 'N/A';
+    document.getElementById('software-version').textContent = reportData.softwareVersion || 'N/A';
+  }
+
+  // 填充软件信息
+  function fillSoftwareInfo() {
+    if (!reportData.softwareInfo) {
+      document.getElementById('software-info').style.display = 'none';
+      return;
+    }
+
+    const info = reportData.softwareInfo;
+
+    document.getElementById('software-description').textContent = info.description || 'N/A';
+
+    if (info.features && info.features.length > 0) {
+      const featuresList = document.getElementById('software-features');
+      for (const feature of info.features) {
+        const li = document.createElement('li');
+        li.textContent = feature;
+        featuresList.appendChild(li);
+      }
+    }
+
+    if (info.version) {
+      document.getElementById('version-number').textContent = info.version.number || 'N/A';
+      document.getElementById('build-date').textContent = info.version.buildDate || 'N/A';
+      document.getElementById('release-type').textContent = info.version.releaseType || 'N/A';
+    }
+  }
+
+  // 填充摘要信息
+  function fillSummaryInfo() {
+    if (!reportData.summary) {
+      document.getElementById('summary').style.display = 'none';
+      return;
+    }
+
+    const summary = reportData.summary;
+
+    document.getElementById('total-tests').textContent = summary.total || 0;
+    document.getElementById('passed-tests').textContent = summary.passed || 0;
+    document.getElementById('failed-tests').textContent = summary.failed || 0;
+    document.getElementById('pending-tests').textContent = summary.pending || 0;
+    document.getElementById('test-duration').textContent = formatDuration(summary.duration || 0);
+    document.getElementById('test-status').textContent = summary.success ? '通过' : '失败';
+    document.getElementById('test-status').className = summary.success ? 'value passed' : 'value failed';
+  }
+
+  // 填充测试元数据
+  function fillTestMetadata() {
+    if (!reportData.metadata) {
+      document.getElementById('test-metadata').style.display = 'none';
+      return;
+    }
+
+    const metadata = reportData.metadata;
+
+    document.getElementById('test-purpose').textContent = metadata.purpose || 'N/A';
+    document.getElementById('test-scope').textContent = metadata.scope || 'N/A';
+    document.getElementById('test-methods').textContent = metadata.methods || 'N/A';
+
+    if (metadata.environment) {
+      document.getElementById('test-hardware').textContent = metadata.environment.hardware || 'N/A';
+      document.getElementById('test-software').textContent = metadata.environment.software || 'N/A';
+      document.getElementById('test-dependencies').textContent = metadata.environment.dependencies || 'N/A';
+    }
+  }
+
+  // 渲染测试结果图表 - 使用ECharts
+  function renderResultsChart() {
+    try {
+      const container = document.getElementById('results-chart-container');
+      if (!container) {
+        console.error('找不到结果图表容器');
+        return;
+      }
+
+      const summary = reportData.summary;
+      if (!summary) {
+        container.innerHTML = '<div class="error-message">没有测试结果数据</div>';
+        return;
+      }
+
+      const passed = summary.passed || 0;
+      const failed = summary.failed || 0;
+      const pending = summary.pending || 0;
+      const total = summary.total || 0;
+
+      if (total === 0) {
+        container.innerHTML = '<div class="error-message">没有测试结果数据</div>';
+        return;
+      }
+
+      // 初始化ECharts实例
+      const chart = echarts.init(container);
+
+      // 配置图表选项
+      const option = {
+        title: {
+          text: '测试结果统计',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'horizontal',
+          bottom: 'bottom',
+          data: ['通过', '失败', '待定']
+        },
+        series: [
+          {
+            name: '测试结果',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            label: {
+              show: false,
+              position: 'center'
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '18',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: [
+              { value: passed, name: '通过', itemStyle: { color: '#2ecc71' } },
+              { value: failed, name: '失败', itemStyle: { color: '#e74c3c' } },
+              { value: pending, name: '待定', itemStyle: { color: '#f39c12' } }
+            ]
+          }
+        ]
+      };
+
+      // 使用配置项设置图表
+      chart.setOption(option);
+
+      // 添加点击事件
+      chart.on('click', function(params) {
+        showChartModal('测试结果统计', option);
+      });
+
+      // 添加右键菜单事件
+      container.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        showChartModal('测试结果统计', option);
+      });
+
+      console.log('测试结果图表渲染成功');
+    } catch (error) {
+      console.error('渲染测试结果图表时出错:', error);
+      const container = document.getElementById('results-chart-container');
+      if (container) {
+        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+      }
+    }
+  }
+
+  // 渲染历史趋势图表 - 使用ECharts
+  function renderHistoryTrendChart() {
+    try {
+      const container = document.getElementById('history-trend-container');
+      if (!container) {
+        console.error('找不到历史趋势图表容器');
+        return;
+      }
+
+      if (!reportData.historyTrend || !reportData.historyTrend.dates || reportData.historyTrend.dates.length === 0) {
+        container.innerHTML = '<div class="error-message">没有历史趋势数据</div>';
+        return;
+      }
+
+      const trend = reportData.historyTrend;
+      const dates = trend.dates;
+      const passed = trend.passed;
+      const failed = trend.failed;
+      const pending = trend.pending || Array(dates.length).fill(0);
+      const passRate = trend.passRate || Array(dates.length).fill(0).map((_, i) => {
+        const total = (passed[i] || 0) + (failed[i] || 0) + (pending[i] || 0);
+        return total > 0 ? Math.round((passed[i] / total) * 100) : 0;
+      });
+
+      // 初始化ECharts实例
+      const chart = echarts.init(container);
+
+      // 配置图表选项
+      const option = {
+        title: {
+          text: '历史趋势',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        legend: {
+          data: ['通过', '失败', '待定', '通过率'],
+          bottom: 'bottom'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: dates
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '测试数量',
+            position: 'left'
+          },
+          {
+            type: 'value',
+            name: '通过率 (%)',
+            position: 'right',
+            min: 0,
+            max: 100,
+            axisLabel: {
+              formatter: '{value}%'
+            }
+          }
+        ],
+        series: [
+          {
+            name: '通过',
+            type: 'bar',
+            stack: 'total',
+            emphasis: {
+              focus: 'series'
+            },
+            data: passed,
+            itemStyle: {
+              color: '#2ecc71'
+            }
+          },
+          {
+            name: '失败',
+            type: 'bar',
+            stack: 'total',
+            emphasis: {
+              focus: 'series'
+            },
+            data: failed,
+            itemStyle: {
+              color: '#e74c3c'
+            }
+          },
+          {
+            name: '待定',
+            type: 'bar',
+            stack: 'total',
+            emphasis: {
+              focus: 'series'
+            },
+            data: pending,
+            itemStyle: {
+              color: '#f39c12'
+            }
+          },
+          {
+            name: '通过率',
+            type: 'line',
+            yAxisIndex: 1,
+            data: passRate,
+            symbol: 'circle',
+            symbolSize: 8,
+            lineStyle: {
+              width: 3,
+              color: '#3498db'
+            },
+            itemStyle: {
+              color: '#3498db'
+            }
+          }
+        ]
+      };
+
+      // 使用配置项设置图表
+      chart.setOption(option);
+
+      // 添加点击事件
+      chart.on('click', function(params) {
+        showChartModal('历史趋势', option);
+      });
+
+      // 添加右键菜单事件
+      container.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        showChartModal('历史趋势', option);
+      });
+
+      console.log('历史趋势图表渲染成功');
+    } catch (error) {
+      console.error('渲染历史趋势图表时出错:', error);
+      const container = document.getElementById('history-trend-container');
+      if (container) {
+        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+      }
+    }
+  }
+
+  // 显示图表模态框
+  function showChartModal(title, option) {
+    const modal = document.getElementById('image-modal');
+    const container = document.getElementById('modal-chart-container');
+
+    // 显示模态框
+    modal.style.display = 'block';
+
+    // 初始化ECharts实例
+    const chart = echarts.init(container);
+
+    // 更新标题
+    option.title = {
+      text: title,
+      left: 'center'
+    };
+
+    // 使用配置项设置图表
+    chart.setOption(option);
+
+    // 调整大小
+    chart.resize();
+  }
+
+  // 设置模态框事件
+  function setupModalEvents() {
+    const modal = document.getElementById('image-modal');
+    const closeButton = document.querySelector('.close-button');
+    const saveButton = document.getElementById('save-image-button');
+
+    // 关闭按钮点击事件
+    closeButton.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+
+    // 点击模态框外部关闭
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // 保存图表按钮点击事件
+    saveButton.addEventListener('click', function() {
+      const container = document.getElementById('modal-chart-container');
+      const chart = echarts.getInstanceByDom(container);
+
+      if (chart) {
+        // 获取图表的数据URL
+        const url = chart.getDataURL({
+          type: 'png',
+          pixelRatio: 2,
+          backgroundColor: '#fff'
+        });
+
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = 'chart-' + new Date().getTime() + '.png';
+        link.href = url;
+        link.click();
+      }
+    });
+  }
+
+  // 设置打印按钮
+  function setupPrintButton() {
+    const printButton = document.getElementById('print-report-button');
+    if (printButton) {
+      printButton.addEventListener('click', function() {
+        window.print();
+      });
+    }
+  }
+
+  // 设置导出PDF按钮
+  function setupExportPdfButton() {
+    const exportButton = document.getElementById('export-pdf-button');
+    if (exportButton) {
+      exportButton.addEventListener('click', function() {
+        alert('PDF导出功能尚未实现');
+      });
+    }
+  }
+
+  // 初始化报告
+  function initReport() {
+    console.log('初始化测试报告...');
+
+    try {
+      // 填充报告元数据
+      fillReportMetadata();
+
+      // 填充软件信息
+      fillSoftwareInfo();
+
+      // 填充摘要信息
+      fillSummaryInfo();
+
+      // 填充测试元数据
+      fillTestMetadata();
+
+      // 渲染测试结果图表
+      renderResultsChart();
+
+      // 渲染历史趋势图表
+      if (reportData.historyTrend && reportData.historyTrend.dates) {
+        renderHistoryTrendChart();
+      } else {
+        document.getElementById('history-trend').style.display = 'none';
+      }
+
+      // 设置模态框事件
+      setupModalEvents();
+
+      // 设置打印按钮
+      setupPrintButton();
+
+      // 设置导出PDF按钮
+      setupExportPdfButton();
+
+      console.log('报告初始化完成');
+    } catch (error) {
+      console.error('初始化报告时发生错误:', error);
+      document.body.innerHTML = \`
+        <div class="error-container">
+          <h1>报告加载失败</h1>
+          <p>初始化报告时发生错误: \${error.message}</p>
+          <p>请刷新页面重试或联系技术支持。</p>
+          <pre>\${error.stack}</pre>
+        </div>
+      \`;
+    }
+  }
+
+  // 初始化报告
+  initReport();
+});`;
   }
 }
 

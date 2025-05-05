@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.3",
+    "foolcards-docs-generator": "file:",
     "highlight.js": "^11.11.1",
     "marked": "^5.1.2"
   },
