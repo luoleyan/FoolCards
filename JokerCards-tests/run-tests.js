@@ -20,7 +20,7 @@ const TEST_TYPES = {
 };
 
 // 运行测试
-function runTests(type, options = {}) {
+async function runTests(type, options = {}) {
   console.log(`=== 运行${getTestTypeName(type)}测试 ===`);
 
   try {
@@ -39,7 +39,7 @@ function runTests(type, options = {}) {
     execSync(command, { stdio: 'inherit' });
 
     // 生成测试报告
-    generateTestReport(type, options);
+    await generateTestReport(type, options);
 
     console.log(`\n✅ ${getTestTypeName(type)}测试完成\n`);
     return true;
@@ -48,7 +48,7 @@ function runTests(type, options = {}) {
 
     // 尝试生成失败报告
     try {
-      generateTestReport(type, options);
+      await generateTestReport(type, options);
     } catch (reportError) {
       console.error(`无法生成测试报告: ${reportError.message}`);
     }
@@ -110,7 +110,7 @@ function getTestTypeName(type) {
 }
 
 // 生成测试报告
-function generateTestReport(type, options = {}) {
+async function generateTestReport(type, options = {}) {
   console.log(`\n生成${getTestTypeName(type)}测试报告...\n`);
 
   try {
@@ -198,7 +198,7 @@ function generateTestReport(type, options = {}) {
 
     // 处理测试结果并生成报告
     const processor = new TestResultsProcessor();
-    processor.process(testResults, {
+    await processor.process(testResults, {
       testType: type,
       generatePdf: options.generatePdf || false,
       useECharts: options.useECharts || false,
@@ -239,7 +239,7 @@ function showHelp() {
 }
 
 // 主函数
-function main() {
+async function main() {
   // 获取命令行参数
   const args = process.argv.slice(2);
 
@@ -280,9 +280,12 @@ function main() {
   if (testType === 'compatibility') {
     runCompatibilityTest();
   } else {
-    runTests(testType, { generatePdf, useECharts });
+    await runTests(testType, { generatePdf, useECharts });
   }
 }
 
 // 执行主函数
-main();
+main().catch(error => {
+  console.error('运行测试时出错:', error);
+  process.exit(1);
+});

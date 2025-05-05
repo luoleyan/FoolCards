@@ -16,13 +16,16 @@ class TestResultsProcessor {
    * 处理测试结果
    * @param {Object} results - Jest测试结果对象
    * @param {Object} options - 处理选项
-   * @returns {Object} 处理后的测试结果
+   * @returns {Promise<Object>} 处理后的测试结果
    */
-  process(results, options = {}) {
-    const { testType = 'all', generatePdf = false } = options;
+  async process(results, options = {}) {
+    const { testType = 'all', generatePdf = false, useECharts = false } = options;
 
     // 生成HTML报告
-    const reportPath = this.reportGenerator.generateReport(results, testType, { generatePdf });
+    const reportPath = await this.reportGenerator.generateReport(results, testType, {
+      generatePdf,
+      useECharts
+    });
 
     // 保存原始测试结果
     this._saveRawResults(results, testType);

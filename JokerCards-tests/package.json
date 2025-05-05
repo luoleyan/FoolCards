@@ -37,6 +37,7 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "jokercards-tests": "file:"
   }
 }

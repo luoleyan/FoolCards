@@ -14,6 +14,7 @@ const TestHistoryManager = require('./test-history-manager');
 const TestDefectAnalyzer = require('./test-defect-analyzer');
 const PerformanceAnalyzer = require('./performance-analyzer');
 const testMetadata = require('./test-metadata');
+const ExcelGenerator = require('./excel-generator');
 
 class TestReportGenerator {
   constructor() {
@@ -38,7 +39,7 @@ class TestReportGenerator {
    * @param {Object} options - 选项
    * @returns {string} 生成的报告HTML文件路径
    */
-  generateReport(testResults, testType, options = {}) {
+  async generateReport(testResults, testType, options = {}) {
     console.log(`正在生成${testType}测试报告...`);
 
     // 保存原始结果，供其他方法使用
@@ -63,6 +64,13 @@ class TestReportGenerator {
       historyTrend,
       options,
     });
+
+    // 生成Excel文件
+    try {
+      await this._generateExcelFiles(reportData);
+    } catch (error) {
+      console.error('生成Excel文件时出错:', error);
+    }
 
     // 确定使用哪种图表库
     const useECharts = options.useECharts || false;
@@ -253,9 +261,6 @@ class TestReportGenerator {
     // 获取改进措施
     const improvements = this._getImprovements();
 
-    // 获取附件资料
-    const attachments = this._getAttachments();
-
     // 获取测试用例表数据
     const testCasesTable = this._getTestCasesTable(this.rawResults);
 
@@ -274,6 +279,50 @@ class TestReportGenerator {
       failed: failedTests,
       total: totalTests,
     });
+
+    // 准备附件列表
+    const attachments = [];
+
+    // 基本附件
+    attachments.push(
+      { name: 'FoolCards测试计划文档.pdf', url: '#', type: 'pdf' },
+      { name: 'FoolCards性能测试报告.pdf', url: '#', type: 'pdf' },
+      { name: 'FoolCards测试环境配置.txt', url: '#', type: 'text' },
+      { name: 'FoolCards测试结果截图.png', url: '#', type: 'image' },
+      { name: 'FoolCards测试总结报告.docx', url: '#', type: 'word' }
+    );
+
+    // 添加Excel文件附件
+    // 测试用例表Excel
+    attachments.push({
+      name: 'FoolCards测试用例清单.xlsx',
+      url: 'excel/FoolCards测试用例清单.xlsx',
+      type: 'excel',
+    });
+
+    // 决策表Excel
+    attachments.push({
+      name: 'FoolCards决策表.xlsx',
+      url: 'excel/FoolCards决策表.xlsx',
+      type: 'excel',
+    });
+
+    // 需求追踪矩阵Excel
+    attachments.push({
+      name: 'FoolCards需求追踪矩阵.xlsx',
+      url: 'excel/FoolCards需求追踪矩阵.xlsx',
+      type: 'excel',
+    });
+
+    // 缺陷跟踪表Excel
+    attachments.push({
+      name: 'FoolCards缺陷跟踪记录.xlsx',
+      url: 'excel/FoolCards缺陷跟踪记录.xlsx',
+      type: 'excel',
+    });
+
+    // 输出附件列表，用于调试
+    console.log('附件列表:', attachments);
 
     return {
       title: `${this._getTestTypeName(testType)}测试报告`,
@@ -369,6 +418,41 @@ class TestReportGenerator {
     // 确保assets目录存在
     const assetsDir = path.join(this.reportDir, 'assets');
     this._ensureDirectoryExists(assetsDir);
+
+    // 确保Excel目录存在
+    const excelDir = path.join(this.reportDir, 'excel');
+    this._ensureDirectoryExists(excelDir);
+
+    // 复制Excel文件到报告目录的excel子目录
+    if (this.excelFiles) {
+      // 复制测试用例表Excel
+      if (this.excelFiles.testCasesExcelPath && fs.existsSync(this.excelFiles.testCasesExcelPath)) {
+        const destPath = path.join(excelDir, 'FoolCards测试用例清单.xlsx');
+        console.log(`复制Excel文件: ${this.excelFiles.testCasesExcelPath} -> ${destPath}`);
+        fs.copyFileSync(this.excelFiles.testCasesExcelPath, destPath);
+      }
+
+      // 复制决策表Excel
+      if (this.excelFiles.decisionTableExcelPath && fs.existsSync(this.excelFiles.decisionTableExcelPath)) {
+        const destPath = path.join(excelDir, 'FoolCards决策表.xlsx');
+        console.log(`复制Excel文件: ${this.excelFiles.decisionTableExcelPath} -> ${destPath}`);
+        fs.copyFileSync(this.excelFiles.decisionTableExcelPath, destPath);
+      }
+
+      // 复制需求追踪矩阵Excel
+      if (this.excelFiles.requirementMatrixExcelPath && fs.existsSync(this.excelFiles.requirementMatrixExcelPath)) {
+        const destPath = path.join(excelDir, 'FoolCards需求追踪矩阵.xlsx');
+        console.log(`复制Excel文件: ${this.excelFiles.requirementMatrixExcelPath} -> ${destPath}`);
+        fs.copyFileSync(this.excelFiles.requirementMatrixExcelPath, destPath);
+      }
+
+      // 复制缺陷跟踪表Excel
+      if (this.excelFiles.defectTrackingExcelPath && fs.existsSync(this.excelFiles.defectTrackingExcelPath)) {
+        const destPath = path.join(excelDir, 'FoolCards缺陷跟踪记录.xlsx');
+        console.log(`复制Excel文件: ${this.excelFiles.defectTrackingExcelPath} -> ${destPath}`);
+        fs.copyFileSync(this.excelFiles.defectTrackingExcelPath, destPath);
+      }
+    }
 
     // 复制CSS文件
     try {
@@ -2024,49 +2108,74 @@ document.addEventListener('contextmenu', function(e) {
   }
 
   /**
-   * 获取附件资料
-   * @returns {Array} 附件资料
+   * 生成Excel文件
+   * @param {Object} reportData - 报告数据
+   * @returns {Promise<Object>} 生成的Excel文件路径
    * @private
    */
-  _getAttachments() {
-    return [
-      {
-        name: 'FoolCards测试计划文档.pdf',
-        url: '#',
-        type: 'pdf',
-      },
-      {
-        name: 'FoolCards测试用例清单.xlsx',
-        url: '#',
-        type: 'excel',
-      },
-      {
-        name: 'FoolCards缺陷跟踪记录.xlsx',
-        url: '#',
-        type: 'excel',
-      },
-      {
-        name: 'FoolCards性能测试报告.pdf',
-        url: '#',
-        type: 'pdf',
-      },
-      {
-        name: 'FoolCards测试环境配置.txt',
-        url: '#',
-        type: 'text',
-      },
-      {
-        name: 'FoolCards测试结果截图.png',
-        url: '#',
-        type: 'image',
-      },
-      {
-        name: 'FoolCards测试总结报告.docx',
-        url: '#',
-        type: 'word',
-      },
-    ];
+  async _generateExcelFiles(reportData) {
+    console.log('正在生成Excel文件...');
+
+    // 创建Excel文件目录
+    const excelDir = path.join(this.reportDir, 'excel');
+    this._ensureDirectoryExists(excelDir);
+
+    // 生成测试用例表Excel
+    let testCasesExcelPath = null;
+    if (reportData.testCasesTable && reportData.testCasesTable.length > 0) {
+      try {
+        testCasesExcelPath = await ExcelGenerator.generateTestCasesExcel(excelDir, reportData.testCasesTable);
+        console.log(`测试用例表Excel已生成: ${testCasesExcelPath}`);
+      } catch (error) {
+        console.error('生成测试用例表Excel时出错:', error);
+      }
+    }
+
+    // 生成决策表Excel
+    let decisionTableExcelPath = null;
+    if (reportData.decisionTable && reportData.decisionTable.headers && reportData.decisionTable.scenarios) {
+      try {
+        decisionTableExcelPath = await ExcelGenerator.generateDecisionTableExcel(excelDir, reportData.decisionTable);
+        console.log(`决策表Excel已生成: ${decisionTableExcelPath}`);
+      } catch (error) {
+        console.error('生成决策表Excel时出错:', error);
+      }
+    }
+
+    // 生成需求追踪矩阵Excel
+    let requirementMatrixExcelPath = null;
+    if (reportData.requirementMatrix && reportData.requirementMatrix.length > 0) {
+      try {
+        requirementMatrixExcelPath = await ExcelGenerator.generateRequirementMatrixExcel(excelDir, reportData.requirementMatrix);
+        console.log(`需求追踪矩阵Excel已生成: ${requirementMatrixExcelPath}`);
+      } catch (error) {
+        console.error('生成需求追踪矩阵Excel时出错:', error);
+      }
+    }
+
+    // 生成缺陷跟踪表Excel
+    let defectTrackingExcelPath = null;
+    if (reportData.defectTrackingTable && reportData.defectTrackingTable.length > 0) {
+      try {
+        defectTrackingExcelPath = await ExcelGenerator.generateDefectTrackingExcel(excelDir, reportData.defectTrackingTable);
+        console.log(`缺陷跟踪表Excel已生成: ${defectTrackingExcelPath}`);
+      } catch (error) {
+        console.error('生成缺陷跟踪表Excel时出错:', error);
+      }
+    }
+
+    // 保存Excel文件路径，供附件列表使用
+    this.excelFiles = {
+      testCasesExcelPath,
+      decisionTableExcelPath,
+      requirementMatrixExcelPath,
+      defectTrackingExcelPath,
+    };
+
+    return this.excelFiles;
   }
+
+
 
   /**
    * 获取测试用例表数据

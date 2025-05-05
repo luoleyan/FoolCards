@@ -848,15 +848,47 @@ document.addEventListener('DOMContentLoaded', () => {
   function fillAttachments() {
     if (!reportData.attachments || reportData.attachments.length === 0) {
       document.getElementById('attachments').style.display = 'none';
+      console.warn('没有附件数据');
       return;
     }
+
+    console.log('附件数据:', reportData.attachments);
 
     const attachmentList = document.getElementById('attachment-list');
     for (const attachment of reportData.attachments) {
       const li = document.createElement('li');
-      li.innerHTML = `<a href="${attachment.url}" target="_blank" class="attachment-link ${attachment.type}">${attachment.name}</a>`;
+
+      // 创建链接元素
+      const link = document.createElement('a');
+      link.href = attachment.url;
+      link.className = `attachment-link ${attachment.type}`;
+      link.textContent = attachment.name;
+
+      // 添加download属性，使链接变成下载链接
+      link.setAttribute('download', attachment.name);
+
+      // 添加点击事件处理程序
+      link.addEventListener('click', (e) => {
+        // 如果URL是#（占位符），阻止默认行为并显示提示
+        if (attachment.url === '#') {
+          e.preventDefault();
+          alert('此附件暂不可用，请稍后再试。');
+        } else {
+          console.log(`点击下载附件: ${attachment.name}, URL: ${attachment.url}`);
+        }
+      });
+
+      // 添加调试信息
+      console.log(`添加附件: ${attachment.name}, URL: ${attachment.url}, 类型: ${attachment.type}`);
+
+      li.appendChild(link);
       attachmentList.appendChild(li);
     }
+
+    // 添加附件列表标题
+    const attachmentTitle = document.createElement('h4');
+    attachmentTitle.textContent = `附件列表 (共${reportData.attachments.length}项)`;
+    attachmentList.parentNode.insertBefore(attachmentTitle, attachmentList);
   }
 
   // 渲染测试用例分布图表 - 使用ECharts
