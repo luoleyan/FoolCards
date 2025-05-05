@@ -20,7 +20,7 @@ class GameManager extends mockCocos.Component {
     this.playAreas = playAreas || [
       new mockCocos.Node('PlayArea0'),
       new mockCocos.Node('PlayArea1'),
-      new mockCocos.Node('PlayArea2')
+      new mockCocos.Node('PlayArea2'),
     ];
     this.exchangeArea = exchangeArea || new mockCocos.Node('ExchangeArea');
 
@@ -84,9 +84,21 @@ class GameManager extends mockCocos.Component {
     this.deck = [];
 
     const suits = [CardSuit.Spade, CardSuit.Heart, CardSuit.Club, CardSuit.Diamond];
-    const ranks = [CardRank.Ace, CardRank.Two, CardRank.Three, CardRank.Four,
-                  CardRank.Five, CardRank.Six, CardRank.Seven, CardRank.Eight,
-                  CardRank.Nine, CardRank.Ten, CardRank.Jack, CardRank.Queen, CardRank.King];
+    const ranks = [
+      CardRank.Ace,
+      CardRank.Two,
+      CardRank.Three,
+      CardRank.Four,
+      CardRank.Five,
+      CardRank.Six,
+      CardRank.Seven,
+      CardRank.Eight,
+      CardRank.Nine,
+      CardRank.Ten,
+      CardRank.Jack,
+      CardRank.Queen,
+      CardRank.King,
+    ];
 
     for (const suit of suits) {
       for (const rank of ranks) {
@@ -220,7 +232,7 @@ class GameManager extends mockCocos.Component {
     console.log(`出牌: ${card.getFullName ? card.getFullName() : '未知卡牌'} 到场地 ${areaIndex}`);
 
     // 检查场地区域是否已满（最多4张卡牌）
-    if (playArea.children.filter(c => c.name === 'PlayerCard').length < 4) {
+    if (playArea.children.filter((c) => c.name === 'PlayerCard').length < 4) {
       // 将卡牌添加到场地区域
       playArea.addChild(card);
       card.name = 'PlayerCard';
@@ -273,16 +285,26 @@ class GameManager extends mockCocos.Component {
     // 基础分数：每张牌的点数
     let score = 0;
     for (const card of cards) {
-      if (card.rank === CardRank.Ace) score += 1;
-      else if (card.rank === CardRank.Jack) score += 11;
-      else if (card.rank === CardRank.Queen) score += 12;
-      else if (card.rank === CardRank.King) score += 13;
-      else score += parseInt(card.rank) || 0;
+      if (card.rank === CardRank.Ace) {
+        score += 1;
+      } else if (card.rank === CardRank.Jack) {
+        score += 11;
+      } else if (card.rank === CardRank.Queen) {
+        score += 12;
+      } else if (card.rank === CardRank.King) {
+        score += 13;
+      } else {
+        score += parseInt(card.rank) || 0;
+      }
     }
 
     // 牌型加分
-    if (this.checkSameSuit(cards)) score += 10; // 同花
-    if (this.checkSequence(cards)) score += 15; // 顺子
+    if (this.checkSameSuit(cards)) {
+      score += 10;
+    } // 同花
+    if (this.checkSequence(cards)) {
+      score += 15;
+    } // 顺子
 
     // 应用场景效果
     if (this._revealedEffects > areaIndex && this.sceneEffects[areaIndex]) {
@@ -309,14 +331,18 @@ class GameManager extends mockCocos.Component {
 
   // 检查是否同花
   checkSameSuit(cards) {
-    if (cards.length < 2) return false;
+    if (cards.length < 2) {
+      return false;
+    }
     const suit = cards[0].suit;
-    return cards.every(card => card.suit === suit);
+    return cards.every((card) => card.suit === suit);
   }
 
   // 检查是否顺子
   checkSequence(cards) {
-    if (cards.length < 3) return false;
+    if (cards.length < 3) {
+      return false;
+    }
     // 简化的顺子检测
     return true;
   }
@@ -339,35 +365,37 @@ class GameManager extends mockCocos.Component {
       return false;
     }
 
-    console.log("=================== 回合结束处理开始 ===================");
+    console.log('=================== 回合结束处理开始 ===================');
     console.log(`当前回合: ${this.currentRound}/${this.maxRounds}`);
 
     // 重置回合状态
     this.resetCardPlayCount();
 
     // 记录玩家在各场地的出牌情况
-    console.log("玩家在各场地的出牌情况:");
+    console.log('玩家在各场地的出牌情况:');
     for (let i = 0; i < this.playAreas.length; i++) {
       const hasPlayed = this.playerPlayedInArea[i];
-      const cardCount = hasPlayed ? this.playAreas[i].children.filter(child => child.name === 'PlayerCard').length : 0;
-      console.log(`- 场地${i+1}: ${hasPlayed ? '已出牌' : '未出牌'} (${cardCount}张)`);
+      const cardCount = hasPlayed
+        ? this.playAreas[i].children.filter((child) => child.name === 'PlayerCard').length
+        : 0;
+      console.log(`- 场地${i + 1}: ${hasPlayed ? '已出牌' : '未出牌'} (${cardCount}张)`);
     }
 
     // AI机器人出牌
-    console.log("AI机器人开始出牌");
+    console.log('AI机器人开始出牌');
     if (this.aiOpponent) {
       this.aiOpponent.playCards(this.maxCardsPerTurn);
     } else {
-      console.error("AI对手组件未初始化");
+      console.error('AI对手组件未初始化');
     }
 
     // 计算所有场地的分数
-    console.log("计算所有场地的分数:");
+    console.log('计算所有场地的分数:');
     let totalPlayerScore = 0;
     let totalOpponentScore = 0;
 
     for (let i = 0; i < this.playAreas.length; i++) {
-      console.log(`计算场地${i+1}的分数:`);
+      console.log(`计算场地${i + 1}的分数:`);
 
       // 计算玩家分数
       const oldPlayerScore = this.areaScores[i];
@@ -406,7 +434,7 @@ class GameManager extends mockCocos.Component {
       this.startNewRound();
     }
 
-    console.log("=================== 回合结束处理完成 ===================");
+    console.log('=================== 回合结束处理完成 ===================');
     return true;
   }
 
@@ -418,7 +446,7 @@ class GameManager extends mockCocos.Component {
 
   // 显示游戏结束
   showGameOver() {
-    console.log("游戏结束");
+    console.log('游戏结束');
 
     // 标记游戏已结束
     this.isGameOver = true;
@@ -433,11 +461,11 @@ class GameManager extends mockCocos.Component {
 
     // 确定胜负
     if (finalPlayerScore > finalOpponentScore) {
-      this.gameResult = "玩家胜利";
+      this.gameResult = '玩家胜利';
     } else if (finalPlayerScore < finalOpponentScore) {
-      this.gameResult = "对手胜利";
+      this.gameResult = '对手胜利';
     } else {
-      this.gameResult = "平局";
+      this.gameResult = '平局';
     }
 
     console.log(`游戏结果: ${this.gameResult}`);
@@ -513,11 +541,11 @@ class GameManager extends mockCocos.Component {
   // 确定游戏结果
   determineGameResult() {
     if (this.playerScore > this.opponentScore) {
-      this.gameResult = "玩家胜利";
+      this.gameResult = '玩家胜利';
     } else if (this.playerScore < this.opponentScore) {
-      this.gameResult = "对手胜利";
+      this.gameResult = '对手胜利';
     } else {
-      this.gameResult = "平局";
+      this.gameResult = '平局';
     }
     return this.gameResult;
   }
@@ -531,5 +559,5 @@ class GameManager extends mockCocos.Component {
 }
 
 module.exports = {
-  GameManager
+  GameManager,
 };

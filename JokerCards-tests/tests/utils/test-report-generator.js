@@ -61,7 +61,7 @@ class TestReportGenerator {
       defectAnalysis,
       performanceAnalysis,
       historyTrend,
-      options
+      options,
     });
 
     // 确定使用哪种图表库
@@ -106,7 +106,7 @@ class TestReportGenerator {
         numPendingTests: 0,
         numTotalTests: 0,
         startTime: Date.now() - 1000,
-        endTime: Date.now()
+        endTime: Date.now(),
       };
     }
 
@@ -116,9 +116,10 @@ class TestReportGenerator {
     const failedTests = testResults.numFailedTests || 0;
     const pendingTests = testResults.numPendingTests || 0;
     const totalTests = testResults.numTotalTests || 0;
-    const testDuration = testResults.startTime && testResults.endTime
-      ? ((testResults.endTime - testResults.startTime) / 1000).toFixed(2)
-      : 0;
+    const testDuration =
+      testResults.startTime && testResults.endTime
+        ? ((testResults.endTime - testResults.startTime) / 1000).toFixed(2)
+        : 0;
 
     // 获取覆盖率数据
     let coverageData = null;
@@ -130,7 +131,7 @@ class TestReportGenerator {
           statements: coverageSummary.total.statements.pct,
           branches: coverageSummary.total.branches.pct,
           functions: coverageSummary.total.functions.pct,
-          lines: coverageSummary.total.lines.pct
+          lines: coverageSummary.total.lines.pct,
         };
       }
     } catch (error) {
@@ -145,30 +146,32 @@ class TestReportGenerator {
         if (suite && suite.testFilePath) {
           console.warn(`套件 ${suite.testFilePath} 没有测试结果数据`);
         } else {
-          console.warn(`套件没有测试结果数据`);
+          console.warn('套件没有测试结果数据');
         }
         continue;
       }
 
       const tests = [];
       for (const test of suite.testResults) {
-        if (!test) continue;
+        if (!test) {
+          continue;
+        }
 
         tests.push({
           title: test.title || '未命名测试',
           status: test.status || 'unknown',
           duration: test.duration ? (test.duration / 1000).toFixed(2) : '0.00',
-          failureMessages: test.failureMessages || []
+          failureMessages: test.failureMessages || [],
         });
       }
 
       suites.push({
         name: suite.testFilePath ? suite.testFilePath.replace(process.cwd(), '') : '未知文件路径',
         tests,
-        passed: tests.filter(t => t.status === 'passed').length,
-        failed: tests.filter(t => t.status === 'failed').length,
-        pending: tests.filter(t => t.status === 'pending').length,
-        total: tests.length
+        passed: tests.filter((t) => t.status === 'passed').length,
+        failed: tests.filter((t) => t.status === 'failed').length,
+        pending: tests.filter((t) => t.status === 'pending').length,
+        total: tests.length,
       });
     }
 
@@ -197,7 +200,7 @@ class TestReportGenerator {
     if (analysisData.performanceAnalysis && analysisData.performanceAnalysis.recommendations) {
       recommendations.push({
         issue: testMetadata.recommendationTemplates.performance.issue,
-        recommendation: testMetadata.recommendationTemplates.performance.recommendation
+        recommendation: testMetadata.recommendationTemplates.performance.recommendation,
       });
     }
 
@@ -205,14 +208,14 @@ class TestReportGenerator {
     if (analysisData.defectAnalysis && analysisData.defectAnalysis.totalDefects > 0) {
       recommendations.push({
         issue: `发现${analysisData.defectAnalysis.totalDefects}个测试缺陷，可能影响游戏功能。`,
-        recommendation: '建议根据缺陷分析结果，优先修复高频率出现的问题。'
+        recommendation: '建议根据缺陷分析结果，优先修复高频率出现的问题。',
       });
     }
 
     // 添加通用建议
     recommendations.push({
       issue: testMetadata.recommendationTemplates.maintainability.issue,
-      recommendation: testMetadata.recommendationTemplates.maintainability.recommendation
+      recommendation: testMetadata.recommendationTemplates.maintainability.recommendation,
     });
 
     // 生成报告编号
@@ -252,7 +255,7 @@ class TestReportGenerator {
     const conclusionData = this._getConclusion({
       passed: passedTests,
       failed: failedTests,
-      total: totalTests
+      total: totalTests,
     });
 
     return {
@@ -270,7 +273,7 @@ class TestReportGenerator {
         pending: pendingTests,
         total: totalTests,
         duration: testDuration,
-        success: failedTests === 0
+        success: failedTests === 0,
       },
       coverage: coverageData,
       suites,
@@ -278,7 +281,7 @@ class TestReportGenerator {
         purpose: metadata.purpose,
         scope: metadata.scope,
         methods: metadata.methods,
-        environment: metadata.environment
+        environment: metadata.environment,
       },
       testPlan,
       testCases,
@@ -289,11 +292,11 @@ class TestReportGenerator {
       riskAnalysis,
       conclusion: conclusionData || {
         text: conclusion,
-        outlook: outlook
+        outlook,
       },
       recommendations,
       improvements,
-      attachments
+      attachments,
     };
   }
 
@@ -317,7 +320,7 @@ class TestReportGenerator {
     }
 
     // 替换模板变量
-    let html = template
+    const html = template
       .replace(/\{\{TITLE\}\}/g, reportData.title)
       .replace(/\{\{TIMESTAMP\}\}/g, reportData.timestamp)
       .replace(/\{\{TEST_TYPE\}\}/g, reportData.testType)
@@ -373,11 +376,66 @@ class TestReportGenerator {
       fs.writeFileSync(targetJsPath, defaultScripts, 'utf8');
     }
 
+    // 复制增强图表相关文件
+    const enhancedChartFiles = [
+      {
+        src: path.join(this.reportDir, 'assets', 'echarts-theme.js'),
+        dest: path.join(assetsDir, 'echarts-theme.js'),
+        templateSrc: path.join(this.templateDir, '../..', 'test-results', 'assets', 'echarts-theme.js'),
+      },
+      {
+        src: path.join(this.reportDir, 'assets', 'enhanced-charts.js'),
+        dest: path.join(assetsDir, 'enhanced-charts.js'),
+        templateSrc: path.join(this.templateDir, '../..', 'test-results', 'assets', 'enhanced-charts.js'),
+      },
+      {
+        src: path.join(this.reportDir, 'assets', 'chart-filters.js'),
+        dest: path.join(assetsDir, 'chart-filters.js'),
+        templateSrc: path.join(this.templateDir, '../..', 'test-results', 'assets', 'chart-filters.js'),
+      },
+      {
+        src: path.join(this.reportDir, 'assets', 'mobile-optimizations.css'),
+        dest: path.join(assetsDir, 'mobile-optimizations.css'),
+        templateSrc: path.join(this.templateDir, '../..', 'test-results', 'assets', 'mobile-optimizations.css'),
+      },
+    ];
+
+    for (const file of enhancedChartFiles) {
+      try {
+        // 首先尝试从模板目录复制
+        if (fs.existsSync(file.templateSrc)) {
+          fs.copyFileSync(file.templateSrc, file.dest);
+          console.log(`从模板目录复制文件: ${file.templateSrc} -> ${file.dest}`);
+        }
+        // 如果模板目录中没有，但目标目录中已存在，则保留
+        else if (fs.existsSync(file.src)) {
+          // 如果源文件和目标文件不同，才复制
+          if (file.src !== file.dest) {
+            fs.copyFileSync(file.src, file.dest);
+            console.log(`复制现有文件: ${file.src} -> ${file.dest}`);
+          }
+        } else {
+          console.warn(`增强图表文件不存在: ${file.templateSrc}`);
+        }
+      } catch (error) {
+        console.warn(`无法复制增强图表文件 ${file.templateSrc || file.src}:`, error.message);
+      }
+    }
+
     // 复制PDF生成相关库文件
     const libFiles = [
-      { src: path.join(this.reportDir, 'assets', 'jspdf.min.js'), dest: path.join(assetsDir, 'jspdf.min.js') },
-      { src: path.join(this.reportDir, 'assets', 'html2canvas.min.js'), dest: path.join(assetsDir, 'html2canvas.min.js') },
-      { src: path.join(this.reportDir, 'assets', 'html2pdf.min.js'), dest: path.join(assetsDir, 'html2pdf.min.js') }
+      {
+        src: path.join(this.reportDir, 'assets', 'jspdf.min.js'),
+        dest: path.join(assetsDir, 'jspdf.min.js'),
+      },
+      {
+        src: path.join(this.reportDir, 'assets', 'html2canvas.min.js'),
+        dest: path.join(assetsDir, 'html2canvas.min.js'),
+      },
+      {
+        src: path.join(this.reportDir, 'assets', 'html2pdf.min.js'),
+        dest: path.join(assetsDir, 'html2pdf.min.js'),
+      },
     ];
 
     for (const file of libFiles) {
@@ -403,14 +461,22 @@ class TestReportGenerator {
    */
   _getTestTypeName(type) {
     switch (type) {
-      case 'unit': return '单元';
-      case 'functional': return '功能';
-      case 'performance': return '性能';
-      case 'system': return '系统';
-      case 'blackbox': return '黑盒';
-      case 'whitebox': return '白盒';
-      case 'all': return '所有';
-      default: return type;
+      case 'unit':
+        return '单元';
+      case 'functional':
+        return '功能';
+      case 'performance':
+        return '性能';
+      case 'system':
+        return '系统';
+      case 'blackbox':
+        return '黑盒';
+      case 'whitebox':
+        return '白盒';
+      case 'all':
+        return '所有';
+      default:
+        return type;
     }
   }
 
@@ -1552,8 +1618,10 @@ document.addEventListener('contextmenu', function(e) {
    */
   _generateReportId(testType) {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return testType.toUpperCase() + '-' + date + '-' + random;
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `${testType.toUpperCase()}-${date}-${random}`;
   }
 
   /**
@@ -1594,13 +1662,13 @@ document.addEventListener('contextmenu', function(e) {
             '多种卡牌效果',
             '游戏场地效果',
             'AI对手系统',
-            '卡牌交换机制'
+            '卡牌交换机制',
           ],
           version: {
             number: packageJson.version || '1.0.0',
             buildDate: new Date().toISOString().slice(0, 10),
-            releaseType: 'Beta'
-          }
+            releaseType: 'Beta',
+          },
         };
       }
     } catch (error) {
@@ -1610,18 +1678,12 @@ document.addEventListener('contextmenu', function(e) {
     // 默认信息
     return {
       description: '测试套件 for FoolCards 游戏',
-      features: [
-        '回合制卡牌对战',
-        '多种卡牌效果',
-        '游戏场地效果',
-        'AI对手系统',
-        '卡牌交换机制'
-      ],
+      features: ['回合制卡牌对战', '多种卡牌效果', '游戏场地效果', 'AI对手系统', '卡牌交换机制'],
       version: {
         number: '1.0.0',
         buildDate: new Date().toISOString().slice(0, 10),
-        releaseType: 'Beta'
-      }
+        releaseType: 'Beta',
+      },
     };
   }
 
@@ -1657,13 +1719,13 @@ document.addEventListener('contextmenu', function(e) {
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
-      return year + '-' + month + '-' + day;
+      return `${year}-${month}-${day}`;
     };
 
     // 生成测试计划时间表
-    const scheduleText = '<p>测试计划于' + currentYear + '年第' + currentQuarter +
-                         '季度执行，从 ' + formatDate(startDate) + ' 到 ' +
-                         formatDate(endDate) + '，预计持续2周时间。</p>';
+    const scheduleText = `<p>测试计划于${currentYear}年第${currentQuarter}季度执行，从 ${formatDate(
+      startDate,
+    )} 到 ${formatDate(endDate)}，预计持续2周时间。</p>`;
 
     // 如果测试元数据中有测试计划，使用它，否则使用默认计划
     if (!metadata.plan) {
@@ -1671,11 +1733,11 @@ document.addEventListener('contextmenu', function(e) {
         phases: [
           { name: '准备阶段', description: '准备测试环境和测试数据' },
           { name: '执行阶段', description: '执行测试用例并记录结果' },
-          { name: '分析阶段', description: '分析测试结果并生成报告' }
+          { name: '分析阶段', description: '分析测试结果并生成报告' },
         ],
         schedule: scheduleText,
         resources: '<p>测试团队：2名测试工程师<br>测试环境：开发环境和测试环境</p>',
-        risks: '<p>主要风险：测试环境不稳定可能导致测试结果不准确。</p>'
+        risks: '<p>主要风险：测试环境不稳定可能导致测试结果不准确。</p>',
       };
     }
 
@@ -1701,7 +1763,7 @@ document.addEventListener('contextmenu', function(e) {
         manual: 0,
         coverage: 0,
         distribution: [],
-        priority: { high: 0, medium: 0, low: 0 }
+        priority: { high: 0, medium: 0, low: 0 },
       };
     }
 
@@ -1727,14 +1789,14 @@ document.addEventListener('contextmenu', function(e) {
       { category: '性能测试', count: Math.floor(totalTests * 0.2) },
       { category: '兼容性测试', count: Math.floor(totalTests * 0.1) },
       { category: '安全测试', count: Math.floor(totalTests * 0.1) },
-      { category: '其他', count: Math.floor(totalTests * 0.1) }
+      { category: '其他', count: Math.floor(totalTests * 0.1) },
     ];
 
     // 生成测试用例优先级数据
     const priority = {
       high: Math.floor(totalTests * 0.3),
       medium: Math.floor(totalTests * 0.5),
-      low: Math.floor(totalTests * 0.2)
+      low: Math.floor(totalTests * 0.2),
     };
 
     return {
@@ -1743,7 +1805,7 @@ document.addEventListener('contextmenu', function(e) {
       manual: manualTests,
       coverage: 85, // 假设测试覆盖率为85%
       distribution,
-      priority
+      priority,
     };
   }
 
@@ -1755,25 +1817,23 @@ document.addEventListener('contextmenu', function(e) {
    */
   _getExecutionRecord(results) {
     // 获取测试开始和结束时间
-    const startTime = results && results.startTime
-      ? new Date(results.startTime)
-      : new Date(Date.now() - 1000 * 60 * 5); // 如果没有开始时间，假设是5分钟前开始的
+    const startTime =
+      results && results.startTime
+        ? new Date(results.startTime)
+        : new Date(Date.now() - 1000 * 60 * 5); // 如果没有开始时间，假设是5分钟前开始的
 
-    const endTime = results && results.endTime
-      ? new Date(results.endTime)
-      : new Date(); // 如果没有结束时间，使用当前时间
+    const endTime = results && results.endTime ? new Date(results.endTime) : new Date(); // 如果没有结束时间，使用当前时间
 
     // 格式化时间
-    const formatDateTime = (date) => {
-      return date.toLocaleString('zh-CN', {
+    const formatDateTime = (date) =>
+      date.toLocaleString('zh-CN', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
       });
-    };
 
     // 计算测试持续时间（毫秒）
     const duration = endTime.getTime() - startTime.getTime();
@@ -1787,35 +1847,40 @@ document.addEventListener('contextmenu', function(e) {
 
     // 添加开始时间
     timelineHtml += '<div class="timeline-item">';
-    timelineHtml += '<div class="timeline-time">' + formatDateTime(startTime) + '</div>';
+    timelineHtml += `<div class="timeline-time">${formatDateTime(startTime)}</div>`;
     timelineHtml += '<div class="timeline-content">测试开始</div>';
     timelineHtml += '</div>';
 
     // 添加中间事件（根据测试套件）
     if (results && results.testResults) {
       const suites = results.testResults;
-      for (let i = 0; i < Math.min(suites.length, 5); i++) { // 最多显示5个套件
+      for (let i = 0; i < Math.min(suites.length, 5); i++) {
+        // 最多显示5个套件
         const suite = suites[i];
-        if (!suite) continue;
+        if (!suite) {
+          continue;
+        }
 
         const suiteTime = suite.endTime ? new Date(suite.endTime) : null;
-        if (!suiteTime) continue;
+        if (!suiteTime) {
+          continue;
+        }
 
         const suiteName = suite.testFilePath
           ? suite.testFilePath.split('/').pop().replace('.test.js', '')
           : '未知套件';
 
         timelineHtml += '<div class="timeline-item">';
-        timelineHtml += '<div class="timeline-time">' + formatDateTime(suiteTime) + '</div>';
-        timelineHtml += '<div class="timeline-content">完成 ' + suiteName + ' 测试</div>';
+        timelineHtml += `<div class="timeline-time">${formatDateTime(suiteTime)}</div>`;
+        timelineHtml += `<div class="timeline-content">完成 ${suiteName} 测试</div>`;
         timelineHtml += '</div>';
       }
     }
 
     // 添加结束时间
     timelineHtml += '<div class="timeline-item">';
-    timelineHtml += '<div class="timeline-time">' + formatDateTime(endTime) + '</div>';
-    timelineHtml += '<div class="timeline-content">测试结束，总耗时: ' + minutes + '分' + seconds + '秒</div>';
+    timelineHtml += `<div class="timeline-time">${formatDateTime(endTime)}</div>`;
+    timelineHtml += `<div class="timeline-content">测试结束，总耗时: ${minutes}分${seconds}秒</div>`;
     timelineHtml += '</div>';
 
     timelineHtml += '</div>';
@@ -1825,7 +1890,7 @@ document.addEventListener('contextmenu', function(e) {
       endTime: formatDateTime(endTime),
       executor: '自动化测试系统',
       environment: '测试环境',
-      timeline: timelineHtml
+      timeline: timelineHtml,
     };
   }
 
@@ -1841,42 +1906,42 @@ document.addEventListener('contextmenu', function(e) {
           title: '性能问题',
           impact: 4,
           probability: 3,
-          description: '在高负载情况下可能出现性能下降，影响用户体验。'
+          description: '在高负载情况下可能出现性能下降，影响用户体验。',
         },
         {
           title: '兼容性问题',
           impact: 3,
           probability: 4,
-          description: '在某些浏览器或设备上可能出现兼容性问题。'
+          description: '在某些浏览器或设备上可能出现兼容性问题。',
         },
         {
           title: '安全漏洞',
           impact: 5,
           probability: 2,
-          description: '可能存在安全漏洞，导致用户数据泄露。'
-        }
+          description: '可能存在安全漏洞，导致用户数据泄露。',
+        },
       ],
       mitigations: [
         {
           title: '性能优化',
-          description: '对关键功能进行性能优化，提高系统响应速度。'
+          description: '对关键功能进行性能优化，提高系统响应速度。',
         },
         {
           title: '兼容性测试',
-          description: '在多种浏览器和设备上进行兼容性测试，确保系统在各种环境下正常运行。'
+          description: '在多种浏览器和设备上进行兼容性测试，确保系统在各种环境下正常运行。',
         },
         {
           title: '安全审计',
-          description: '定期进行安全审计，及时修复安全漏洞。'
-        }
+          description: '定期进行安全审计，及时修复安全漏洞。',
+        },
       ],
       matrix: [
         { title: '性能问题', impact: 4, probability: 3, count: 5 },
         { title: '兼容性问题', impact: 3, probability: 4, count: 7 },
         { title: '安全漏洞', impact: 5, probability: 2, count: 3 },
         { title: '功能缺陷', impact: 3, probability: 3, count: 10 },
-        { title: '用户体验问题', impact: 2, probability: 4, count: 8 }
-      ]
+        { title: '用户体验问题', impact: 2, probability: 4, count: 8 },
+      ],
     };
   }
 
@@ -1889,20 +1954,20 @@ document.addEventListener('contextmenu', function(e) {
     return [
       {
         title: '提高测试覆盖率',
-        description: '增加单元测试和集成测试，提高代码覆盖率。'
+        description: '增加单元测试和集成测试，提高代码覆盖率。',
       },
       {
         title: '优化测试流程',
-        description: '引入持续集成和持续部署，自动化测试流程。'
+        description: '引入持续集成和持续部署，自动化测试流程。',
       },
       {
         title: '加强性能测试',
-        description: '增加性能测试用例，定期进行性能测试。'
+        description: '增加性能测试用例，定期进行性能测试。',
       },
       {
         title: '改进测试报告',
-        description: '优化测试报告格式，提供更详细的测试结果分析。'
-      }
+        description: '优化测试报告格式，提供更详细的测试结果分析。',
+      },
     ];
   }
 
@@ -1916,38 +1981,38 @@ document.addEventListener('contextmenu', function(e) {
       {
         name: 'FoolCards测试计划文档.pdf',
         url: '#',
-        type: 'pdf'
+        type: 'pdf',
       },
       {
         name: 'FoolCards测试用例清单.xlsx',
         url: '#',
-        type: 'excel'
+        type: 'excel',
       },
       {
         name: 'FoolCards缺陷跟踪记录.xlsx',
         url: '#',
-        type: 'excel'
+        type: 'excel',
       },
       {
         name: 'FoolCards性能测试报告.pdf',
         url: '#',
-        type: 'pdf'
+        type: 'pdf',
       },
       {
         name: 'FoolCards测试环境配置.txt',
         url: '#',
-        type: 'text'
+        type: 'text',
       },
       {
         name: 'FoolCards测试结果截图.png',
         url: '#',
-        type: 'image'
+        type: 'image',
       },
       {
         name: 'FoolCards测试总结报告.docx',
         url: '#',
-        type: 'word'
-      }
+        type: 'word',
+      },
     ];
   }
 
@@ -1974,7 +2039,7 @@ document.addEventListener('contextmenu', function(e) {
 
     return {
       text: conclusion,
-      outlook: outlook
+      outlook,
     };
   }
 
@@ -1989,8 +2054,8 @@ document.addEventListener('contextmenu', function(e) {
       // 这里使用Node.js环境下的PDF生成库
       // 由于在Node.js环境中无法直接使用浏览器的html2pdf.js，
       // 所以这里只是一个示例，实际实现可能需要使用其他库
-      console.log(`PDF报告生成功能需要在浏览器环境中使用。`);
-      console.log(`请在报告页面中点击"导出PDF"按钮生成PDF报告。`);
+      console.log('PDF报告生成功能需要在浏览器环境中使用。');
+      console.log('请在报告页面中点击"导出PDF"按钮生成PDF报告。');
     } catch (error) {
       console.error(`生成PDF报告失败: ${error.message}`);
     }

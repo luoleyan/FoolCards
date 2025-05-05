@@ -25,11 +25,11 @@ describe('GameManager功能测试', () => {
       new Card(CardSuit.Heart, CardRank.King),
       new Card(CardSuit.Club, CardRank.Queen),
       new Card(CardSuit.Diamond, CardRank.Jack),
-      new Card(CardSuit.Spade, CardRank.Ten)
+      new Card(CardSuit.Spade, CardRank.Ten),
     ];
 
     // 将卡牌添加到玩家手牌
-    cards.forEach(card => {
+    cards.forEach((card) => {
       gameManager.playerHand.addChild(card.node);
     });
   });

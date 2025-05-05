@@ -1,453 +1,475 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{TITLE}}</title>
-  <link rel="stylesheet" href="report-styles.css">
-  <!-- 优先使用本地库文件，如果本地文件不可用则使用CDN -->
-  <script>
-    // 定义全局变量，用于跟踪库加载状态
-    window.librariesLoaded = {
-      chart: false,
-      jspdf: false,
-      html2canvas: false,
-      html2pdf: false
-    };
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{TITLE}}</title>
+    <link rel="stylesheet" href="report-styles.css" />
+    <!-- 优先使用本地库文件，如果本地文件不可用则使用CDN -->
+    <script>
+      // 定义全局变量，用于跟踪库加载状态
+      window.librariesLoaded = {
+        chart: false,
+        jspdf: false,
+        html2canvas: false,
+        html2pdf: false,
+      };
 
-    // 加载脚本函数
-    function loadScript(src, fallback, libraryName) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = false; // 确保按顺序加载
-        script.onload = function() {
-          console.log(`库 ${libraryName} 加载成功: ${src}`);
-          window.librariesLoaded[libraryName] = true;
-          resolve();
-        };
-        script.onerror = () => {
-          console.warn(`无法加载本地脚本: ${src}，尝试使用CDN`);
-          const fallbackScript = document.createElement('script');
-          fallbackScript.src = fallback;
-          fallbackScript.async = false; // 确保按顺序加载
-          fallbackScript.onload = function() {
-            console.log(`库 ${libraryName} 从CDN加载成功: ${fallback}`);
+      // 加载脚本函数
+      function loadScript(src, fallback, libraryName) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.async = false; // 确保按顺序加载
+          script.onload = function () {
+            console.log(`库 ${libraryName} 加载成功: ${src}`);
             window.librariesLoaded[libraryName] = true;
             resolve();
           };
-          fallbackScript.onerror = function() {
-            console.error(`库 ${libraryName} 加载失败`);
-            reject(new Error(`无法加载库 ${libraryName}`));
+          script.onerror = () => {
+            console.warn(`无法加载本地脚本: ${src}，尝试使用CDN`);
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = fallback;
+            fallbackScript.async = false; // 确保按顺序加载
+            fallbackScript.onload = function () {
+              console.log(`库 ${libraryName} 从CDN加载成功: ${fallback}`);
+              window.librariesLoaded[libraryName] = true;
+              resolve();
+            };
+            fallbackScript.onerror = function () {
+              console.error(`库 ${libraryName} 加载失败`);
+              reject(new Error(`无法加载库 ${libraryName}`));
+            };
+            document.head.appendChild(fallbackScript);
           };
-          document.head.appendChild(fallbackScript);
-        };
-        document.head.appendChild(script);
-      });
-    }
+          document.head.appendChild(script);
+        });
+      }
 
-    // 按顺序加载库文件
-    loadScript('assets/chart.min.js', 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', 'chart')
-      .then(() => loadScript('assets/jspdf.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf'))
-      .then(() => loadScript('assets/html2canvas.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas'))
-      .then(() => loadScript('assets/html2pdf.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', 'html2pdf'))
-      .then(() => {
-        console.log('所有库文件加载完成');
-        // 触发自定义事件，通知脚本库已加载完成
-        document.dispatchEvent(new Event('librariesLoaded'));
-      })
-      .catch(error => {
-        console.error('加载库文件失败:', error);
-      });
-  </script>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>{{TITLE}}</h1>
-      <div class="report-meta">
-        <div class="report-meta-item">
-          <span class="meta-label">报告编号:</span>
-          <span class="meta-value" id="report-id">{{REPORT_ID}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">文档版本:</span>
-          <span class="meta-value" id="doc-version">{{DOC_VERSION}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">测试日期:</span>
-          <span class="meta-value" id="test-date">{{TEST_DATE}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">软件版本:</span>
-          <span class="meta-value" id="software-version">{{SOFTWARE_VERSION}}</span>
-        </div>
-      </div>
-      <p class="timestamp">生成时间: {{TIMESTAMP}}</p>
-      <div class="header-actions">
-        <button id="export-pdf-button" class="action-button" type="button">导出PDF</button>
-        <button id="print-report-button" class="action-button" type="button">打印报告</button>
-      </div>
-    </header>
-
-    <div id="software-info" class="section">
-      <h2>软件版本与功能描述</h2>
-      <div class="software-description">
-        <h3>软件概述</h3>
-        <p id="software-description"></p>
-
-        <h3>主要功能</h3>
-        <ul id="software-features"></ul>
-
-        <h3>测试版本信息</h3>
-        <div class="version-info">
-          <div class="version-item">
-            <span class="version-label">版本号:</span>
-            <span class="version-value" id="version-number"></span>
+      // 按顺序加载库文件
+      loadScript(
+        'assets/chart.min.js',
+        'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js',
+        'chart',
+      )
+        .then(() =>
+          loadScript(
+            'assets/jspdf.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+            'jspdf',
+          ),
+        )
+        .then(() =>
+          loadScript(
+            'assets/html2canvas.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+            'html2canvas',
+          ),
+        )
+        .then(() =>
+          loadScript(
+            'assets/html2pdf.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+            'html2pdf',
+          ),
+        )
+        .then(() => {
+          console.log('所有库文件加载完成');
+          // 触发自定义事件，通知脚本库已加载完成
+          document.dispatchEvent(new Event('librariesLoaded'));
+        })
+        .catch((error) => {
+          console.error('加载库文件失败:', error);
+        });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>{{TITLE}}</h1>
+        <div class="report-meta">
+          <div class="report-meta-item">
+            <span class="meta-label">报告编号:</span>
+            <span class="meta-value" id="report-id">{{REPORT_ID}}</span>
           </div>
-          <div class="version-item">
-            <span class="version-label">构建日期:</span>
-            <span class="version-value" id="build-date"></span>
+          <div class="report-meta-item">
+            <span class="meta-label">文档版本:</span>
+            <span class="meta-value" id="doc-version">{{DOC_VERSION}}</span>
           </div>
-          <div class="version-item">
-            <span class="version-label">发布类型:</span>
-            <span class="version-value" id="release-type"></span>
+          <div class="report-meta-item">
+            <span class="meta-label">测试日期:</span>
+            <span class="meta-value" id="test-date">{{TEST_DATE}}</span>
+          </div>
+          <div class="report-meta-item">
+            <span class="meta-label">软件版本:</span>
+            <span class="meta-value" id="software-version">{{SOFTWARE_VERSION}}</span>
           </div>
         </div>
-      </div>
-    </div>
+        <p class="timestamp">生成时间: {{TIMESTAMP}}</p>
+        <div class="header-actions">
+          <button id="export-pdf-button" class="action-button" type="button">导出PDF</button>
+          <button id="print-report-button" class="action-button" type="button">打印报告</button>
+        </div>
+      </header>
 
-    <div id="summary" class="section">
-      <h2>测试摘要</h2>
-      <div class="summary-info">
-        <div class="summary-item">
-          <span class="label">总测试数:</span>
-          <span class="value" id="total-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">通过:</span>
-          <span class="value passed" id="passed-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">失败:</span>
-          <span class="value failed" id="failed-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">待定:</span>
-          <span class="value pending" id="pending-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">执行时间:</span>
-          <span class="value" id="test-duration"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">状态:</span>
-          <span class="value" id="test-status"></span>
+      <div id="software-info" class="section">
+        <h2>软件版本与功能描述</h2>
+        <div class="software-description">
+          <h3>软件概述</h3>
+          <p id="software-description"></p>
+
+          <h3>主要功能</h3>
+          <ul id="software-features"></ul>
+
+          <h3>测试版本信息</h3>
+          <div class="version-info">
+            <div class="version-item">
+              <span class="version-label">版本号:</span>
+              <span class="version-value" id="version-number"></span>
+            </div>
+            <div class="version-item">
+              <span class="version-label">构建日期:</span>
+              <span class="version-value" id="build-date"></span>
+            </div>
+            <div class="version-item">
+              <span class="version-label">发布类型:</span>
+              <span class="version-value" id="release-type"></span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div id="summary-charts">
-        <div class="chart-container">
-          <canvas id="results-chart"></canvas>
+      <div id="summary" class="section">
+        <h2>测试摘要</h2>
+        <div class="summary-info">
+          <div class="summary-item">
+            <span class="label">总测试数:</span>
+            <span class="value" id="total-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">通过:</span>
+            <span class="value passed" id="passed-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">失败:</span>
+            <span class="value failed" id="failed-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">待定:</span>
+            <span class="value pending" id="pending-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">执行时间:</span>
+            <span class="value" id="test-duration"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">状态:</span>
+            <span class="value" id="test-status"></span>
+          </div>
+        </div>
+
+        <div id="summary-charts">
+          <div class="chart-container">
+            <canvas id="results-chart"></canvas>
+            <div class="chart-info">点击右键可保存图表</div>
+          </div>
+          <div class="chart-container" id="coverage-chart-container">
+            <canvas id="coverage-chart"></canvas>
+            <div class="chart-info">点击右键可保存图表</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="test-purpose" class="section">
+        <h2>测试目的</h2>
+        <p id="purpose-text"></p>
+      </div>
+
+      <div id="test-scope" class="section">
+        <h2>测试范围</h2>
+        <p id="scope-text"></p>
+      </div>
+
+      <div id="test-plan" class="section">
+        <h2>测试计划</h2>
+        <div class="test-plan-container">
+          <div class="test-plan-item">
+            <h3>测试阶段</h3>
+            <ul id="test-phases"></ul>
+          </div>
+          <div class="test-plan-item">
+            <h3>测试进度</h3>
+            <div id="test-schedule"></div>
+          </div>
+          <div class="test-plan-item">
+            <h3>资源分配</h3>
+            <div id="resource-allocation"></div>
+          </div>
+          <div class="test-plan-item">
+            <h3>风险评估</h3>
+            <div id="risk-assessment"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="test-methods" class="section">
+        <h2>测试方法与策略</h2>
+        <p id="methods-text"></p>
+
+        <div class="test-strategy">
+          <h3>测试策略</h3>
+          <div id="test-strategy-content"></div>
+
+          <h3>测试优先级</h3>
+          <div id="test-priority"></div>
+
+          <h3>测试工具</h3>
+          <ul id="test-tools"></ul>
+        </div>
+      </div>
+
+      <div id="test-environment" class="section">
+        <h2>测试环境与配置</h2>
+        <div class="environment-info">
+          <div class="environment-item">
+            <h3>硬件环境</h3>
+            <ul id="hardware-list"></ul>
+          </div>
+          <div class="environment-item">
+            <h3>软件环境</h3>
+            <ul id="software-list"></ul>
+          </div>
+          <div class="environment-item">
+            <h3>依赖项</h3>
+            <ul id="dependencies-list"></ul>
+          </div>
+          <div class="environment-item">
+            <h3>网络配置</h3>
+            <ul id="network-config"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="history-trend" class="section">
+        <h2>历史趋势</h2>
+        <div id="history-trend-container" class="chart-container">
+          <canvas id="history-trend-chart"></canvas>
           <div class="chart-info">点击右键可保存图表</div>
         </div>
-        <div class="chart-container" id="coverage-chart-container">
-          <canvas id="coverage-chart"></canvas>
-          <div class="chart-info">点击右键可保存图表</div>
-        </div>
       </div>
-    </div>
 
-    <div id="test-purpose" class="section">
-      <h2>测试目的</h2>
-      <p id="purpose-text"></p>
-    </div>
-
-    <div id="test-scope" class="section">
-      <h2>测试范围</h2>
-      <p id="scope-text"></p>
-    </div>
-
-    <div id="test-plan" class="section">
-      <h2>测试计划</h2>
-      <div class="test-plan-container">
-        <div class="test-plan-item">
-          <h3>测试阶段</h3>
-          <ul id="test-phases"></ul>
-        </div>
-        <div class="test-plan-item">
-          <h3>测试进度</h3>
-          <div id="test-schedule"></div>
-        </div>
-        <div class="test-plan-item">
-          <h3>资源分配</h3>
-          <div id="resource-allocation"></div>
-        </div>
-        <div class="test-plan-item">
-          <h3>风险评估</h3>
-          <div id="risk-assessment"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="test-methods" class="section">
-      <h2>测试方法与策略</h2>
-      <p id="methods-text"></p>
-
-      <div class="test-strategy">
-        <h3>测试策略</h3>
-        <div id="test-strategy-content"></div>
-
-        <h3>测试优先级</h3>
-        <div id="test-priority"></div>
-
-        <h3>测试工具</h3>
-        <ul id="test-tools"></ul>
-      </div>
-    </div>
-
-    <div id="test-environment" class="section">
-      <h2>测试环境与配置</h2>
-      <div class="environment-info">
-        <div class="environment-item">
-          <h3>硬件环境</h3>
-          <ul id="hardware-list"></ul>
-        </div>
-        <div class="environment-item">
-          <h3>软件环境</h3>
-          <ul id="software-list"></ul>
-        </div>
-        <div class="environment-item">
-          <h3>依赖项</h3>
-          <ul id="dependencies-list"></ul>
-        </div>
-        <div class="environment-item">
-          <h3>网络配置</h3>
-          <ul id="network-config"></ul>
-        </div>
-      </div>
-    </div>
-
-    <div id="history-trend" class="section">
-      <h2>历史趋势</h2>
-      <div id="history-trend-container" class="chart-container">
-        <canvas id="history-trend-chart"></canvas>
-        <div class="chart-info">点击右键可保存图表</div>
-      </div>
-    </div>
-
-    <div id="defect-analysis" class="section">
-      <h2>缺陷统计与分析</h2>
-      <div id="defect-analysis-container">
-        <div class="defect-summary">
-          <div class="defect-summary-item">
-            <span class="label">总缺陷数:</span>
-            <span class="value" id="total-defects"></span>
+      <div id="defect-analysis" class="section">
+        <h2>缺陷统计与分析</h2>
+        <div id="defect-analysis-container">
+          <div class="defect-summary">
+            <div class="defect-summary-item">
+              <span class="label">总缺陷数:</span>
+              <span class="value" id="total-defects"></span>
+            </div>
           </div>
-        </div>
 
-        <div class="defect-charts">
-          <div class="chart-container">
-            <canvas id="defect-category-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
+          <div class="defect-charts">
+            <div class="chart-container">
+              <canvas id="defect-category-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="defect-pattern-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
           </div>
-          <div class="chart-container">
-            <canvas id="defect-pattern-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
-          </div>
-        </div>
 
-        <div class="defect-recommendations">
-          <h3>修复建议</h3>
-          <div id="category-recommendations"></div>
-          <div id="pattern-recommendations"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="performance-analysis" class="section">
-      <h2>性能分析</h2>
-      <div id="performance-analysis-container">
-        <div class="performance-summary">
-          <div class="performance-summary-item">
-            <span class="label">平均耗时:</span>
-            <span class="value" id="average-duration"></span>
-          </div>
-          <div class="performance-summary-item">
-            <span class="label">中位数耗时:</span>
-            <span class="value" id="median-duration"></span>
-          </div>
-          <div class="performance-summary-item">
-            <span class="label">标准差:</span>
-            <span class="value" id="std-deviation"></span>
-          </div>
-        </div>
-
-        <div class="performance-charts">
-          <div class="chart-container">
-            <canvas id="suite-performance-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
-          </div>
-          <div class="chart-container">
-            <canvas id="slow-tests-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
-          </div>
-        </div>
-
-        <div class="performance-recommendations">
-          <h3>性能优化建议</h3>
-          <div id="performance-recommendations"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="test-cases" class="section">
-      <h2>测试用例概述</h2>
-      <div class="test-cases-overview">
-        <div class="test-cases-summary">
-          <div class="test-cases-summary-item">
-            <span class="label">总用例数:</span>
-            <span class="value" id="total-test-cases"></span>
-          </div>
-          <div class="test-cases-summary-item">
-            <span class="label">自动化用例:</span>
-            <span class="value" id="automated-test-cases"></span>
-          </div>
-          <div class="test-cases-summary-item">
-            <span class="label">手动用例:</span>
-            <span class="value" id="manual-test-cases"></span>
-          </div>
-          <div class="test-cases-summary-item">
-            <span class="label">覆盖率:</span>
-            <span class="value" id="test-cases-coverage"></span>
-          </div>
-        </div>
-
-        <div class="test-cases-distribution">
-          <h3>用例分布</h3>
-          <div class="chart-container">
-            <canvas id="test-cases-distribution-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
-          </div>
-        </div>
-
-        <div class="test-cases-priority">
-          <h3>优先级分布</h3>
-          <div class="chart-container">
-            <canvas id="test-cases-priority-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
+          <div class="defect-recommendations">
+            <h3>修复建议</h3>
+            <div id="category-recommendations"></div>
+            <div id="pattern-recommendations"></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div id="test-execution" class="section">
-      <h2>测试执行记录</h2>
-      <div class="test-execution-summary">
-        <div class="test-execution-summary-item">
-          <span class="label">开始时间:</span>
-          <span class="value" id="test-start-time"></span>
-        </div>
-        <div class="test-execution-summary-item">
-          <span class="label">结束时间:</span>
-          <span class="value" id="test-end-time"></span>
-        </div>
-        <div class="test-execution-summary-item">
-          <span class="label">执行人员:</span>
-          <span class="value" id="test-executor"></span>
-        </div>
-        <div class="test-execution-summary-item">
-          <span class="label">执行环境:</span>
-          <span class="value" id="test-execution-env"></span>
+      <div id="performance-analysis" class="section">
+        <h2>性能分析</h2>
+        <div id="performance-analysis-container">
+          <div class="performance-summary">
+            <div class="performance-summary-item">
+              <span class="label">平均耗时:</span>
+              <span class="value" id="average-duration"></span>
+            </div>
+            <div class="performance-summary-item">
+              <span class="label">中位数耗时:</span>
+              <span class="value" id="median-duration"></span>
+            </div>
+            <div class="performance-summary-item">
+              <span class="label">标准差:</span>
+              <span class="value" id="std-deviation"></span>
+            </div>
+          </div>
+
+          <div class="performance-charts">
+            <div class="chart-container">
+              <canvas id="suite-performance-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="slow-tests-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+          </div>
+
+          <div class="performance-recommendations">
+            <h3>性能优化建议</h3>
+            <div id="performance-recommendations"></div>
+          </div>
         </div>
       </div>
 
-      <div class="test-execution-timeline">
-        <h3>执行时间线</h3>
-        <div id="test-execution-timeline-container"></div>
+      <div id="test-cases" class="section">
+        <h2>测试用例概述</h2>
+        <div class="test-cases-overview">
+          <div class="test-cases-summary">
+            <div class="test-cases-summary-item">
+              <span class="label">总用例数:</span>
+              <span class="value" id="total-test-cases"></span>
+            </div>
+            <div class="test-cases-summary-item">
+              <span class="label">自动化用例:</span>
+              <span class="value" id="automated-test-cases"></span>
+            </div>
+            <div class="test-cases-summary-item">
+              <span class="label">手动用例:</span>
+              <span class="value" id="manual-test-cases"></span>
+            </div>
+            <div class="test-cases-summary-item">
+              <span class="label">覆盖率:</span>
+              <span class="value" id="test-cases-coverage"></span>
+            </div>
+          </div>
+
+          <div class="test-cases-distribution">
+            <h3>用例分布</h3>
+            <div class="chart-container">
+              <canvas id="test-cases-distribution-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+          </div>
+
+          <div class="test-cases-priority">
+            <h3>优先级分布</h3>
+            <div class="chart-container">
+              <canvas id="test-cases-priority-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div id="test-suites" class="section">
-      <h2>测试套件详情</h2>
-      <div id="suites-container"></div>
-    </div>
-
-    <div id="issues-recommendations" class="section">
-      <h2>问题与建议</h2>
-      <div id="issues-container"></div>
-    </div>
-
-    <div id="risk-analysis" class="section">
-      <h2>问题分析与风险评估</h2>
-      <div class="risk-analysis-container">
-        <div class="risk-matrix">
-          <h3>风险矩阵</h3>
-          <div class="chart-container">
-            <canvas id="risk-matrix-chart"></canvas>
-            <div class="chart-info">点击右键可保存图表</div>
+      <div id="test-execution" class="section">
+        <h2>测试执行记录</h2>
+        <div class="test-execution-summary">
+          <div class="test-execution-summary-item">
+            <span class="label">开始时间:</span>
+            <span class="value" id="test-start-time"></span>
+          </div>
+          <div class="test-execution-summary-item">
+            <span class="label">结束时间:</span>
+            <span class="value" id="test-end-time"></span>
+          </div>
+          <div class="test-execution-summary-item">
+            <span class="label">执行人员:</span>
+            <span class="value" id="test-executor"></span>
+          </div>
+          <div class="test-execution-summary-item">
+            <span class="label">执行环境:</span>
+            <span class="value" id="test-execution-env"></span>
           </div>
         </div>
 
-        <div class="risk-items">
-          <h3>主要风险项</h3>
-          <div id="risk-items-container"></div>
+        <div class="test-execution-timeline">
+          <h3>执行时间线</h3>
+          <div id="test-execution-timeline-container"></div>
+        </div>
+      </div>
+
+      <div id="test-suites" class="section">
+        <h2>测试套件详情</h2>
+        <div id="suites-container"></div>
+      </div>
+
+      <div id="issues-recommendations" class="section">
+        <h2>问题与建议</h2>
+        <div id="issues-container"></div>
+      </div>
+
+      <div id="risk-analysis" class="section">
+        <h2>问题分析与风险评估</h2>
+        <div class="risk-analysis-container">
+          <div class="risk-matrix">
+            <h3>风险矩阵</h3>
+            <div class="chart-container">
+              <canvas id="risk-matrix-chart"></canvas>
+              <div class="chart-info">点击右键可保存图表</div>
+            </div>
+          </div>
+
+          <div class="risk-items">
+            <h3>主要风险项</h3>
+            <div id="risk-items-container"></div>
+          </div>
+
+          <div class="mitigation-strategies">
+            <h3>缓解策略</h3>
+            <div id="mitigation-strategies-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="conclusion" class="section">
+        <h2>测试总结与结论</h2>
+        <div class="conclusion-text">
+          <h3>结论</h3>
+          <p id="conclusion-text"></p>
+        </div>
+        <div class="outlook-text">
+          <h3>展望</h3>
+          <p id="outlook-text"></p>
         </div>
 
-        <div class="mitigation-strategies">
-          <h3>缓解策略</h3>
-          <div id="mitigation-strategies-container"></div>
+        <div class="improvement-measures">
+          <h3>后续建议与改进措施</h3>
+          <ul id="improvement-measures"></ul>
+        </div>
+      </div>
+
+      <div id="attachments" class="section">
+        <h2>附件资料</h2>
+        <div class="attachments-container">
+          <div class="attachment-list">
+            <h3>附件列表</h3>
+            <ul id="attachment-list"></ul>
+          </div>
+
+          <div class="attachment-preview">
+            <h3>附件预览</h3>
+            <div id="attachment-preview-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="image-modal" class="modal">
+        <div class="modal-content">
+          <span class="close-button">&times;</span>
+          <img id="modal-image" src="" alt="图表大图" />
+          <div class="modal-footer">
+            <button id="save-image-button" type="button">保存图表</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="conclusion" class="section">
-      <h2>测试总结与结论</h2>
-      <div class="conclusion-text">
-        <h3>结论</h3>
-        <p id="conclusion-text"></p>
-      </div>
-      <div class="outlook-text">
-        <h3>展望</h3>
-        <p id="outlook-text"></p>
-      </div>
-
-      <div class="improvement-measures">
-        <h3>后续建议与改进措施</h3>
-        <ul id="improvement-measures"></ul>
-      </div>
-    </div>
-
-    <div id="attachments" class="section">
-      <h2>附件资料</h2>
-      <div class="attachments-container">
-        <div class="attachment-list">
-          <h3>附件列表</h3>
-          <ul id="attachment-list"></ul>
-        </div>
-
-        <div class="attachment-preview">
-          <h3>附件预览</h3>
-          <div id="attachment-preview-container"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="image-modal" class="modal">
-      <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <img id="modal-image" src="" alt="图表大图">
-        <div class="modal-footer">
-          <button id="save-image-button" type="button">保存图表</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // 测试报告数据
-    const reportData = {{REPORT_DATA}};
-  </script>
-  <script src="report-scripts.js"></script>
-</body>
+    <script>
+      // 测试报告数据
+      const reportData = {{REPORT_DATA}};
+    </script>
+    <script src="report-scripts.js"></script>
+  </body>
 </html>

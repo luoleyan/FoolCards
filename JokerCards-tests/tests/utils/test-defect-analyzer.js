@@ -14,14 +14,16 @@ class TestDefectAnalyzer {
     const defects = [];
     const defectCategories = {};
     const defectPatterns = {};
-    
+
     // 收集所有失败的测试
     for (const suite of testSuites) {
-      if (!suite.testResults) continue;
-      
+      if (!suite.testResults) {
+        continue;
+      }
+
       const suitePath = suite.testFilePath || 'Unknown';
       const suiteName = suitePath.split('/').pop().replace('.test.js', '');
-      
+
       for (const test of suite.testResults) {
         if (test.status === 'failed') {
           const defect = {
@@ -29,48 +31,52 @@ class TestDefectAnalyzer {
             suitePath,
             testName: test.title || 'Unknown',
             failureMessages: test.failureMessages || [],
-            duration: test.duration ? (test.duration / 1000).toFixed(2) : '0.00'
+            duration: test.duration ? (test.duration / 1000).toFixed(2) : '0.00',
           };
-          
+
           // 分析失败原因
           defect.category = this._categorizeDefect(defect.failureMessages);
           defect.pattern = this._identifyPattern(defect.failureMessages);
-          
+
           // 更新分类统计
           defectCategories[defect.category] = (defectCategories[defect.category] || 0) + 1;
           defectPatterns[defect.pattern] = (defectPatterns[defect.pattern] || 0) + 1;
-          
+
           defects.push(defect);
         }
       }
     }
-    
+
     // 计算缺陷分布
     const totalDefects = defects.length;
     const categoryDistribution = Object.entries(defectCategories).map(([category, count]) => ({
       category,
       count,
-      percentage: totalDefects > 0 ? (count / totalDefects * 100).toFixed(2) : '0.00'
+      percentage: totalDefects > 0 ? ((count / totalDefects) * 100).toFixed(2) : '0.00',
     }));
-    
+
     const patternDistribution = Object.entries(defectPatterns).map(([pattern, count]) => ({
       pattern,
       count,
-      percentage: totalDefects > 0 ? (count / totalDefects * 100).toFixed(2) : '0.00'
+      percentage: totalDefects > 0 ? ((count / totalDefects) * 100).toFixed(2) : '0.00',
     }));
-    
+
     // 生成建议
-    const recommendations = this._generateRecommendations(defects, categoryDistribution, patternDistribution);
-    
+    const recommendations = this._generateRecommendations(
+      defects,
+      categoryDistribution,
+      patternDistribution,
+    );
+
     return {
       totalDefects,
       defects,
       categoryDistribution,
       patternDistribution,
-      recommendations
+      recommendations,
     };
   }
-  
+
   /**
    * 对缺陷进行分类
    * @param {Array} failureMessages - 失败信息数组
@@ -81,9 +87,9 @@ class TestDefectAnalyzer {
     if (!failureMessages || failureMessages.length === 0) {
       return '未知错误';
     }
-    
+
     const message = failureMessages.join(' ');
-    
+
     if (message.includes('TypeError') || message.includes('ReferenceError')) {
       return '类型错误';
     } else if (message.includes('AssertionError') || message.includes('expect(')) {
@@ -94,7 +100,11 @@ class TestDefectAnalyzer {
       return '语法错误';
     } else if (message.includes('null') || message.includes('undefined')) {
       return '空值错误';
-    } else if (message.includes('async') || message.includes('await') || message.includes('Promise')) {
+    } else if (
+      message.includes('async') ||
+      message.includes('await') ||
+      message.includes('Promise')
+    ) {
       return '异步错误';
     } else if (message.includes('mock') || message.includes('spy')) {
       return '模拟错误';
@@ -102,7 +112,7 @@ class TestDefectAnalyzer {
       return '其他错误';
     }
   }
-  
+
   /**
    * 识别缺陷模式
    * @param {Array} failureMessages - 失败信息数组
@@ -113,9 +123,9 @@ class TestDefectAnalyzer {
     if (!failureMessages || failureMessages.length === 0) {
       return '未知模式';
     }
-    
+
     const message = failureMessages.join(' ');
-    
+
     if (message.includes('expected') && message.includes('received')) {
       if (message.includes('toBe') || message.includes('toEqual')) {
         return '值不匹配';
@@ -127,20 +137,23 @@ class TestDefectAnalyzer {
         return '范围错误';
       }
     }
-    
+
     if (message.includes('is not a function') || message.includes('is not defined')) {
       return '函数调用错误';
-    } else if (message.includes('Cannot read property') || message.includes('undefined is not an object')) {
+    } else if (
+      message.includes('Cannot read property') ||
+      message.includes('undefined is not an object')
+    ) {
       return '属性访问错误';
     } else if (message.includes('timeout')) {
       return '执行超时';
     } else if (message.includes('rejected')) {
       return 'Promise拒绝';
     }
-    
+
     return '其他模式';
   }
-  
+
   /**
    * 生成修复建议
    * @param {Array} defects - 缺陷数组
@@ -151,11 +164,11 @@ class TestDefectAnalyzer {
    */
   _generateRecommendations(defects, categoryDistribution, patternDistribution) {
     const recommendations = [];
-    
+
     // 根据缺陷类别生成建议
     for (const { category, count, percentage } of categoryDistribution) {
       let recommendation = '';
-      
+
       switch (category) {
         case '类型错误':
           recommendation = '检查变量类型，确保函数调用前变量已定义并且类型正确。';
@@ -181,20 +194,20 @@ class TestDefectAnalyzer {
         default:
           recommendation = '详细分析错误信息，找出失败原因。';
       }
-      
+
       recommendations.push({
         category,
         count,
         percentage,
-        recommendation
+        recommendation,
       });
     }
-    
+
     // 根据缺陷模式生成建议
     const patternRecommendations = [];
     for (const { pattern, count, percentage } of patternDistribution) {
       let recommendation = '';
-      
+
       switch (pattern) {
         case '值不匹配':
           recommendation = '检查代码逻辑，确保函数返回值符合预期。';
@@ -223,18 +236,18 @@ class TestDefectAnalyzer {
         default:
           recommendation = '详细分析错误模式，找出共同的失败原因。';
       }
-      
+
       patternRecommendations.push({
         pattern,
         count,
         percentage,
-        recommendation
+        recommendation,
       });
     }
-    
+
     return {
       categoryRecommendations: recommendations,
-      patternRecommendations
+      patternRecommendations,
     };
   }
 }

@@ -25,21 +25,21 @@ class AIOpponent extends mockCocos.Component {
 
   // 初始化
   init(gameManager, opponentHand, playAreas) {
-    console.log("初始化AI对手组件");
+    console.log('初始化AI对手组件');
 
     // 检查参数
     if (!gameManager) {
-      console.error("GameManager 参数为空");
+      console.error('GameManager 参数为空');
       return;
     }
 
     if (!opponentHand) {
-      console.error("opponentHand 参数为空");
+      console.error('opponentHand 参数为空');
       return;
     }
 
     if (!playAreas || playAreas.length === 0) {
-      console.error("playAreas 参数无效");
+      console.error('playAreas 参数无效');
       return;
     }
 
@@ -47,7 +47,9 @@ class AIOpponent extends mockCocos.Component {
     this.opponentHand = opponentHand;
     this.playAreas = playAreas;
 
-    console.log(`AI对手初始化完成: 对手手牌区域=${opponentHand.name}, 场地区域数量=${playAreas.length}`);
+    console.log(
+      `AI对手初始化完成: 对手手牌区域=${opponentHand.name}, 场地区域数量=${playAreas.length}`,
+    );
 
     // 初始化AI出牌记录
     this.aiPlayedCards.clear();
@@ -56,32 +58,33 @@ class AIOpponent extends mockCocos.Component {
 
   // AI机器人出牌逻辑
   playCards(maxCardsPerTurn = 3) {
-    console.log("AI机器人开始出牌");
+    console.log('AI机器人开始出牌');
 
     // 检查对手手牌区域是否存在
     if (!this.opponentHand) {
-      console.error("对手手牌区域未设置");
+      console.error('对手手牌区域未设置');
       return;
     }
 
-    console.log(`对手手牌区域: ${this.opponentHand.name}, 子节点数量: ${this.opponentHand.children.length}`);
+    console.log(
+      `对手手牌区域: ${this.opponentHand.name}, 子节点数量: ${this.opponentHand.children.length}`,
+    );
 
     // 检查场地区域是否存在
     if (!this.playAreas || this.playAreas.length === 0) {
-      console.error("场地区域未设置或为空");
+      console.error('场地区域未设置或为空');
       return;
     }
 
     console.log(`场地区域数量: ${this.playAreas.length}`);
 
     // 获取对手手牌
-    const opponentCards = this.opponentHand.children
-      .filter(node => node !== null);
+    const opponentCards = this.opponentHand.children.filter((node) => node !== null);
 
     console.log(`对手有效卡牌数量: ${opponentCards.length}`);
 
     if (opponentCards.length === 0) {
-      console.log("AI没有手牌，无法出牌");
+      console.log('AI没有手牌，无法出牌');
       return;
     }
 
@@ -90,18 +93,20 @@ class AIOpponent extends mockCocos.Component {
     console.log(`AI将出${aiPlayCount}张牌`);
 
     // 检查是否是特殊测试场景
-    const isFlushTest = opponentCards.every(card => card.suit === CardSuit.Heart);
-    const isStraightTest = opponentCards.some(card => card.rank === CardRank.Ace) &&
-                          opponentCards.some(card => card.rank === CardRank.Two) &&
-                          opponentCards.some(card => card.rank === CardRank.Three);
-    const isHighRankTest = opponentCards.some(card => card.rank === CardRank.Jack) &&
-                          opponentCards.some(card => card.rank === CardRank.Queen) &&
-                          opponentCards.some(card => card.rank === CardRank.King);
+    const isFlushTest = opponentCards.every((card) => card.suit === CardSuit.Heart);
+    const isStraightTest =
+      opponentCards.some((card) => card.rank === CardRank.Ace) &&
+      opponentCards.some((card) => card.rank === CardRank.Two) &&
+      opponentCards.some((card) => card.rank === CardRank.Three);
+    const isHighRankTest =
+      opponentCards.some((card) => card.rank === CardRank.Jack) &&
+      opponentCards.some((card) => card.rank === CardRank.Queen) &&
+      opponentCards.some((card) => card.rank === CardRank.King);
 
     // 特殊测试场景处理
     if (isFlushTest) {
       // 同花牌型测试
-      console.log("检测到同花牌型测试");
+      console.log('检测到同花牌型测试');
       // 将所有同花牌放入第一个区域
       for (const card of opponentCards) {
         this.recordCardPlayed(card, 0);
@@ -117,16 +122,20 @@ class AIOpponent extends mockCocos.Component {
       // 重新排列AI卡牌
       this.arrangeAICardsInPlayArea(0);
 
-      console.log("AI出牌完成");
+      console.log('AI出牌完成');
       return;
     } else if (isStraightTest) {
       // 顺子牌型测试
-      console.log("检测到顺子牌型测试");
+      console.log('检测到顺子牌型测试');
       // 将所有顺子牌放入第二个区域
       for (const card of opponentCards) {
-        if (card.rank === CardRank.Ace || card.rank === CardRank.Two ||
-            card.rank === CardRank.Three || card.rank === CardRank.Four ||
-            card.rank === CardRank.Five) {
+        if (
+          card.rank === CardRank.Ace ||
+          card.rank === CardRank.Two ||
+          card.rank === CardRank.Three ||
+          card.rank === CardRank.Four ||
+          card.rank === CardRank.Five
+        ) {
           this.recordCardPlayed(card, 1);
           this.showCardInPlayArea(card, 1);
 
@@ -141,15 +150,18 @@ class AIOpponent extends mockCocos.Component {
       // 重新排列AI卡牌
       this.arrangeAICardsInPlayArea(1);
 
-      console.log("AI出牌完成");
+      console.log('AI出牌完成');
       return;
     } else if (isHighRankTest) {
       // 高点数牌型测试
-      console.log("检测到高点数牌型测试");
+      console.log('检测到高点数牌型测试');
       // 将所有JQK牌放入第三个区域
       for (const card of opponentCards) {
-        if (card.rank === CardRank.Jack || card.rank === CardRank.Queen ||
-            card.rank === CardRank.King) {
+        if (
+          card.rank === CardRank.Jack ||
+          card.rank === CardRank.Queen ||
+          card.rank === CardRank.King
+        ) {
           this.recordCardPlayed(card, 2);
           this.showCardInPlayArea(card, 2);
 
@@ -164,7 +176,7 @@ class AIOpponent extends mockCocos.Component {
       // 重新排列AI卡牌
       this.arrangeAICardsInPlayArea(2);
 
-      console.log("AI出牌完成");
+      console.log('AI出牌完成');
       return;
     }
 
@@ -180,7 +192,9 @@ class AIOpponent extends mockCocos.Component {
         const card = opponentCards[randomIndex];
         if (card) {
           selectedCards.push(card);
-          console.log(`选择了卡牌: ${card.getFullName ? card.getFullName() : `${card.suit} ${card.rank}`}`);
+          console.log(
+            `选择了卡牌: ${card.getFullName ? card.getFullName() : `${card.suit} ${card.rank}`}`,
+          );
         }
       }
     }
@@ -227,7 +241,7 @@ class AIOpponent extends mockCocos.Component {
     }
 
     // 检查是否有场景效果
-    const hasEffects = this.playAreas.some(area => area.effect);
+    const hasEffects = this.playAreas.some((area) => area.effect);
 
     // 根据场景效果和卡牌特性选择合适的区域
     for (let i = 0; i < selectedCards.length; i++) {
@@ -235,7 +249,7 @@ class AIOpponent extends mockCocos.Component {
 
       // 检查卡牌是否有效
       if (!card) {
-        console.error("无效的卡牌对象");
+        console.error('无效的卡牌对象');
         continue;
       }
 
@@ -247,14 +261,21 @@ class AIOpponent extends mockCocos.Component {
           areaIndex = 0;
         }
         // 如果有顺子牌组，将顺子牌放在第二个区域（连锁效果）
-        else if (card.rank === CardRank.Ace || card.rank === CardRank.Two ||
-                card.rank === CardRank.Three || card.rank === CardRank.Four ||
-                card.rank === CardRank.Five) {
+        else if (
+          card.rank === CardRank.Ace ||
+          card.rank === CardRank.Two ||
+          card.rank === CardRank.Three ||
+          card.rank === CardRank.Four ||
+          card.rank === CardRank.Five
+        ) {
           areaIndex = 1;
         }
         // 如果有高点数牌组，将高点数牌放在第三个区域（点数加成）
-        else if (card.rank === CardRank.Jack || card.rank === CardRank.Queen ||
-                card.rank === CardRank.King) {
+        else if (
+          card.rank === CardRank.Jack ||
+          card.rank === CardRank.Queen ||
+          card.rank === CardRank.King
+        ) {
           areaIndex = 2;
         }
         // 其他牌随机放置
@@ -289,12 +310,14 @@ class AIOpponent extends mockCocos.Component {
       this.arrangeAICardsInPlayArea(i);
     }
 
-    console.log("AI出牌完成");
+    console.log('AI出牌完成');
   }
 
   // 在场地区域显示AI出的牌
   showCardInPlayArea(card, areaIndex) {
-    console.log(`显示AI卡牌 ${card.getFullName ? card.getFullName() : `${card.suit} ${card.rank}`} 在场地区域 ${areaIndex}`);
+    console.log(
+      `显示AI卡牌 ${card.getFullName ? card.getFullName() : `${card.suit} ${card.rank}`} 在场地区域 ${areaIndex}`,
+    );
 
     // 获取场地区域
     const playArea = this.playAreas[areaIndex];
@@ -333,7 +356,7 @@ class AIOpponent extends mockCocos.Component {
     const spacing = 30;
 
     // 计算起始位置（居中）
-    const startX = -(containers.length - 1) * spacing / 2;
+    const startX = (-(containers.length - 1) * spacing) / 2;
 
     // 重新排列卡牌
     // 在测试环境中，我们不需要实际设置位置
@@ -342,7 +365,7 @@ class AIOpponent extends mockCocos.Component {
 
   // 移除所有卡牌容器
   removeAllCardContainers() {
-    console.log("移除所有AI卡牌容器");
+    console.log('移除所有AI卡牌容器');
 
     for (const [areaIndex, containers] of this.aiCardContainers.entries()) {
       for (const container of containers) {
@@ -355,12 +378,12 @@ class AIOpponent extends mockCocos.Component {
 
   // 清除出牌记录
   clearPlayedCardsRecord() {
-    console.log("清除AI出牌记录");
+    console.log('清除AI出牌记录');
     this.aiPlayedCards.clear();
 
     // 清空场地区域
     if (this.playAreas) {
-      this.playAreas.forEach(area => {
+      this.playAreas.forEach((area) => {
         area.children = [];
       });
     }
@@ -369,7 +392,7 @@ class AIOpponent extends mockCocos.Component {
   // 重新排列对手手牌
   arrangeOpponentHand() {
     if (!this.opponentHand) {
-      console.error("对手手牌区域未设置");
+      console.error('对手手牌区域未设置');
       return;
     }
 
@@ -385,7 +408,7 @@ class AIOpponent extends mockCocos.Component {
     const spacing = 30;
 
     // 计算起始位置（居中）
-    const startX = -(cards.length - 1) * spacing / 2;
+    const startX = (-(cards.length - 1) * spacing) / 2;
 
     // 重新排列卡牌
     for (let i = 0; i < cards.length; i++) {
@@ -418,5 +441,5 @@ class AIOpponent extends mockCocos.Component {
 }
 
 module.exports = {
-  AIOpponent
+  AIOpponent,
 };

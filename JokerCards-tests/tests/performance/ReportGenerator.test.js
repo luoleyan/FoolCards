@@ -21,20 +21,20 @@ describe('测试报告生成器性能测试', () => {
       startTime: Date.now() - 10000,
       endTime: Date.now(),
       success: true,
-      testResults: []
+      testResults: [],
     };
 
     for (let i = 0; i < suiteCount; i++) {
       const suite = {
         testFilePath: `/test/suite${i}.test.js`,
-        testResults: []
+        testResults: [],
       };
 
       for (let j = 0; j < testCount; j++) {
         suite.testResults.push({
           title: `测试 ${j + 1}`,
           status: 'passed',
-          duration: Math.random() * 200
+          duration: Math.random() * 200,
         });
       }
 
@@ -54,7 +54,7 @@ describe('测试报告生成器性能测试', () => {
     const reportData = generator._prepareReportData(testResults, 'performance');
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`处理小型测试结果耗时: ${duration.toFixed(2)}ms`);
     expect(duration).toBeLessThan(200); // 增加时间阈值
@@ -72,7 +72,7 @@ describe('测试报告生成器性能测试', () => {
     const reportData = generator._prepareReportData(testResults, 'performance');
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`处理中型测试结果耗时: ${duration.toFixed(2)}ms`);
     expect(duration).toBeLessThan(400); // 增加时间阈值
@@ -90,7 +90,7 @@ describe('测试报告生成器性能测试', () => {
     const reportData = generator._prepareReportData(testResults, 'performance');
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`处理大型测试结果耗时: ${duration.toFixed(2)}ms`);
     expect(duration).toBeLessThan(1000); // 增加时间阈值
@@ -105,11 +105,11 @@ describe('测试报告生成器性能测试', () => {
     const chartData = ChartGenerator.generateResultsPieChartData({
       passed: 100,
       failed: 10,
-      pending: 5
+      pending: 5,
     });
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`生成图表数据耗时: ${duration.toFixed(2)}ms`);
     expect(duration).toBeLessThan(100); // 增加时间阈值

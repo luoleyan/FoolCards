@@ -35,10 +35,7 @@ describe('SceneEffect类单元测试', () => {
   });
 
   test('未揭示的场景效果不应用', () => {
-    const cards = [
-      new Card(CardSuit.Heart, CardRank.Ace),
-      new Card(CardSuit.Heart, CardRank.King)
-    ];
+    const cards = [new Card(CardSuit.Heart, CardRank.Ace), new Card(CardSuit.Heart, CardRank.King)];
 
     const baseScore = 14; // Ace(1) + King(13)
 
@@ -48,10 +45,7 @@ describe('SceneEffect类单元测试', () => {
   });
 
   test('基础场景效果不提供额外加成', () => {
-    const cards = [
-      new Card(CardSuit.Heart, CardRank.Ace),
-      new Card(CardSuit.Heart, CardRank.King)
-    ];
+    const cards = [new Card(CardSuit.Heart, CardRank.Ace), new Card(CardSuit.Heart, CardRank.King)];
 
     const baseScore = 14; // Ace(1) + King(13)
 
@@ -67,13 +61,13 @@ describe('SceneEffect类单元测试', () => {
     // 创建同花牌组
     const sameFlowerCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
-      new Card(CardSuit.Heart, CardRank.King)
+      new Card(CardSuit.Heart, CardRank.King),
     ];
 
     // 创建非同花牌组
     const differentFlowerCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
-      new Card(CardSuit.Spade, CardRank.King)
+      new Card(CardSuit.Spade, CardRank.King),
     ];
 
     const baseScore = 14; // Ace(1) + King(13)
@@ -95,14 +89,14 @@ describe('SceneEffect类单元测试', () => {
     const jqkCards = [
       new Card(CardSuit.Heart, CardRank.Jack),
       new Card(CardSuit.Spade, CardRank.Queen),
-      new Card(CardSuit.Club, CardRank.King)
+      new Card(CardSuit.Club, CardRank.King),
     ];
 
     // 创建不包含JQK的牌组
     const normalCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
       new Card(CardSuit.Spade, CardRank.Two),
-      new Card(CardSuit.Club, CardRank.Three)
+      new Card(CardSuit.Club, CardRank.Three),
     ];
 
     const jqkBaseScore = 36; // Jack(11) + Queen(12) + King(13)
@@ -125,14 +119,14 @@ describe('SceneEffect类单元测试', () => {
     const straightCards = [
       new Card(CardSuit.Heart, CardRank.Three),
       new Card(CardSuit.Spade, CardRank.Four),
-      new Card(CardSuit.Club, CardRank.Five)
+      new Card(CardSuit.Club, CardRank.Five),
     ];
 
     // 创建非顺子牌组（卡牌点数不连续）
     const nonStraightCards = [
       new Card(CardSuit.Heart, CardRank.Three),
       new Card(CardSuit.Spade, CardRank.Four),
-      new Card(CardSuit.Club, CardRank.Six)
+      new Card(CardSuit.Club, CardRank.Six),
     ];
 
     const straightBaseScore = 12; // Three(3) + Four(4) + Five(5)
@@ -156,14 +150,14 @@ describe('SceneEffect类单元测试', () => {
     // 创建不同数量的牌组
     const twoCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
-      new Card(CardSuit.Spade, CardRank.King)
+      new Card(CardSuit.Spade, CardRank.King),
     ];
 
     const fourCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
       new Card(CardSuit.Spade, CardRank.King),
       new Card(CardSuit.Club, CardRank.Queen),
-      new Card(CardSuit.Diamond, CardRank.Jack)
+      new Card(CardSuit.Diamond, CardRank.Jack),
     ];
 
     const twoCardsBaseScore = 14; // Ace(1) + King(13)
@@ -174,10 +168,10 @@ describe('SceneEffect类单元测试', () => {
 
     // 根据卡牌数量加分
     const twoCardsScore = specialEffect.applyEffect(twoCards, twoCardsBaseScore);
-    expect(twoCardsScore).toBe(twoCardsBaseScore + (2 * 5));
+    expect(twoCardsScore).toBe(twoCardsBaseScore + 2 * 5);
 
     const fourCardsScore = specialEffect.applyEffect(fourCards, fourCardsBaseScore);
-    expect(fourCardsScore).toBe(fourCardsBaseScore + (4 * 5));
+    expect(fourCardsScore).toBe(fourCardsBaseScore + 4 * 5);
   });
 
   test('获取场景效果信息', () => {

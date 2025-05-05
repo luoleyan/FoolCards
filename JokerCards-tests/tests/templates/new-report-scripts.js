@@ -1,5 +1,9 @@
-// 测试报告脚本 - ECharts版本
-document.addEventListener('DOMContentLoaded', function() {
+// 测试报告脚本 - 增强ECharts版本
+document.addEventListener('DOMContentLoaded', () => {
+  // 全局变量
+  let enhancedCharts;
+  let chartFilters;
+
   // 初始化报告
   initReport();
 
@@ -7,6 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
   function initReport() {
     try {
       console.log('初始化测试报告...');
+
+      // 初始化增强图表功能
+      enhancedCharts = new EnhancedCharts();
+      chartFilters = new ChartFilters(enhancedCharts);
 
       // 填充报告元数据
       fillReportMetadata();
@@ -71,6 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // 初始化打印功能
       initPrint();
 
+      // 添加移动端优化
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.body.classList.add('mobile-device');
+      }
+
       console.log('测试报告初始化完成');
     } catch (error) {
       console.error('初始化报告时发生错误:', error);
@@ -108,6 +121,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 渲染风险矩阵图表
     renderRiskMatrixChart();
+
+    // 渲染雷达图（如果有数据）
+    renderTestCoverageRadarChart();
+
+    // 渲染热力图（如果有数据）
+    renderDefectHeatmapChart();
   }
 
   // 初始化模态框
@@ -116,74 +135,105 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeButton = document.querySelector('.close-button');
     const saveButton = document.getElementById('save-image-button');
 
+    // 创建保存格式选择下拉菜单
+    const saveFormatSelect = document.createElement('select');
+    saveFormatSelect.id = 'save-format-select';
+    saveFormatSelect.style.marginRight = '10px';
+    saveFormatSelect.style.padding = '5px';
+    saveFormatSelect.style.borderRadius = '3px';
+
+    // 添加保存格式选项
+    const formats = [
+      { value: 'png', label: 'PNG图片' },
+      { value: 'jpeg', label: 'JPEG图片' },
+      { value: 'svg', label: 'SVG矢量图' },
+      { value: 'pdf', label: 'PDF文档' }
+    ];
+
+    formats.forEach(format => {
+      const option = document.createElement('option');
+      option.value = format.value;
+      option.textContent = format.label;
+      saveFormatSelect.appendChild(option);
+    });
+
+    // 将选择框添加到模态框底部
+    const modalFooter = document.querySelector('.modal-footer');
+    modalFooter.insertBefore(saveFormatSelect, saveButton);
+
     // 关闭模态框
-    closeButton.addEventListener('click', function() {
+    closeButton.addEventListener('click', () => {
       modal.style.display = 'none';
     });
 
     // 点击模态框外部关闭
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', (event) => {
       if (event.target === modal) {
         modal.style.display = 'none';
       }
     });
 
     // 保存图表
-    saveButton.addEventListener('click', function() {
+    saveButton.addEventListener('click', () => {
       const chartContainer = document.getElementById('modal-chart-container');
-      const chart = echarts.getInstanceByDom(chartContainer);
+      const chart = enhancedCharts.charts.get('modal-chart-container');
+      const format = saveFormatSelect.value;
 
       if (chart) {
         try {
-          // 获取图表的数据URL
-          const url = chart.getDataURL({
-            type: 'png',
-            pixelRatio: 2,
-            backgroundColor: '#fff'
-          });
+          if (format === 'pdf') {
+            // 使用增强图表功能保存PDF
+            enhancedCharts.saveChart('modal-chart-container', 'pdf');
+          } else {
+            // 获取图表的数据URL
+            const url = chart.getDataURL({
+              type: format,
+              pixelRatio: 2,
+              backgroundColor: '#fff',
+              excludeComponents: ['toolbox']
+            });
 
-          // 创建下载链接
-          const link = document.createElement('a');
-          link.download = `chart-${Date.now()}.png`;
-          link.href = url;
-          link.click();
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.download = `chart-${Date.now()}.${format}`;
+            link.href = url;
+            link.click();
+          }
         } catch (error) {
           console.error('保存图表时出错:', error);
-          alert('保存图表失败: ' + error.message);
+          alert(`保存图表失败: ${error.message}`);
         }
+      }
+    });
+
+    // 添加键盘事件支持
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && modal.style.display === 'block') {
+        modal.style.display = 'none';
       }
     });
   }
 
   // 显示图表模态框
   function showChartModal(title, option) {
-    const modal = document.getElementById('image-modal');
-    const container = document.getElementById('modal-chart-container');
-
-    // 显示模态框
-    modal.style.display = 'block';
-
-    // 创建新的ECharts实例
-    const chart = echarts.init(container);
+    // 使用增强图表功能显示模态框
+    const containerId = option.containerId || 'results-chart-container';
+    enhancedCharts.showChartModal(containerId);
 
     // 更新标题
-    const newOption = JSON.parse(JSON.stringify(option));
-    if (newOption.title) {
-      newOption.title.text = title;
+    const modalChart = enhancedCharts.charts.get('modal-chart-container');
+    if (modalChart) {
+      const currentOption = modalChart.getOption();
+      currentOption.title[0].text = title;
+      modalChart.setOption(currentOption);
     }
-
-    // 设置图表选项
-    chart.setOption(newOption);
-
-    // 调整大小
-    chart.resize();
   }
 
   // 初始化导出PDF功能
   function initExportPDF() {
     const exportButton = document.getElementById('export-pdf-button');
 
-    exportButton.addEventListener('click', function() {
+    exportButton.addEventListener('click', () => {
       try {
         const element = document.querySelector('.container');
         const opt = {
@@ -191,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
           filename: `test-report-${Date.now()}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         };
 
         // 显示加载提示
@@ -204,18 +254,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(loadingOverlay);
 
         // 生成PDF
-        html2pdf().set(opt).from(element).save().then(() => {
-          // 移除加载提示
-          document.body.removeChild(loadingOverlay);
-        }).catch(error => {
-          console.error('生成PDF时出错:', error);
-          alert('生成PDF失败: ' + error.message);
-          // 移除加载提示
-          document.body.removeChild(loadingOverlay);
-        });
+        html2pdf()
+          .set(opt)
+          .from(element)
+          .save()
+          .then(() => {
+            // 移除加载提示
+            document.body.removeChild(loadingOverlay);
+          })
+          .catch((error) => {
+            console.error('生成PDF时出错:', error);
+            alert(`生成PDF失败: ${error.message}`);
+            // 移除加载提示
+            document.body.removeChild(loadingOverlay);
+          });
       } catch (error) {
         console.error('生成PDF报告失败:', error.message);
-        alert('生成PDF失败: ' + error.message);
+        alert(`生成PDF失败: ${error.message}`);
       }
     });
   }
@@ -224,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function initPrint() {
     const printButton = document.getElementById('print-report-button');
 
-    printButton.addEventListener('click', function() {
+    printButton.addEventListener('click', () => {
       window.print();
     });
   }
@@ -294,7 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('pending-tests').textContent = summary.pending || 0;
     document.getElementById('test-duration').textContent = formatDuration(summary.duration || 0);
     document.getElementById('test-status').textContent = summary.success ? '通过' : '失败';
-    document.getElementById('test-status').className = summary.success ? 'value passed' : 'value failed';
+    document.getElementById('test-status').className = summary.success
+      ? 'value passed'
+      : 'value failed';
   }
 
   // 填充测试目的
@@ -401,7 +458,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('total-test-cases').textContent = testCases.total || 0;
     document.getElementById('automated-test-cases').textContent = testCases.automated || 0;
     document.getElementById('manual-test-cases').textContent = testCases.manual || 0;
-    document.getElementById('test-cases-coverage').textContent = testCases.coverage ? testCases.coverage + '%' : 'N/A';
+    document.getElementById('test-cases-coverage').textContent = testCases.coverage
+      ? `${testCases.coverage}%`
+      : 'N/A';
 
     // 渲染用例分布图表
     if (testCases.distribution && testCases.distribution.length > 0) {
@@ -471,14 +530,18 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
           </thead>
           <tbody>
-            ${suite.tests.map(test => `
+            ${suite.tests
+              .map(
+                (test) => `
               <tr class="${test.status}">
                 <td>${test.name}</td>
                 <td>${test.status === 'passed' ? '通过' : test.status === 'failed' ? '失败' : '待定'}</td>
                 <td>${formatDuration(test.duration)}</td>
                 <td>${test.error || ''}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join('')}
           </tbody>
         `;
         suiteDiv.appendChild(testsTable);
@@ -511,7 +574,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 填充修复建议
     if (defectAnalysis.recommendations) {
-      if (defectAnalysis.recommendations.categoryRecommendations && defectAnalysis.recommendations.categoryRecommendations.length > 0) {
+      if (
+        defectAnalysis.recommendations.categoryRecommendations &&
+        defectAnalysis.recommendations.categoryRecommendations.length > 0
+      ) {
         const categoryRecommendations = document.getElementById('category-recommendations');
         const ul = document.createElement('ul');
         for (const recommendation of defectAnalysis.recommendations.categoryRecommendations) {
@@ -522,7 +588,10 @@ document.addEventListener('DOMContentLoaded', function() {
         categoryRecommendations.appendChild(ul);
       }
 
-      if (defectAnalysis.recommendations.patternRecommendations && defectAnalysis.recommendations.patternRecommendations.length > 0) {
+      if (
+        defectAnalysis.recommendations.patternRecommendations &&
+        defectAnalysis.recommendations.patternRecommendations.length > 0
+      ) {
         const patternRecommendations = document.getElementById('pattern-recommendations');
         const ul = document.createElement('ul');
         for (const recommendation of defectAnalysis.recommendations.patternRecommendations) {
@@ -545,9 +614,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const performanceAnalysis = reportData.performanceAnalysis;
 
     if (performanceAnalysis.summary) {
-      document.getElementById('average-duration').textContent = formatDuration(performanceAnalysis.summary.averageDuration || 0);
-      document.getElementById('median-duration').textContent = formatDuration(performanceAnalysis.summary.medianDuration || 0);
-      document.getElementById('std-deviation').textContent = formatDuration(performanceAnalysis.summary.stdDeviation || 0);
+      document.getElementById('average-duration').textContent = formatDuration(
+        performanceAnalysis.summary.averageDuration || 0,
+      );
+      document.getElementById('median-duration').textContent = formatDuration(
+        performanceAnalysis.summary.medianDuration || 0,
+      );
+      document.getElementById('std-deviation').textContent = formatDuration(
+        performanceAnalysis.summary.stdDeviation || 0,
+      );
     }
 
     // 渲染套件性能图表
@@ -674,14 +749,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.testCases || !reportData.testCases.distribution || reportData.testCases.distribution.length === 0) {
+      if (
+        !reportData.testCases ||
+        !reportData.testCases.distribution ||
+        reportData.testCases.distribution.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有测试用例分布数据</div>';
         return;
       }
 
       const distribution = reportData.testCases.distribution;
-      const categories = distribution.map(item => item.category);
-      const counts = distribution.map(item => item.count);
+      const categories = distribution.map((item) => item.category);
+      const counts = distribution.map((item) => item.count);
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -690,16 +769,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '测试用例分布',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
         },
         legend: {
           orient: 'horizontal',
           bottom: 'bottom',
-          data: categories
+          data: categories,
         },
         series: [
           {
@@ -707,31 +786,31 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'pie',
             radius: '55%',
             center: ['50%', '50%'],
-            data: distribution.map(item => ({
+            data: distribution.map((item) => ({
               name: item.category,
-              value: item.count
+              value: item.count,
             })),
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
                 shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            }
-          }
-        ]
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('测试用例分布', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('测试用例分布', option);
       });
@@ -741,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染测试用例分布图表时出错:', error);
       const container = document.getElementById('test-cases-distribution-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -755,14 +834,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.performanceAnalysis || !reportData.performanceAnalysis.suitePerformance || reportData.performanceAnalysis.suitePerformance.length === 0) {
+      if (
+        !reportData.performanceAnalysis ||
+        !reportData.performanceAnalysis.suitePerformance ||
+        reportData.performanceAnalysis.suitePerformance.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有套件性能数据</div>';
         return;
       }
 
       const suitePerformance = reportData.performanceAnalysis.suitePerformance;
-      const suiteNames = suitePerformance.map(item => item.name);
-      const durations = suitePerformance.map(item => item.duration);
+      const suiteNames = suitePerformance.map((item) => item.name);
+      const durations = suitePerformance.map((item) => item.duration);
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -771,39 +854,39 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '套件执行时间',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
+            type: 'shadow',
           },
-          formatter: function(params) {
+          formatter(params) {
             return `${params[0].name}<br>${params[0].marker}${params[0].seriesName}: ${formatDuration(params[0].value)}`;
-          }
+          },
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '15%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'category',
           data: suiteNames,
           axisLabel: {
             interval: 0,
-            rotate: 30
-          }
+            rotate: 30,
+          },
         },
         yAxis: {
           type: 'value',
           name: '执行时间 (秒)',
           axisLabel: {
-            formatter: function(value) {
-              return value + 's';
-            }
-          }
+            formatter(value) {
+              return `${value}s`;
+            },
+          },
         },
         series: [
           {
@@ -811,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             data: durations,
             itemStyle: {
-              color: function(params) {
+              color(params) {
                 // 根据执行时间生成不同的颜色
                 const value = params.value;
                 if (value < 1) {
@@ -821,29 +904,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                   return '#e74c3c'; // 红色，慢
                 }
-              }
+              },
             },
             label: {
               show: true,
               position: 'top',
-              formatter: function(params) {
+              formatter(params) {
                 return formatDuration(params.value);
-              }
-            }
-          }
-        ]
+              },
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('套件执行时间', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('套件执行时间', option);
       });
@@ -853,7 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染套件性能图表时出错:', error);
       const container = document.getElementById('suite-performance-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -867,15 +950,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.performanceAnalysis || !reportData.performanceAnalysis.slowTests || reportData.performanceAnalysis.slowTests.length === 0) {
+      if (
+        !reportData.performanceAnalysis ||
+        !reportData.performanceAnalysis.slowTests ||
+        reportData.performanceAnalysis.slowTests.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有慢测试数据</div>';
         return;
       }
 
       const slowTests = reportData.performanceAnalysis.slowTests;
-      const testNames = slowTests.map(item => item.name);
-      const durations = slowTests.map(item => item.duration);
-      const expected = slowTests.map(item => item.expected);
+      const testNames = slowTests.map((item) => item.name);
+      const durations = slowTests.map((item) => item.duration);
+      const expected = slowTests.map((item) => item.expected);
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -884,42 +971,42 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '慢测试分析',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
+            type: 'shadow',
           },
-          formatter: function(params) {
+          formatter(params) {
             return `${params[0].name}<br>${params[0].marker}实际: ${formatDuration(params[0].value)}<br>${params[1].marker}预期: ${formatDuration(params[1].value)}`;
-          }
+          },
         },
         legend: {
           data: ['实际耗时', '预期耗时'],
-          bottom: 'bottom'
+          bottom: 'bottom',
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '15%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'value',
           name: '执行时间 (秒)',
           axisLabel: {
-            formatter: function(value) {
-              return value + 's';
-            }
-          }
+            formatter(value) {
+              return `${value}s`;
+            },
+          },
         },
         yAxis: {
           type: 'category',
           data: testNames,
           axisLabel: {
-            interval: 0
-          }
+            interval: 0,
+          },
         },
         series: [
           {
@@ -927,44 +1014,44 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             data: durations,
             itemStyle: {
-              color: '#e74c3c'
+              color: '#e74c3c',
             },
             label: {
               show: true,
               position: 'right',
-              formatter: function(params) {
+              formatter(params) {
                 return formatDuration(params.value);
-              }
-            }
+              },
+            },
           },
           {
             name: '预期耗时',
             type: 'bar',
             data: expected,
             itemStyle: {
-              color: '#2ecc71'
+              color: '#2ecc71',
             },
             label: {
               show: true,
               position: 'right',
-              formatter: function(params) {
+              formatter(params) {
                 return formatDuration(params.value);
-              }
-            }
-          }
-        ]
+              },
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('慢测试分析', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('慢测试分析', option);
       });
@@ -974,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染慢测试图表时出错:', error);
       const container = document.getElementById('slow-tests-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -988,15 +1075,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.riskAnalysis || !reportData.riskAnalysis.matrix || reportData.riskAnalysis.matrix.length === 0) {
+      if (
+        !reportData.riskAnalysis ||
+        !reportData.riskAnalysis.matrix ||
+        reportData.riskAnalysis.matrix.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有风险矩阵数据</div>';
         return;
       }
 
       const matrix = reportData.riskAnalysis.matrix;
-      const data = matrix.map(item => ({
+      const data = matrix.map((item) => ({
         name: item.title,
-        value: [item.probability, item.impact, item.count]
+        value: [item.probability, item.impact, item.count],
       }));
 
       // 初始化ECharts实例
@@ -1006,18 +1097,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '风险矩阵',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
-          formatter: function(params) {
+          formatter(params) {
             return `${params.data.name}<br>影响: ${params.data.value[1]}<br>可能性: ${params.data.value[0]}<br>问题数: ${params.data.value[2]}`;
-          }
+          },
         },
         grid: {
           left: '10%',
           right: '10%',
           bottom: '15%',
-          top: '15%'
+          top: '15%',
         },
         xAxis: {
           type: 'value',
@@ -1026,8 +1117,8 @@ document.addEventListener('DOMContentLoaded', function() {
           max: 5,
           splitNumber: 5,
           splitLine: {
-            show: true
-          }
+            show: true,
+          },
         },
         yAxis: {
           type: 'value',
@@ -1036,19 +1127,19 @@ document.addEventListener('DOMContentLoaded', function() {
           max: 5,
           splitNumber: 5,
           splitLine: {
-            show: true
-          }
+            show: true,
+          },
         },
         series: [
           {
             name: '风险项',
             type: 'scatter',
-            symbolSize: function(data) {
+            symbolSize(data) {
               return Math.sqrt(data[2]) * 15;
             },
-            data: data,
+            data,
             itemStyle: {
-              color: function(params) {
+              color(params) {
                 const impact = params.data.value[1];
                 const probability = params.data.value[0];
                 const risk = impact * probability;
@@ -1060,38 +1151,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                   return '#e74c3c'; // 高风险，红色
                 }
-              }
+              },
             },
             label: {
               show: true,
-              formatter: function(params) {
+              formatter(params) {
                 return params.data.name;
               },
-              position: 'top'
+              position: 'top',
             },
             emphasis: {
               label: {
                 show: true,
-                formatter: function(params) {
+                formatter(params) {
                   return `${params.data.name}\n影响: ${params.data.value[1]}\n可能性: ${params.data.value[0]}\n问题数: ${params.data.value[2]}`;
                 },
-                position: 'top'
-              }
-            }
-          }
-        ]
+                position: 'top',
+              },
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('风险矩阵', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('风险矩阵', option);
       });
@@ -1101,7 +1192,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染风险矩阵图表时出错:', error);
       const container = document.getElementById('risk-matrix-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -1124,7 +1215,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const data = [
         { name: '高优先级', value: priority.high || 0 },
         { name: '中优先级', value: priority.medium || 0 },
-        { name: '低优先级', value: priority.low || 0 }
+        { name: '低优先级', value: priority.low || 0 },
       ];
 
       // 初始化ECharts实例
@@ -1134,16 +1225,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '测试用例优先级分布',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
         },
         legend: {
           orient: 'horizontal',
           bottom: 'bottom',
-          data: ['高优先级', '中优先级', '低优先级']
+          data: ['高优先级', '中优先级', '低优先级'],
         },
         series: [
           {
@@ -1154,41 +1245,41 @@ document.addEventListener('DOMContentLoaded', function() {
             itemStyle: {
               borderRadius: 10,
               borderColor: '#fff',
-              borderWidth: 2
+              borderWidth: 2,
             },
             label: {
               show: false,
-              position: 'center'
+              position: 'center',
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: '18',
-                fontWeight: 'bold'
-              }
+                fontWeight: 'bold',
+              },
             },
             labelLine: {
-              show: false
+              show: false,
             },
             data: [
               { value: priority.high || 0, name: '高优先级', itemStyle: { color: '#e74c3c' } },
               { value: priority.medium || 0, name: '中优先级', itemStyle: { color: '#f39c12' } },
-              { value: priority.low || 0, name: '低优先级', itemStyle: { color: '#3498db' } }
-            ]
-          }
-        ]
+              { value: priority.low || 0, name: '低优先级', itemStyle: { color: '#3498db' } },
+            ],
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('测试用例优先级分布', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('测试用例优先级分布', option);
       });
@@ -1198,15 +1289,16 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染测试用例优先级图表时出错:', error);
       const container = document.getElementById('test-cases-priority-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
 
-  // 渲染测试结果图表 - 使用ECharts
+  // 渲染测试结果图表 - 使用增强ECharts
   function renderResultsChart() {
     try {
-      const container = document.getElementById('results-chart-container');
+      const containerId = 'results-chart-container';
+      const container = document.getElementById(containerId);
       if (!container) {
         console.error('找不到结果图表容器');
         return;
@@ -1228,23 +1320,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // 初始化ECharts实例
-      const chart = echarts.init(container);
-
       // 配置图表选项
       const option = {
         title: {
           text: '测试结果统计',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
         },
         legend: {
           orient: 'horizontal',
           bottom: 'bottom',
-          data: ['通过', '失败', '待定']
+          data: ['通过', '失败', '待定'],
         },
         series: [
           {
@@ -1255,43 +1344,83 @@ document.addEventListener('DOMContentLoaded', function() {
             itemStyle: {
               borderRadius: 10,
               borderColor: '#fff',
-              borderWidth: 2
+              borderWidth: 2,
             },
             label: {
               show: false,
-              position: 'center'
+              position: 'center',
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: '18',
-                fontWeight: 'bold'
-              }
+                fontWeight: 'bold',
+              },
             },
             labelLine: {
-              show: false
+              show: false,
             },
             data: [
               { value: passed, name: '通过', itemStyle: { color: '#2ecc71' } },
               { value: failed, name: '失败', itemStyle: { color: '#e74c3c' } },
-              { value: pending, name: '待定', itemStyle: { color: '#f39c12' } }
-            ]
-          }
-        ]
+              { value: pending, name: '待定', itemStyle: { color: '#f39c12' } },
+            ],
+            // 添加动画效果
+            animationType: 'scale',
+            animationEasing: 'elasticOut',
+            animationDelay: function (idx) {
+              return Math.random() * 200;
+            }
+          },
+        ],
       };
 
-      // 使用配置项设置图表
-      chart.setOption(option);
+      // 使用增强图表功能创建图表
+      const chart = enhancedCharts.createChart(containerId, option);
 
-      // 添加点击事件
-      chart.on('click', function(params) {
-        showChartModal('测试结果统计', option);
-      });
+      // 添加筛选功能
+      chartFilters.createFilterControls(containerId, {
+        title: '筛选选项',
+        position: 'top',
+        filters: [
+          {
+            type: 'checkbox',
+            name: 'resultType',
+            label: '结果类型',
+            options: [
+              { value: 'passed', label: '通过' },
+              { value: 'failed', label: '失败' },
+              { value: 'pending', label: '待定' }
+            ],
+            defaultValue: ['passed', 'failed', 'pending']
+          }
+        ],
+        onChange: function(filter) {
+          if (filter.name === 'resultType') {
+            const selectedTypes = filter.value;
+            const chart = enhancedCharts.charts.get(containerId);
 
-      // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        showChartModal('测试结果统计', option);
+            if (chart) {
+              const option = chart.getOption();
+              const newData = [];
+
+              if (selectedTypes.includes('passed')) {
+                newData.push({ value: passed, name: '通过', itemStyle: { color: '#2ecc71' } });
+              }
+
+              if (selectedTypes.includes('failed')) {
+                newData.push({ value: failed, name: '失败', itemStyle: { color: '#e74c3c' } });
+              }
+
+              if (selectedTypes.includes('pending')) {
+                newData.push({ value: pending, name: '待定', itemStyle: { color: '#f39c12' } });
+              }
+
+              option.series[0].data = newData;
+              chart.setOption(option);
+            }
+          }
+        }
       });
 
       console.log('测试结果图表渲染成功');
@@ -1299,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染测试结果图表时出错:', error);
       const container = document.getElementById('results-chart-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -1313,7 +1442,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.historyTrend || !reportData.historyTrend.dates || reportData.historyTrend.dates.length === 0) {
+      if (
+        !reportData.historyTrend ||
+        !reportData.historyTrend.dates ||
+        reportData.historyTrend.dates.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有历史趋势数据</div>';
         return;
       }
@@ -1323,10 +1456,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const passed = trend.passed;
       const failed = trend.failed;
       const pending = trend.pending || Array(dates.length).fill(0);
-      const passRate = trend.passRate || Array(dates.length).fill(0).map((_, i) => {
-        const total = (passed[i] || 0) + (failed[i] || 0) + (pending[i] || 0);
-        return total > 0 ? Math.round((passed[i] / total) * 100) : 0;
-      });
+      const passRate =
+        trend.passRate ||
+        Array(dates.length)
+          .fill(0)
+          .map((_, i) => {
+            const total = (passed[i] || 0) + (failed[i] || 0) + (pending[i] || 0);
+            return total > 0 ? Math.round((passed[i] / total) * 100) : 0;
+          });
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -1335,33 +1472,33 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '历史趋势',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
-          }
+            type: 'shadow',
+          },
         },
         legend: {
           data: ['通过', '失败', '待定', '通过率'],
-          bottom: 'bottom'
+          bottom: 'bottom',
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '15%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'category',
-          data: dates
+          data: dates,
         },
         yAxis: [
           {
             type: 'value',
             name: '测试数量',
-            position: 'left'
+            position: 'left',
           },
           {
             type: 'value',
@@ -1370,9 +1507,9 @@ document.addEventListener('DOMContentLoaded', function() {
             min: 0,
             max: 100,
             axisLabel: {
-              formatter: '{value}%'
-            }
-          }
+              formatter: '{value}%',
+            },
+          },
         ],
         series: [
           {
@@ -1380,36 +1517,36 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: passed,
             itemStyle: {
-              color: '#2ecc71'
-            }
+              color: '#2ecc71',
+            },
           },
           {
             name: '失败',
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: failed,
             itemStyle: {
-              color: '#e74c3c'
-            }
+              color: '#e74c3c',
+            },
           },
           {
             name: '待定',
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: pending,
             itemStyle: {
-              color: '#f39c12'
-            }
+              color: '#f39c12',
+            },
           },
           {
             name: '通过率',
@@ -1420,25 +1557,25 @@ document.addEventListener('DOMContentLoaded', function() {
             symbolSize: 8,
             lineStyle: {
               width: 3,
-              color: '#3498db'
+              color: '#3498db',
             },
             itemStyle: {
-              color: '#3498db'
-            }
-          }
-        ]
+              color: '#3498db',
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('历史趋势', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('历史趋势', option);
       });
@@ -1448,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染历史趋势图表时出错:', error);
       const container = document.getElementById('history-trend-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -1462,14 +1599,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.defectAnalysis || !reportData.defectAnalysis.categoryDistribution || reportData.defectAnalysis.categoryDistribution.length === 0) {
+      if (
+        !reportData.defectAnalysis ||
+        !reportData.defectAnalysis.categoryDistribution ||
+        reportData.defectAnalysis.categoryDistribution.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有缺陷分类数据</div>';
         return;
       }
 
       const categoryDistribution = reportData.defectAnalysis.categoryDistribution;
-      const categories = categoryDistribution.map(item => item.category);
-      const counts = categoryDistribution.map(item => item.count);
+      const categories = categoryDistribution.map((item) => item.category);
+      const counts = categoryDistribution.map((item) => item.count);
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -1478,16 +1619,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '缺陷分类统计',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
         },
         legend: {
           orient: 'horizontal',
           bottom: 'bottom',
-          data: categories
+          data: categories,
         },
         series: [
           {
@@ -1495,31 +1636,31 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'pie',
             radius: '55%',
             center: ['50%', '50%'],
-            data: categoryDistribution.map(item => ({
+            data: categoryDistribution.map((item) => ({
               name: item.category,
-              value: item.count
+              value: item.count,
             })),
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
                 shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            }
-          }
-        ]
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('缺陷分类统计', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('缺陷分类统计', option);
       });
@@ -1529,7 +1670,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染缺陷分类图表时出错:', error);
       const container = document.getElementById('defect-category-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -1543,14 +1684,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.defectAnalysis || !reportData.defectAnalysis.patternDistribution || reportData.defectAnalysis.patternDistribution.length === 0) {
+      if (
+        !reportData.defectAnalysis ||
+        !reportData.defectAnalysis.patternDistribution ||
+        reportData.defectAnalysis.patternDistribution.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有缺陷模式数据</div>';
         return;
       }
 
       const patternDistribution = reportData.defectAnalysis.patternDistribution;
-      const patterns = patternDistribution.map(item => item.pattern);
-      const counts = patternDistribution.map(item => item.count);
+      const patterns = patternDistribution.map((item) => item.pattern);
+      const counts = patternDistribution.map((item) => item.count);
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
@@ -1559,59 +1704,59 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '缺陷模式统计',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
-          }
+            type: 'shadow',
+          },
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '15%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'category',
           data: patterns,
           axisLabel: {
             interval: 0,
-            rotate: 30
-          }
+            rotate: 30,
+          },
         },
         yAxis: {
-          type: 'value'
+          type: 'value',
         },
         series: [
           {
             name: '缺陷数量',
             type: 'bar',
             data: counts.map((value, index) => ({
-              value: value,
+              value,
               itemStyle: {
-                color: `rgba(${Math.floor(Math.random() * 150) + 50}, ${Math.floor(Math.random() * 150) + 50}, ${Math.floor(Math.random() * 150) + 50}, 0.8)`
-              }
+                color: `rgba(${Math.floor(Math.random() * 150) + 50}, ${Math.floor(Math.random() * 150) + 50}, ${Math.floor(Math.random() * 150) + 50}, 0.8)`,
+              },
             })),
             label: {
               show: true,
-              position: 'top'
-            }
-          }
-        ]
+              position: 'top',
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('缺陷模式统计', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('缺陷模式统计', option);
       });
@@ -1621,7 +1766,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染缺陷模式图表时出错:', error);
       const container = document.getElementById('defect-pattern-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -1653,30 +1798,30 @@ document.addEventListener('DOMContentLoaded', function() {
       const option = {
         title: {
           text: '代码覆盖率',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
-          }
+            type: 'shadow',
+          },
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '3%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'value',
           max: 100,
           axisLabel: {
-            formatter: '{value}%'
-          }
+            formatter: '{value}%',
+          },
         },
         yAxis: {
           type: 'category',
-          data: ['语句', '分支', '函数', '行']
+          data: ['语句', '分支', '函数', '行'],
         },
         series: [
           {
@@ -1686,27 +1831,27 @@ document.addEventListener('DOMContentLoaded', function() {
               { value: statements, itemStyle: { color: '#3498db' } },
               { value: branches, itemStyle: { color: '#2ecc71' } },
               { value: functions, itemStyle: { color: '#9b59b6' } },
-              { value: lines, itemStyle: { color: '#e67e22' } }
+              { value: lines, itemStyle: { color: '#e67e22' } },
             ],
             label: {
               show: true,
               position: 'right',
-              formatter: '{c}%'
-            }
-          }
-        ]
+              formatter: '{c}%',
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('代码覆盖率', option);
       });
 
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('代码覆盖率', option);
       });
@@ -1716,8 +1861,154 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('渲染覆盖率图表时出错:', error);
       const container = document.getElementById('coverage-chart-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
+    }
+  }
+
+  // 渲染测试覆盖率雷达图
+  function renderTestCoverageRadarChart() {
+    try {
+      // 检查是否有覆盖率数据
+      if (!reportData.coverage) {
+        return;
+      }
+
+      // 创建雷达图容器
+      const section = document.createElement('div');
+      section.id = 'coverage-radar-section';
+      section.className = 'section';
+
+      const title = document.createElement('h2');
+      title.textContent = '测试覆盖率多维度分析';
+      section.appendChild(title);
+
+      const container = document.createElement('div');
+      container.id = 'coverage-radar-container';
+      container.className = 'chart-container';
+      container.style.height = '400px';
+      section.appendChild(container);
+
+      // 插入到历史趋势图表后面
+      const historyTrendSection = document.getElementById('history-trend');
+      historyTrendSection.parentNode.insertBefore(section, historyTrendSection.nextSibling);
+
+      // 准备雷达图数据
+      const coverage = reportData.coverage;
+      const indicators = [
+        { name: '语句覆盖率', max: 100 },
+        { name: '分支覆盖率', max: 100 },
+        { name: '函数覆盖率', max: 100 },
+        { name: '行覆盖率', max: 100 }
+      ];
+
+      const series = [
+        {
+          name: '当前版本',
+          value: [
+            coverage.statements || 0,
+            coverage.branches || 0,
+            coverage.functions || 0,
+            coverage.lines || 0
+          ]
+        }
+      ];
+
+      // 如果有历史数据，添加到雷达图中
+      if (reportData.historyTrend && reportData.historyTrend.coverage && reportData.historyTrend.coverage.length > 0) {
+        const lastHistoryCoverage = reportData.historyTrend.coverage[reportData.historyTrend.coverage.length - 1];
+        series.push({
+          name: '上一版本',
+          value: [
+            lastHistoryCoverage.statements || 0,
+            lastHistoryCoverage.branches || 0,
+            lastHistoryCoverage.functions || 0,
+            lastHistoryCoverage.lines || 0
+          ]
+        });
+      }
+
+      // 使用增强图表功能创建雷达图
+      enhancedCharts.createRadarChart('coverage-radar-container', {
+        title: '测试覆盖率多维度分析',
+        indicators: indicators,
+        series: series
+      });
+
+      console.log('测试覆盖率雷达图渲染成功');
+    } catch (error) {
+      console.error('渲染测试覆盖率雷达图时出错:', error);
+    }
+  }
+
+  // 渲染缺陷热力图
+  function renderDefectHeatmapChart() {
+    try {
+      // 检查是否有缺陷数据
+      if (!reportData.defectAnalysis || !reportData.defectAnalysis.patternDistribution) {
+        return;
+      }
+
+      // 创建热力图容器
+      const section = document.createElement('div');
+      section.id = 'defect-heatmap-section';
+      section.className = 'section';
+
+      const title = document.createElement('h2');
+      title.textContent = '缺陷密度热力图';
+      section.appendChild(title);
+
+      const container = document.createElement('div');
+      container.id = 'defect-heatmap-container';
+      container.className = 'chart-container';
+      container.style.height = '400px';
+      section.appendChild(container);
+
+      // 插入到缺陷分析部分
+      const defectAnalysisSection = document.getElementById('defect-analysis');
+      defectAnalysisSection.appendChild(section);
+
+      // 准备热力图数据
+      const modules = ['UI组件', '游戏逻辑', '网络通信', '数据存储', '音频处理', '输入控制'];
+      const severities = ['严重', '高', '中', '低', '提示'];
+
+      // 生成模拟数据（实际项目中应该使用真实数据）
+      const values = [];
+
+      // 如果有真实数据，使用真实数据
+      if (reportData.defectAnalysis.defectMatrix) {
+        for (let i = 0; i < reportData.defectAnalysis.defectMatrix.length; i++) {
+          const item = reportData.defectAnalysis.defectMatrix[i];
+          values.push([
+            modules.indexOf(item.module),
+            severities.indexOf(item.severity),
+            item.count
+          ]);
+        }
+      } else {
+        // 否则生成模拟数据
+        for (let i = 0; i < modules.length; i++) {
+          for (let j = 0; j < severities.length; j++) {
+            // 生成一些随机数据
+            const value = Math.floor(Math.random() * 10);
+            if (value > 0) {
+              values.push([i, j, value]);
+            }
+          }
+        }
+      }
+
+      // 使用增强图表功能创建热力图
+      enhancedCharts.createHeatmapChart('defect-heatmap-container', {
+        title: '缺陷密度热力图',
+        xAxis: modules,
+        yAxis: severities,
+        values: values
+      });
+
+      console.log('缺陷热力图渲染成功');
+    } catch (error) {
+      console.error('渲染缺陷热力图时出错:', error);
     }
   }
 });

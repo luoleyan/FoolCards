@@ -1,0 +1,17 @@
+# 构建输出
+dist
+build
+coverage
+test-results
+
+# 依赖
+node_modules
+
+# 第三方库
+**/vendor/**
+
+# 生成的文件
+*.min.js
+
+# 模板文件
+tests/templates/**/*.js

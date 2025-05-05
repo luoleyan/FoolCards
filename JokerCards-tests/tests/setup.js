@@ -12,7 +12,7 @@ global.window = {
   innerHeight: 1080,
   devicePixelRatio: 1,
   addEventListener: jest.fn(),
-  removeEventListener: jest.fn()
+  removeEventListener: jest.fn(),
 };
 
 global.document = {
@@ -21,11 +21,11 @@ global.document = {
       fillRect: jest.fn(),
       clearRect: jest.fn(),
       getImageData: jest.fn(() => ({
-        data: new Uint8Array(4)
+        data: new Uint8Array(4),
       })),
       putImageData: jest.fn(),
       createImageData: jest.fn(() => ({
-        data: new Uint8Array(4)
+        data: new Uint8Array(4),
       })),
       drawImage: jest.fn(),
       save: jest.fn(),
@@ -33,22 +33,24 @@ global.document = {
       scale: jest.fn(),
       translate: jest.fn(),
       transform: jest.fn(),
-      rotate: jest.fn()
+      rotate: jest.fn(),
     })),
     style: {},
     width: 800,
-    height: 600
-  }))
+    height: 600,
+  })),
 };
 
 global.navigator = {
-  userAgent: 'jest'
+  userAgent: 'jest',
 };
 
 global.Image = class {
   constructor() {
     setTimeout(() => {
-      if (this.onload) this.onload();
+      if (this.onload) {
+        this.onload();
+      }
     }, 100);
   }
 };
@@ -56,14 +58,16 @@ global.Image = class {
 global.Audio = class {
   constructor() {
     setTimeout(() => {
-      if (this.oncanplaythrough) this.oncanplaythrough();
+      if (this.oncanplaythrough) {
+        this.oncanplaythrough();
+      }
     }, 100);
   }
-  
+
   play() {
     return Promise.resolve();
   }
-  
+
   pause() {}
 };
 
@@ -74,13 +78,13 @@ expect.extend({
     if (pass) {
       return {
         message: () => `expected ${received} not to be within range ${floor} - ${ceiling}`,
-        pass: true
+        pass: true,
       };
     } else {
       return {
         message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
-        pass: false
+        pass: false,
       };
     }
-  }
+  },
 });

@@ -1,5 +1,5 @@
 // 测试报告脚本 - ECharts版本
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // 格式化持续时间
   function formatDuration(seconds) {
     if (seconds < 60) {
@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('pending-tests').textContent = summary.pending || 0;
     document.getElementById('test-duration').textContent = formatDuration(summary.duration || 0);
     document.getElementById('test-status').textContent = summary.success ? '通过' : '失败';
-    document.getElementById('test-status').className = summary.success ? 'value passed' : 'value failed';
+    document.getElementById('test-status').className = summary.success
+      ? 'value passed'
+      : 'value failed';
   }
 
   // 填充测试元数据
@@ -85,7 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (metadata.environment) {
       document.getElementById('test-hardware').textContent = metadata.environment.hardware || 'N/A';
       document.getElementById('test-software').textContent = metadata.environment.software || 'N/A';
-      document.getElementById('test-dependencies').textContent = metadata.environment.dependencies || 'N/A';
+      document.getElementById('test-dependencies').textContent =
+        metadata.environment.dependencies || 'N/A';
     }
   }
 
@@ -116,21 +119,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
-      
+
       // 配置图表选项
       const option = {
         title: {
           text: '测试结果统计',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
         },
         legend: {
           orient: 'horizontal',
           bottom: 'bottom',
-          data: ['通过', '失败', '待定']
+          data: ['通过', '失败', '待定'],
         },
         series: [
           {
@@ -141,51 +144,51 @@ document.addEventListener('DOMContentLoaded', function() {
             itemStyle: {
               borderRadius: 10,
               borderColor: '#fff',
-              borderWidth: 2
+              borderWidth: 2,
             },
             label: {
               show: false,
-              position: 'center'
+              position: 'center',
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: '18',
-                fontWeight: 'bold'
-              }
+                fontWeight: 'bold',
+              },
             },
             labelLine: {
-              show: false
+              show: false,
             },
             data: [
               { value: passed, name: '通过', itemStyle: { color: '#2ecc71' } },
               { value: failed, name: '失败', itemStyle: { color: '#e74c3c' } },
-              { value: pending, name: '待定', itemStyle: { color: '#f39c12' } }
-            ]
-          }
-        ]
+              { value: pending, name: '待定', itemStyle: { color: '#f39c12' } },
+            ],
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
-      
+
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('测试结果统计', option);
       });
-      
+
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('测试结果统计', option);
       });
-      
+
       console.log('测试结果图表渲染成功');
     } catch (error) {
       console.error('渲染测试结果图表时出错:', error);
       const container = document.getElementById('results-chart-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -199,7 +202,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      if (!reportData.historyTrend || !reportData.historyTrend.dates || reportData.historyTrend.dates.length === 0) {
+      if (
+        !reportData.historyTrend ||
+        !reportData.historyTrend.dates ||
+        reportData.historyTrend.dates.length === 0
+      ) {
         container.innerHTML = '<div class="error-message">没有历史趋势数据</div>';
         return;
       }
@@ -209,45 +216,49 @@ document.addEventListener('DOMContentLoaded', function() {
       const passed = trend.passed;
       const failed = trend.failed;
       const pending = trend.pending || Array(dates.length).fill(0);
-      const passRate = trend.passRate || Array(dates.length).fill(0).map((_, i) => {
-        const total = (passed[i] || 0) + (failed[i] || 0) + (pending[i] || 0);
-        return total > 0 ? Math.round((passed[i] / total) * 100) : 0;
-      });
+      const passRate =
+        trend.passRate ||
+        Array(dates.length)
+          .fill(0)
+          .map((_, i) => {
+            const total = (passed[i] || 0) + (failed[i] || 0) + (pending[i] || 0);
+            return total > 0 ? Math.round((passed[i] / total) * 100) : 0;
+          });
 
       // 初始化ECharts实例
       const chart = echarts.init(container);
-      
+
       // 配置图表选项
       const option = {
         title: {
           text: '历史趋势',
-          left: 'center'
+          left: 'center',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
-          }
+            type: 'shadow',
+          },
         },
         legend: {
           data: ['通过', '失败', '待定', '通过率'],
-          bottom: 'bottom'
+          bottom: 'bottom',
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '15%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: {
           type: 'category',
-          data: dates
+          data: dates,
         },
         yAxis: [
           {
             type: 'value',
             name: '测试数量',
-            position: 'left'
+            position: 'left',
           },
           {
             type: 'value',
@@ -256,9 +267,9 @@ document.addEventListener('DOMContentLoaded', function() {
             min: 0,
             max: 100,
             axisLabel: {
-              formatter: '{value}%'
-            }
-          }
+              formatter: '{value}%',
+            },
+          },
         ],
         series: [
           {
@@ -266,36 +277,36 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: passed,
             itemStyle: {
-              color: '#2ecc71'
-            }
+              color: '#2ecc71',
+            },
           },
           {
             name: '失败',
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: failed,
             itemStyle: {
-              color: '#e74c3c'
-            }
+              color: '#e74c3c',
+            },
           },
           {
             name: '待定',
             type: 'bar',
             stack: 'total',
             emphasis: {
-              focus: 'series'
+              focus: 'series',
             },
             data: pending,
             itemStyle: {
-              color: '#f39c12'
-            }
+              color: '#f39c12',
+            },
           },
           {
             name: '通过率',
@@ -306,35 +317,35 @@ document.addEventListener('DOMContentLoaded', function() {
             symbolSize: 8,
             lineStyle: {
               width: 3,
-              color: '#3498db'
+              color: '#3498db',
             },
             itemStyle: {
-              color: '#3498db'
-            }
-          }
-        ]
+              color: '#3498db',
+            },
+          },
+        ],
       };
 
       // 使用配置项设置图表
       chart.setOption(option);
-      
+
       // 添加点击事件
-      chart.on('click', function(params) {
+      chart.on('click', (params) => {
         showChartModal('历史趋势', option);
       });
-      
+
       // 添加右键菜单事件
-      container.addEventListener('contextmenu', function(e) {
+      container.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showChartModal('历史趋势', option);
       });
-      
+
       console.log('历史趋势图表渲染成功');
     } catch (error) {
       console.error('渲染历史趋势图表时出错:', error);
       const container = document.getElementById('history-trend-container');
       if (container) {
-        container.innerHTML = '<div class="error-message">渲染图表时出错: ' + error.message + '</div>';
+        container.innerHTML = `<div class="error-message">渲染图表时出错: ${error.message}</div>`;
       }
     }
   }
@@ -343,22 +354,22 @@ document.addEventListener('DOMContentLoaded', function() {
   function showChartModal(title, option) {
     const modal = document.getElementById('image-modal');
     const container = document.getElementById('modal-chart-container');
-    
+
     // 显示模态框
     modal.style.display = 'block';
-    
+
     // 初始化ECharts实例
     const chart = echarts.init(container);
-    
+
     // 更新标题
     option.title = {
       text: title,
-      left: 'center'
+      left: 'center',
     };
-    
+
     // 使用配置项设置图表
     chart.setOption(option);
-    
+
     // 调整大小
     chart.resize();
   }
@@ -368,35 +379,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('image-modal');
     const closeButton = document.querySelector('.close-button');
     const saveButton = document.getElementById('save-image-button');
-    
+
     // 关闭按钮点击事件
-    closeButton.addEventListener('click', function() {
+    closeButton.addEventListener('click', () => {
       modal.style.display = 'none';
     });
-    
+
     // 点击模态框外部关闭
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', (event) => {
       if (event.target === modal) {
         modal.style.display = 'none';
       }
     });
-    
+
     // 保存图表按钮点击事件
-    saveButton.addEventListener('click', function() {
+    saveButton.addEventListener('click', () => {
       const container = document.getElementById('modal-chart-container');
       const chart = echarts.getInstanceByDom(container);
-      
+
       if (chart) {
         // 获取图表的数据URL
         const url = chart.getDataURL({
           type: 'png',
           pixelRatio: 2,
-          backgroundColor: '#fff'
+          backgroundColor: '#fff',
         });
-        
+
         // 创建下载链接
         const link = document.createElement('a');
-        link.download = 'chart-' + new Date().getTime() + '.png';
+        link.download = `chart-${new Date().getTime()}.png`;
         link.href = url;
         link.click();
       }
@@ -407,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupPrintButton() {
     const printButton = document.getElementById('print-report-button');
     if (printButton) {
-      printButton.addEventListener('click', function() {
+      printButton.addEventListener('click', () => {
         window.print();
       });
     }
@@ -417,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupExportPdfButton() {
     const exportButton = document.getElementById('export-pdf-button');
     if (exportButton) {
-      exportButton.addEventListener('click', function() {
+      exportButton.addEventListener('click', () => {
         alert('PDF导出功能尚未实现');
       });
     }

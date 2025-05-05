@@ -23,14 +23,26 @@ describe('游戏系统测试', () => {
     playerHand = { name: 'PlayerHand', children: [] };
     opponentHand = { name: 'OpponentHand', children: [] };
     playAreas = [
-      { name: 'PlayArea1', children: [], effect: new SceneEffect(SceneEffectType.BASIC, '基础场景', '无特殊效果的基础场景') },
-      { name: 'PlayArea2', children: [], effect: new SceneEffect(SceneEffectType.SUIT_BONUS, '花色加成', '同花牌型额外加分') },
-      { name: 'PlayArea3', children: [], effect: new SceneEffect(SceneEffectType.RANK_BONUS, '点数加成', 'JQK额外加分') }
+      {
+        name: 'PlayArea1',
+        children: [],
+        effect: new SceneEffect(SceneEffectType.BASIC, '基础场景', '无特殊效果的基础场景'),
+      },
+      {
+        name: 'PlayArea2',
+        children: [],
+        effect: new SceneEffect(SceneEffectType.SUIT_BONUS, '花色加成', '同花牌型额外加分'),
+      },
+      {
+        name: 'PlayArea3',
+        children: [],
+        effect: new SceneEffect(SceneEffectType.RANK_BONUS, '点数加成', 'JQK额外加分'),
+      },
     ];
     exchangeArea = { name: 'ExchangeArea', children: [] };
 
     // 揭示所有场景效果
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       if (area.effect) {
         area.effect.reveal();
       }
@@ -40,7 +52,13 @@ describe('游戏系统测试', () => {
     specialHandsManager = new SpecialHandsManager();
 
     // 创建游戏管理器
-    gameManager = new GameManager(playerHand, opponentHand, playAreas, exchangeArea, specialHandsManager);
+    gameManager = new GameManager(
+      playerHand,
+      opponentHand,
+      playAreas,
+      exchangeArea,
+      specialHandsManager,
+    );
 
     // 创建AI对手
     aiOpponent = new AIOpponent();
@@ -89,7 +107,7 @@ describe('游戏系统测试', () => {
 
     // 检查AI是否出牌
     let totalAICards = 0;
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       totalAICards += area.children.length;
     });
     expect(totalAICards).toBeGreaterThanOrEqual(2); // 玩家出了2张牌，AI可能也出牌了
@@ -137,15 +155,15 @@ describe('游戏系统测试', () => {
     const flushCards = [
       new Card(CardSuit.Heart, CardRank.Ace),
       new Card(CardSuit.Heart, CardRank.King),
-      new Card(CardSuit.Heart, CardRank.Queen)
+      new Card(CardSuit.Heart, CardRank.Queen),
     ];
 
-    flushCards.forEach(card => {
+    flushCards.forEach((card) => {
       playerHand.children.push(card);
     });
 
     // 玩家出牌到花色加成区域
-    flushCards.forEach(card => {
+    flushCards.forEach((card) => {
       gameManager.playCard(card, playAreas[1]);
     });
 
@@ -171,15 +189,15 @@ describe('游戏系统测试', () => {
     const jqkCards = [
       new Card(CardSuit.Heart, CardRank.Jack),
       new Card(CardSuit.Heart, CardRank.Queen),
-      new Card(CardSuit.Heart, CardRank.King)
+      new Card(CardSuit.Heart, CardRank.King),
     ];
 
-    jqkCards.forEach(card => {
+    jqkCards.forEach((card) => {
       playerHand.children.push(card);
     });
 
     // 玩家出牌到点数加成区域
-    jqkCards.forEach(card => {
+    jqkCards.forEach((card) => {
       gameManager.playCard(card, playAreas[2]);
     });
 

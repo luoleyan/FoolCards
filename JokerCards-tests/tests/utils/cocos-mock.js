@@ -7,14 +7,14 @@
 const mockCocos = {
   // 装饰器
   _decorator: {
-    ccclass: function(target) {
+    ccclass(target) {
       return target;
     },
-    property: function(options) {
-      return function(target, key) {
+    property(options) {
+      return function (target, key) {
         // 不做任何事情，仅用于模拟装饰器
       };
-    }
+    },
   },
 
   // 基础组件类
@@ -167,7 +167,7 @@ const mockCocos = {
         x: 0,
         y: 0,
         width: this.width,
-        height: this.height
+        height: this.height,
       };
     }
   },
@@ -205,37 +205,37 @@ const mockCocos = {
   },
 
   // 缓动系统
-  tween: function(target) {
+  tween(target) {
     return {
-      to: function(duration, props, easing) {
+      to(duration, props, easing) {
         return {
-          call: function(callback) {
+          call(callback) {
             return this;
           },
-          delay: function(time) {
+          delay(time) {
             return this;
           },
-          repeat: function(times) {
+          repeat(times) {
             return this;
           },
-          repeatForever: function() {
+          repeatForever() {
             return this;
           },
-          start: function() {
+          start() {
             // 立即应用属性变化
             if (props) {
               Object.assign(target, props);
             }
             return this;
-          }
+          },
         };
-      }
+      },
     };
   },
 
   // 资源管理
   resources: {
-    load: function(path, type, callback) {
+    load(path, type, callback) {
       if (typeof type === 'function') {
         callback = type;
         type = null;
@@ -249,21 +249,21 @@ const mockCocos = {
           callback(new Error('Resource not found'), null);
         }
       }, 10);
-    }
+    },
   },
 
   // 场景管理
   director: {
-    loadScene: function(sceneName, onLaunched) {
+    loadScene(sceneName, onLaunched) {
       if (onLaunched) {
         setTimeout(onLaunched, 10);
       }
     },
-    getScene: function() {
+    getScene() {
       return {
-        name: 'MockScene'
+        name: 'MockScene',
       };
-    }
+    },
   },
 
   // 事件系统
@@ -307,12 +307,12 @@ const mockCocos = {
 
   // 输入系统
   input: {
-    on: function(type, callback, target) {
+    on(type, callback, target) {
       // 输入事件监听模拟
     },
-    off: function(type, callback, target) {
+    off(type, callback, target) {
       // 移除输入事件监听模拟
-    }
+    },
   },
 
   // 事件类型
@@ -325,8 +325,8 @@ const mockCocos = {
     MOUSE_MOVE: 'mouse-move',
     MOUSE_UP: 'mouse-up',
     MOUSE_ENTER: 'mouse-enter',
-    MOUSE_LEAVE: 'mouse-leave'
-  }
+    MOUSE_LEAVE: 'mouse-leave',
+  },
 };
 
 module.exports = mockCocos;

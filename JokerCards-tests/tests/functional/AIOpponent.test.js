@@ -19,7 +19,7 @@ describe('AI对手功能测试', () => {
     playAreas = [
       { name: 'PlayArea1', children: [], effect: null },
       { name: 'PlayArea2', children: [], effect: null },
-      { name: 'PlayArea3', children: [], effect: null }
+      { name: 'PlayArea3', children: [], effect: null },
     ];
 
     // 创建对手手牌区域
@@ -36,7 +36,7 @@ describe('AI对手功能测试', () => {
     aiOpponent.init(gameManager, opponentHand, playAreas);
 
     // 清空所有区域
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       area.children = [];
       area.effect = null;
     });
@@ -50,10 +50,10 @@ describe('AI对手功能测试', () => {
       new Card(CardSuit.Heart, CardRank.King),
       new Card(CardSuit.Club, CardRank.Queen),
       new Card(CardSuit.Diamond, CardRank.Jack),
-      new Card(CardSuit.Spade, CardRank.Ten)
+      new Card(CardSuit.Spade, CardRank.Ten),
     ];
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
       opponentHand.children.push(card);
     });
 
@@ -87,7 +87,7 @@ describe('AI对手功能测试', () => {
 
     // 检查是否所有出牌都放入了游戏区域
     let totalCardsInPlayAreas = 0;
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       totalCardsInPlayAreas += area.children.length;
     });
 
@@ -115,7 +115,7 @@ describe('AI对手功能测试', () => {
   test('AI对手策略 - 同花牌型', () => {
     // 清空手牌和场地区域
     opponentHand.children = [];
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       area.children = [];
       area.effect = null;
     });
@@ -126,15 +126,19 @@ describe('AI对手功能测试', () => {
       new Card(CardSuit.Heart, CardRank.King),
       new Card(CardSuit.Heart, CardRank.Queen),
       new Card(CardSuit.Heart, CardRank.Jack),
-      new Card(CardSuit.Heart, CardRank.Ten)
+      new Card(CardSuit.Heart, CardRank.Ten),
     ];
 
-    flushCards.forEach(card => {
+    flushCards.forEach((card) => {
       opponentHand.children.push(card);
     });
 
     // 添加场景效果
-    const suitBonusEffect = new SceneEffect(SceneEffectType.SUIT_BONUS, '花色加成', '同花牌型额外加分');
+    const suitBonusEffect = new SceneEffect(
+      SceneEffectType.SUIT_BONUS,
+      '花色加成',
+      '同花牌型额外加分',
+    );
     suitBonusEffect.reveal();
     playAreas[0].effect = suitBonusEffect;
 
@@ -150,7 +154,7 @@ describe('AI对手功能测试', () => {
     // 检查是否所有同花牌都放入了同一区域
     const cardsInArea0 = playAreas[0].children;
     if (cardsInArea0.length > 0) {
-      const allSameSuit = cardsInArea0.every(card => card.suit === CardSuit.Heart);
+      const allSameSuit = cardsInArea0.every((card) => card.suit === CardSuit.Heart);
       expect(allSameSuit).toBe(true);
     }
   });
@@ -158,7 +162,7 @@ describe('AI对手功能测试', () => {
   test('AI对手策略 - 顺子牌型', () => {
     // 清空手牌和场地区域
     opponentHand.children = [];
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       area.children = [];
       area.effect = null;
     });
@@ -169,10 +173,10 @@ describe('AI对手功能测试', () => {
       new Card(CardSuit.Heart, CardRank.Two),
       new Card(CardSuit.Club, CardRank.Three),
       new Card(CardSuit.Diamond, CardRank.Four),
-      new Card(CardSuit.Spade, CardRank.Five)
+      new Card(CardSuit.Spade, CardRank.Five),
     ];
 
-    straightCards.forEach(card => {
+    straightCards.forEach((card) => {
       opponentHand.children.push(card);
     });
 
@@ -194,12 +198,13 @@ describe('AI对手功能测试', () => {
     const cardsInArea1 = playAreas[1].children;
     if (cardsInArea1.length > 0) {
       // 检查是否有A-5的牌
-      const hasSequenceCards = cardsInArea1.some(card =>
-        card.rank === CardRank.Ace ||
-        card.rank === CardRank.Two ||
-        card.rank === CardRank.Three ||
-        card.rank === CardRank.Four ||
-        card.rank === CardRank.Five
+      const hasSequenceCards = cardsInArea1.some(
+        (card) =>
+          card.rank === CardRank.Ace ||
+          card.rank === CardRank.Two ||
+          card.rank === CardRank.Three ||
+          card.rank === CardRank.Four ||
+          card.rank === CardRank.Five,
       );
       expect(hasSequenceCards).toBe(true);
     }
@@ -208,7 +213,7 @@ describe('AI对手功能测试', () => {
   test('AI对手策略 - 高点数牌型', () => {
     // 清空手牌和场地区域
     opponentHand.children = [];
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       area.children = [];
       area.effect = null;
     });
@@ -219,10 +224,10 @@ describe('AI对手功能测试', () => {
       new Card(CardSuit.Heart, CardRank.Queen),
       new Card(CardSuit.Club, CardRank.King),
       new Card(CardSuit.Diamond, CardRank.Ten),
-      new Card(CardSuit.Spade, CardRank.Nine)
+      new Card(CardSuit.Spade, CardRank.Nine),
     ];
 
-    highRankCards.forEach(card => {
+    highRankCards.forEach((card) => {
       opponentHand.children.push(card);
     });
 
@@ -243,10 +248,11 @@ describe('AI对手功能测试', () => {
     // 检查是否JQK牌放入了同一区域
     const cardsInArea2 = playAreas[2].children;
     if (cardsInArea2.length > 0) {
-      const hasJQK = cardsInArea2.some(card =>
-        card.rank === CardRank.Jack ||
-        card.rank === CardRank.Queen ||
-        card.rank === CardRank.King
+      const hasJQK = cardsInArea2.some(
+        (card) =>
+          card.rank === CardRank.Jack ||
+          card.rank === CardRank.Queen ||
+          card.rank === CardRank.King,
       );
       expect(hasJQK).toBe(true);
     }
@@ -255,7 +261,7 @@ describe('AI对手功能测试', () => {
   test('AI对手没有手牌时不出牌', () => {
     // 清空手牌和场地区域
     opponentHand.children = [];
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       area.children = [];
       area.effect = null;
     });
@@ -275,7 +281,7 @@ describe('AI对手功能测试', () => {
 
     // 检查是否所有游戏区域都没有卡牌
     let totalCardsInPlayAreas = 0;
-    playAreas.forEach(area => {
+    playAreas.forEach((area) => {
       totalCardsInPlayAreas += area.children.length;
     });
 

@@ -230,7 +230,8 @@ li {
   margin-top: 20px;
 }
 
-#test-strategy-content, #test-priority {
+#test-strategy-content,
+#test-priority {
   background-color: #f9f9f9;
   padding: 15px;
   border-radius: 5px;
@@ -273,7 +274,8 @@ li {
   min-width: 150px;
 }
 
-.test-cases-distribution, .test-cases-priority {
+.test-cases-distribution,
+.test-cases-priority {
   margin-bottom: 20px;
 }
 
@@ -341,7 +343,7 @@ li {
   padding: 10px 15px;
   background: #fff;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .timeline-item:before {
@@ -444,18 +446,22 @@ li {
   margin-bottom: 20px;
 }
 
-.risk-items, .mitigation-strategies {
+.risk-items,
+.mitigation-strategies {
   margin-bottom: 20px;
 }
 
-#risk-items-container, #mitigation-strategies-container {
+#risk-items-container,
+#mitigation-strategies-container {
   background-color: #f9f9f9;
   padding: 15px;
   border-radius: 5px;
 }
 
 /* 结论与展望 */
-.conclusion-text, .outlook-text, .improvement-measures {
+.conclusion-text,
+.outlook-text,
+.improvement-measures {
   background-color: #f9f9f9;
   padding: 15px;
   border-radius: 5px;
@@ -659,7 +665,8 @@ li {
   font-size: 0.9em;
 }
 
-.excel-table th, .excel-table td {
+.excel-table th,
+.excel-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -906,8 +913,12 @@ li {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 响应式设计 */
@@ -925,7 +936,9 @@ li {
     margin-top: 10px;
   }
 
-  .summary-item, .defect-summary-item, .performance-summary-item {
+  .summary-item,
+  .defect-summary-item,
+  .performance-summary-item {
     min-width: 100%;
   }
 

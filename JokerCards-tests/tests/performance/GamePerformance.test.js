@@ -24,7 +24,7 @@ describe('游戏性能测试', () => {
     playAreas = [
       { name: 'PlayArea1', children: [] },
       { name: 'PlayArea2', children: [] },
-      { name: 'PlayArea3', children: [] }
+      { name: 'PlayArea3', children: [] },
     ];
     exchangeArea = { name: 'ExchangeArea', children: [] };
 
@@ -32,7 +32,13 @@ describe('游戏性能测试', () => {
     specialHandsManager = new SpecialHandsManager();
 
     // 创建游戏管理器
-    gameManager = new GameManager(playerHand, opponentHand, playAreas, exchangeArea, specialHandsManager);
+    gameManager = new GameManager(
+      playerHand,
+      opponentHand,
+      playAreas,
+      exchangeArea,
+      specialHandsManager,
+    );
   });
 
   test('测试卡牌初始化性能', () => {
@@ -49,7 +55,7 @@ describe('游戏性能测试', () => {
     }
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`创建 ${numCards} 张卡牌耗时: ${duration.toFixed(2)}ms`);
 
@@ -68,7 +74,7 @@ describe('游戏性能测试', () => {
     }
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`初始化 ${numRounds} 个游戏回合耗时: ${duration.toFixed(2)}ms`);
 
@@ -98,7 +104,7 @@ describe('游戏性能测试', () => {
     for (let i = 0; i < numDecisions; i++) {
       // 每次决策前重置手牌
       opponentHand.children = [...opponentHand.children];
-      playAreas.forEach(area => area.children = []);
+      playAreas.forEach((area) => (area.children = []));
 
       // AI出牌（设置最大出牌数为3）
       aiOpponent.playCards(3);
@@ -108,7 +114,7 @@ describe('游戏性能测试', () => {
     }
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`执行 ${numDecisions} 次AI决策耗时: ${duration.toFixed(2)}ms`);
 
@@ -125,7 +131,7 @@ describe('游戏性能测试', () => {
         new Card(CardSuit.Spade, CardRank.Two),
         new Card(CardSuit.Spade, CardRank.Three),
         new Card(CardSuit.Spade, CardRank.Four),
-        new Card(CardSuit.Spade, CardRank.Five)
+        new Card(CardSuit.Spade, CardRank.Five),
       ],
       // 四条
       [
@@ -133,7 +139,7 @@ describe('游戏性能测试', () => {
         new Card(CardSuit.Heart, CardRank.King),
         new Card(CardSuit.Club, CardRank.King),
         new Card(CardSuit.Diamond, CardRank.King),
-        new Card(CardSuit.Spade, CardRank.Ace)
+        new Card(CardSuit.Spade, CardRank.Ace),
       ],
       // 葫芦
       [
@@ -141,7 +147,7 @@ describe('游戏性能测试', () => {
         new Card(CardSuit.Heart, CardRank.Queen),
         new Card(CardSuit.Club, CardRank.Queen),
         new Card(CardSuit.Spade, CardRank.Jack),
-        new Card(CardSuit.Heart, CardRank.Jack)
+        new Card(CardSuit.Heart, CardRank.Jack),
       ],
       // 同花
       [
@@ -149,7 +155,7 @@ describe('游戏性能测试', () => {
         new Card(CardSuit.Heart, CardRank.Five),
         new Card(CardSuit.Heart, CardRank.Nine),
         new Card(CardSuit.Heart, CardRank.Jack),
-        new Card(CardSuit.Heart, CardRank.King)
+        new Card(CardSuit.Heart, CardRank.King),
       ],
       // 顺子
       [
@@ -157,8 +163,8 @@ describe('游戏性能测试', () => {
         new Card(CardSuit.Heart, CardRank.Four),
         new Card(CardSuit.Diamond, CardRank.Five),
         new Card(CardSuit.Club, CardRank.Six),
-        new Card(CardSuit.Spade, CardRank.Seven)
-      ]
+        new Card(CardSuit.Spade, CardRank.Seven),
+      ],
     ];
 
     const startTime = process.hrtime();
@@ -176,7 +182,7 @@ describe('游戏性能测试', () => {
     }
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`执行 ${numChecks} 次特殊牌型检测耗时: ${duration.toFixed(2)}ms`);
 
@@ -191,17 +197,17 @@ describe('游戏性能测试', () => {
       new SceneEffect(SceneEffectType.SUIT_BONUS, '花色加成', '同花牌型额外加分'),
       new SceneEffect(SceneEffectType.RANK_BONUS, '点数加成', 'JQK额外加分'),
       new SceneEffect(SceneEffectType.CHAIN, '连锁效果', '顺子额外加分'),
-      new SceneEffect(SceneEffectType.SPECIAL, '特殊效果', '根据卡牌数量加分')
+      new SceneEffect(SceneEffectType.SPECIAL, '特殊效果', '根据卡牌数量加分'),
     ];
 
     // 揭示所有场景效果
-    effects.forEach(effect => effect.reveal());
+    effects.forEach((effect) => effect.reveal());
 
     // 创建测试牌组
     const cards = [
       new Card(CardSuit.Heart, CardRank.Jack),
       new Card(CardSuit.Heart, CardRank.Queen),
-      new Card(CardSuit.Heart, CardRank.King)
+      new Card(CardSuit.Heart, CardRank.King),
     ];
 
     const baseScore = 36; // Jack(11) + Queen(12) + King(13)
@@ -221,7 +227,7 @@ describe('游戏性能测试', () => {
     }
 
     const endTime = process.hrtime(startTime);
-    const duration = (endTime[0] * 1000 + endTime[1] / 1000000);
+    const duration = endTime[0] * 1000 + endTime[1] / 1000000;
 
     console.log(`执行 ${numApplications} 次场景效果应用耗时: ${duration.toFixed(2)}ms`);
 

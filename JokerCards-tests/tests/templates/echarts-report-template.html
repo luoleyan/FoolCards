@@ -1,209 +1,213 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{TITLE}}</title>
-  <link rel="stylesheet" href="report-styles.css">
-  <style>
-    /* 图表容器样式 */
-    .chart-container {
-      height: 300px;
-      margin: 20px 0;
-      position: relative;
-    }
-    
-    /* 错误消息样式 */
-    .error-message {
-      padding: 15px;
-      background-color: #ffebee;
-      color: #c62828;
-      border-radius: 4px;
-      margin: 10px 0;
-      text-align: center;
-    }
-    
-    /* 加载提示样式 */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(255, 255, 255, 0.8);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    .loading-spinner {
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 2s linear infinite;
-    }
-    .loading-text {
-      margin-top: 20px;
-      font-size: 16px;
-      color: #333;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>{{TITLE}}</h1>
-      <div class="report-meta">
-        <div class="report-meta-item">
-          <span class="meta-label">报告编号:</span>
-          <span class="meta-value" id="report-id">{{REPORT_ID}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">文档版本:</span>
-          <span class="meta-value" id="doc-version">{{DOC_VERSION}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">测试日期:</span>
-          <span class="meta-value" id="test-date">{{TEST_DATE}}</span>
-        </div>
-        <div class="report-meta-item">
-          <span class="meta-label">软件版本:</span>
-          <span class="meta-value" id="software-version">{{SOFTWARE_VERSION}}</span>
-        </div>
-      </div>
-      <p class="timestamp">生成时间: {{TIMESTAMP}}</p>
-      <div class="header-actions">
-        <button id="export-pdf-button" class="action-button" type="button">导出PDF</button>
-        <button id="print-report-button" class="action-button" type="button">打印报告</button>
-      </div>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{TITLE}}</title>
+    <link rel="stylesheet" href="report-styles.css" />
+    <style>
+      /* 图表容器样式 */
+      .chart-container {
+        height: 300px;
+        margin: 20px 0;
+        position: relative;
+      }
 
-    <!-- 软件信息 -->
-    <div id="software-info" class="section">
-      <h2>软件信息</h2>
-      <div class="info-group">
-        <div class="info-item">
-          <span class="label">描述:</span>
-          <span class="value" id="software-description"></span>
+      /* 错误消息样式 */
+      .error-message {
+        padding: 15px;
+        background-color: #ffebee;
+        color: #c62828;
+        border-radius: 4px;
+        margin: 10px 0;
+        text-align: center;
+      }
+
+      /* 加载提示样式 */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      .loading-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+      }
+      .loading-text {
+        margin-top: 20px;
+        font-size: 16px;
+        color: #333;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>{{TITLE}}</h1>
+        <div class="report-meta">
+          <div class="report-meta-item">
+            <span class="meta-label">报告编号:</span>
+            <span class="meta-value" id="report-id">{{REPORT_ID}}</span>
+          </div>
+          <div class="report-meta-item">
+            <span class="meta-label">文档版本:</span>
+            <span class="meta-value" id="doc-version">{{DOC_VERSION}}</span>
+          </div>
+          <div class="report-meta-item">
+            <span class="meta-label">测试日期:</span>
+            <span class="meta-value" id="test-date">{{TEST_DATE}}</span>
+          </div>
+          <div class="report-meta-item">
+            <span class="meta-label">软件版本:</span>
+            <span class="meta-value" id="software-version">{{SOFTWARE_VERSION}}</span>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="label">功能:</span>
-          <ul id="software-features" class="feature-list"></ul>
+        <p class="timestamp">生成时间: {{TIMESTAMP}}</p>
+        <div class="header-actions">
+          <button id="export-pdf-button" class="action-button" type="button">导出PDF</button>
+          <button id="print-report-button" class="action-button" type="button">打印报告</button>
         </div>
-        <div class="info-item">
-          <span class="label">版本号:</span>
-          <span class="value" id="version-number"></span>
+      </header>
+
+      <!-- 软件信息 -->
+      <div id="software-info" class="section">
+        <h2>软件信息</h2>
+        <div class="info-group">
+          <div class="info-item">
+            <span class="label">描述:</span>
+            <span class="value" id="software-description"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">功能:</span>
+            <ul id="software-features" class="feature-list"></ul>
+          </div>
+          <div class="info-item">
+            <span class="label">版本号:</span>
+            <span class="value" id="version-number"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">构建日期:</span>
+            <span class="value" id="build-date"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">发布类型:</span>
+            <span class="value" id="release-type"></span>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="label">构建日期:</span>
-          <span class="value" id="build-date"></span>
+      </div>
+
+      <!-- 测试摘要 -->
+      <div id="summary" class="section">
+        <h2>测试摘要</h2>
+        <div class="summary-info">
+          <div class="summary-item">
+            <span class="label">总测试数:</span>
+            <span class="value" id="total-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">通过:</span>
+            <span class="value passed" id="passed-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">失败:</span>
+            <span class="value failed" id="failed-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">待定:</span>
+            <span class="value pending" id="pending-tests"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">执行时间:</span>
+            <span class="value" id="test-duration"></span>
+          </div>
+          <div class="summary-item">
+            <span class="label">状态:</span>
+            <span class="value" id="test-status"></span>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="label">发布类型:</span>
-          <span class="value" id="release-type"></span>
+
+        <div id="summary-charts">
+          <div class="chart-container" id="results-chart-container"></div>
+          <div class="chart-container" id="coverage-chart-container"></div>
+        </div>
+      </div>
+
+      <!-- 测试元数据 -->
+      <div id="test-metadata" class="section">
+        <h2>测试元数据</h2>
+        <div class="info-group">
+          <div class="info-item">
+            <span class="label">测试目的:</span>
+            <span class="value" id="test-purpose"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">测试范围:</span>
+            <span class="value" id="test-scope"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">测试方法:</span>
+            <span class="value" id="test-methods"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">硬件环境:</span>
+            <span class="value" id="test-hardware"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">软件环境:</span>
+            <span class="value" id="test-software"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">依赖项:</span>
+            <span class="value" id="test-dependencies"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 历史趋势 -->
+      <div id="history-trend" class="section">
+        <h2>历史趋势</h2>
+        <div id="history-trend-container" class="chart-container"></div>
+      </div>
+
+      <!-- 图表模态框 -->
+      <div id="image-modal" class="modal">
+        <div class="modal-content">
+          <span class="close-button">&times;</span>
+          <div id="modal-chart-container" style="width: 100%; height: 500px"></div>
+          <div class="modal-footer">
+            <button id="save-image-button" type="button">保存图表</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 测试摘要 -->
-    <div id="summary" class="section">
-      <h2>测试摘要</h2>
-      <div class="summary-info">
-        <div class="summary-item">
-          <span class="label">总测试数:</span>
-          <span class="value" id="total-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">通过:</span>
-          <span class="value passed" id="passed-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">失败:</span>
-          <span class="value failed" id="failed-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">待定:</span>
-          <span class="value pending" id="pending-tests"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">执行时间:</span>
-          <span class="value" id="test-duration"></span>
-        </div>
-        <div class="summary-item">
-          <span class="label">状态:</span>
-          <span class="value" id="test-status"></span>
-        </div>
-      </div>
+    <!-- 引入ECharts库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
-      <div id="summary-charts">
-        <div class="chart-container" id="results-chart-container"></div>
-        <div class="chart-container" id="coverage-chart-container"></div>
-      </div>
-    </div>
-
-    <!-- 测试元数据 -->
-    <div id="test-metadata" class="section">
-      <h2>测试元数据</h2>
-      <div class="info-group">
-        <div class="info-item">
-          <span class="label">测试目的:</span>
-          <span class="value" id="test-purpose"></span>
-        </div>
-        <div class="info-item">
-          <span class="label">测试范围:</span>
-          <span class="value" id="test-scope"></span>
-        </div>
-        <div class="info-item">
-          <span class="label">测试方法:</span>
-          <span class="value" id="test-methods"></span>
-        </div>
-        <div class="info-item">
-          <span class="label">硬件环境:</span>
-          <span class="value" id="test-hardware"></span>
-        </div>
-        <div class="info-item">
-          <span class="label">软件环境:</span>
-          <span class="value" id="test-software"></span>
-        </div>
-        <div class="info-item">
-          <span class="label">依赖项:</span>
-          <span class="value" id="test-dependencies"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 历史趋势 -->
-    <div id="history-trend" class="section">
-      <h2>历史趋势</h2>
-      <div id="history-trend-container" class="chart-container"></div>
-    </div>
-
-    <!-- 图表模态框 -->
-    <div id="image-modal" class="modal">
-      <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <div id="modal-chart-container" style="width: 100%; height: 500px;"></div>
-        <div class="modal-footer">
-          <button id="save-image-button" type="button">保存图表</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 引入ECharts库 -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  
-  <script>
-    // 测试报告数据
-    const reportData = {{REPORT_DATA}};
-  </script>
-  <script src="echarts-report-scripts.js"></script>
-</body>
+    <script>
+      // 测试报告数据
+      const reportData = {{REPORT_DATA}};
+    </script>
+    <script src="echarts-report-scripts.js"></script>
+  </body>
 </html>

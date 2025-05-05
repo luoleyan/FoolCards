@@ -80,24 +80,31 @@ node run-tests.js compatibility
 ## 测试类型说明
 
 ### 单元测试 (Unit Testing)
+
 测试独立组件和函数的正确性，如Card类的基本功能。
 
 ### 功能测试 (Functional Testing)
+
 测试游戏功能是否按照预期工作，如出牌、回合管理、分数计算等。
 
 ### 性能测试 (Performance Testing)
+
 评估游戏在不同条件下的性能表现，如出牌、分数计算、AI出牌等操作的执行时间。
 
 ### 兼容性测试 (Compatibility Testing)
+
 确保游戏在不同浏览器和设备上正常运行。
 
 ### 系统测试 (System Testing)
+
 测试整个游戏系统的集成功能，模拟完整游戏流程。
 
 ### 黑盒测试 (Black Box Testing)
+
 从用户角度测试游戏功能，不关注内部实现。
 
 ### 白盒测试 (White Box Testing)
+
 基于代码结构的测试，关注内部实现。
 
 ## 手动测试

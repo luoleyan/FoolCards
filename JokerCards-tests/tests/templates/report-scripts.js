@@ -1,5 +1,5 @@
 // 测试报告脚本
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // 初始化报告
   function initReport() {
     console.log('初始化测试报告...');
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // 检查Chart.js是否已加载
       if (typeof Chart === 'undefined') {
         console.error('Chart.js 库未加载，无法渲染图表');
-        document.querySelectorAll('.chart-container').forEach(container => {
+        document.querySelectorAll('.chart-container').forEach((container) => {
           container.innerHTML = '<div class="error-message">图表库加载失败，无法显示图表</div>';
         });
       } else {
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hideLoading();
     } catch (error) {
       console.error('初始化报告时发生错误:', error);
-      alert('初始化报告时发生错误: ' + error.message);
+      alert(`初始化报告时发生错误: ${error.message}`);
       hideLoading();
     }
   }
@@ -127,7 +127,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingElement = document.createElement('div');
     loadingElement.id = 'loading-libraries';
     loadingElement.className = 'loading-overlay';
-    loadingElement.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">正在加载库文件，请稍候...</div>';
+    loadingElement.innerHTML =
+      '<div class="loading-spinner"></div><div class="loading-text">正在加载库文件，请稍候...</div>';
     document.body.appendChild(loadingElement);
   }
 
@@ -143,13 +144,13 @@ document.addEventListener('DOMContentLoaded', function() {
   showLoading();
 
   // 监听库加载完成事件
-  document.addEventListener('librariesLoaded', function() {
+  document.addEventListener('librariesLoaded', () => {
     console.log('收到库加载完成事件');
     initReport();
   });
 
   // 如果5秒后仍未收到库加载完成事件，尝试直接初始化
-  setTimeout(function() {
+  setTimeout(() => {
     if (document.getElementById('loading-libraries')) {
       console.warn('未收到库加载完成事件，尝试直接初始化报告');
       initReport();
@@ -184,7 +185,9 @@ function generateReportId() {
 
   const testType = reportData.testType.toUpperCase();
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const random = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, '0');
 
   return `${testType}-${date}-${random}`;
 }
@@ -248,31 +251,25 @@ function renderResultsChart() {
     type: 'doughnut',
     data: {
       labels: ['通过', '失败', '待定'],
-      datasets: [{
-        data: [
-          reportData.summary.passed,
-          reportData.summary.failed,
-          reportData.summary.pending
-        ],
-        backgroundColor: [
-          '#2ecc71',
-          '#e74c3c',
-          '#f39c12'
-        ]
-      }]
+      datasets: [
+        {
+          data: [reportData.summary.passed, reportData.summary.failed, reportData.summary.pending],
+          backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12'],
+        },
+      ],
     },
     options: {
       responsive: true,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
         },
         title: {
           display: true,
-          text: '测试结果统计'
-        }
-      }
-    }
+          text: '测试结果统计',
+        },
+      },
+    },
   });
 }
 
@@ -284,32 +281,34 @@ function renderCoverageChart() {
     type: 'bar',
     data: {
       labels: ['语句', '分支', '函数', '行'],
-      datasets: [{
-        label: '覆盖率 (%)',
-        data: [
-          reportData.coverage.statements,
-          reportData.coverage.branches,
-          reportData.coverage.functions,
-          reportData.coverage.lines
-        ],
-        backgroundColor: '#3498db'
-      }]
+      datasets: [
+        {
+          label: '覆盖率 (%)',
+          data: [
+            reportData.coverage.statements,
+            reportData.coverage.branches,
+            reportData.coverage.functions,
+            reportData.coverage.lines,
+          ],
+          backgroundColor: '#3498db',
+        },
+      ],
     },
     options: {
       responsive: true,
       scales: {
         y: {
           beginAtZero: true,
-          max: 100
-        }
+          max: 100,
+        },
       },
       plugins: {
         title: {
           display: true,
-          text: '代码覆盖率'
-        }
-      }
-    }
+          text: '代码覆盖率',
+        },
+      },
+    },
   });
 }
 
@@ -317,7 +316,7 @@ function renderCoverageChart() {
 function renderTestSuites() {
   const container = document.getElementById('suites-container');
 
-  reportData.suites.forEach(suite => {
+  reportData.suites.forEach((suite) => {
     const suiteElement = document.createElement('div');
     suiteElement.className = 'suite';
 
@@ -355,7 +354,7 @@ function renderTestSuites() {
     const suiteContent = document.createElement('div');
     suiteContent.className = 'suite-content';
 
-    suite.tests.forEach(test => {
+    suite.tests.forEach((test) => {
       const testElement = document.createElement('div');
       testElement.className = `test ${test.status}`;
 
@@ -374,7 +373,7 @@ function renderTestSuites() {
     });
 
     // 添加点击事件
-    suiteHeader.addEventListener('click', function() {
+    suiteHeader.addEventListener('click', () => {
       if (suiteContent.style.display === 'block') {
         suiteContent.style.display = 'none';
       } else {
@@ -393,8 +392,8 @@ function renderTestSuites() {
 function setupChartClickEvents() {
   const charts = document.querySelectorAll('canvas');
 
-  charts.forEach(chart => {
-    chart.addEventListener('click', function() {
+  charts.forEach((chart) => {
+    chart.addEventListener('click', function () {
       showImageModal(this);
     });
   });
@@ -419,19 +418,19 @@ function setupModalEvents() {
   const saveButton = document.getElementById('save-image-button');
 
   // 关闭按钮事件
-  closeButton.addEventListener('click', function() {
+  closeButton.addEventListener('click', () => {
     modal.style.display = 'none';
   });
 
   // 点击模态框外部关闭
-  window.addEventListener('click', function(event) {
+  window.addEventListener('click', (event) => {
     if (event.target === modal) {
       modal.style.display = 'none';
     }
   });
 
   // 保存图片按钮事件
-  saveButton.addEventListener('click', function() {
+  saveButton.addEventListener('click', () => {
     const modalImg = document.getElementById('modal-image');
 
     // 创建下载链接
@@ -444,7 +443,9 @@ function setupModalEvents() {
 
 // 填充测试元数据
 function fillTestMetadata() {
-  if (!reportData.metadata) return;
+  if (!reportData.metadata) {
+    return;
+  }
 
   // 填充测试目的
   if (reportData.metadata.purpose) {
@@ -528,7 +529,9 @@ function fillTestMetadata() {
 
 // 渲染历史趋势图表
 function renderHistoryTrendChart() {
-  if (!reportData.historyTrend || !reportData.historyTrend.dates) return;
+  if (!reportData.historyTrend || !reportData.historyTrend.dates) {
+    return;
+  }
 
   const ctx = document.getElementById('history-trend-chart').getContext('2d');
 
@@ -544,7 +547,7 @@ function renderHistoryTrendChart() {
           backgroundColor: 'rgba(46, 204, 113, 0.1)',
           tension: 0.1,
           fill: true,
-          yAxisID: 'y'
+          yAxisID: 'y',
         },
         {
           label: '通过',
@@ -554,7 +557,7 @@ function renderHistoryTrendChart() {
           borderDash: [5, 5],
           tension: 0.1,
           fill: false,
-          yAxisID: 'y1'
+          yAxisID: 'y1',
         },
         {
           label: '失败',
@@ -564,9 +567,9 @@ function renderHistoryTrendChart() {
           borderDash: [5, 5],
           tension: 0.1,
           fill: false,
-          yAxisID: 'y1'
-        }
-      ]
+          yAxisID: 'y1',
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -577,40 +580,45 @@ function renderHistoryTrendChart() {
           position: 'left',
           title: {
             display: true,
-            text: '通过率 (%)'
-          }
+            text: '通过率 (%)',
+          },
         },
         y1: {
           beginAtZero: true,
           position: 'right',
           grid: {
-            drawOnChartArea: false
+            drawOnChartArea: false,
           },
           title: {
             display: true,
-            text: '测试数量'
-          }
-        }
+            text: '测试数量',
+          },
+        },
       },
       plugins: {
         title: {
           display: true,
-          text: '测试历史趋势'
-        }
-      }
-    }
+          text: '测试历史趋势',
+        },
+      },
+    },
   });
 }
 
 // 填充缺陷分析
 function fillDefectAnalysis() {
-  if (!reportData.defectAnalysis) return;
+  if (!reportData.defectAnalysis) {
+    return;
+  }
 
   // 填充总缺陷数
   document.getElementById('total-defects').textContent = reportData.defectAnalysis.totalDefects;
 
   // 填充缺陷类别建议
-  if (reportData.defectAnalysis.recommendations && reportData.defectAnalysis.recommendations.categoryRecommendations) {
+  if (
+    reportData.defectAnalysis.recommendations &&
+    reportData.defectAnalysis.recommendations.categoryRecommendations
+  ) {
     const categoryRecommendationsContainer = document.getElementById('category-recommendations');
 
     for (const rec of reportData.defectAnalysis.recommendations.categoryRecommendations) {
@@ -633,7 +641,10 @@ function fillDefectAnalysis() {
   }
 
   // 填充缺陷模式建议
-  if (reportData.defectAnalysis.recommendations && reportData.defectAnalysis.recommendations.patternRecommendations) {
+  if (
+    reportData.defectAnalysis.recommendations &&
+    reportData.defectAnalysis.recommendations.patternRecommendations
+  ) {
     const patternRecommendationsContainer = document.getElementById('pattern-recommendations');
 
     for (const rec of reportData.defectAnalysis.recommendations.patternRecommendations) {
@@ -658,88 +669,103 @@ function fillDefectAnalysis() {
 
 // 渲染缺陷分析图表
 function renderDefectAnalysisCharts() {
-  if (!reportData.defectAnalysis) return;
+  if (!reportData.defectAnalysis) {
+    return;
+  }
 
   // 缺陷类别分布图
-  if (reportData.defectAnalysis.categoryDistribution && reportData.defectAnalysis.categoryDistribution.length > 0) {
+  if (
+    reportData.defectAnalysis.categoryDistribution &&
+    reportData.defectAnalysis.categoryDistribution.length > 0
+  ) {
     const ctxCategory = document.getElementById('defect-category-chart').getContext('2d');
 
     new Chart(ctxCategory, {
       type: 'pie',
       data: {
-        labels: reportData.defectAnalysis.categoryDistribution.map(item => item.category),
-        datasets: [{
-          data: reportData.defectAnalysis.categoryDistribution.map(item => item.count),
-          backgroundColor: [
-            '#e74c3c',
-            '#e67e22',
-            '#f39c12',
-            '#f1c40f',
-            '#2ecc71',
-            '#3498db',
-            '#9b59b6',
-            '#34495e'
-          ]
-        }]
+        labels: reportData.defectAnalysis.categoryDistribution.map((item) => item.category),
+        datasets: [
+          {
+            data: reportData.defectAnalysis.categoryDistribution.map((item) => item.count),
+            backgroundColor: [
+              '#e74c3c',
+              '#e67e22',
+              '#f39c12',
+              '#f1c40f',
+              '#2ecc71',
+              '#3498db',
+              '#9b59b6',
+              '#34495e',
+            ],
+          },
+        ],
       },
       options: {
         responsive: true,
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
           },
           title: {
             display: true,
-            text: '缺陷类别分布'
-          }
-        }
-      }
+            text: '缺陷类别分布',
+          },
+        },
+      },
     });
   }
 
   // 缺陷模式分布图
-  if (reportData.defectAnalysis.patternDistribution && reportData.defectAnalysis.patternDistribution.length > 0) {
+  if (
+    reportData.defectAnalysis.patternDistribution &&
+    reportData.defectAnalysis.patternDistribution.length > 0
+  ) {
     const ctxPattern = document.getElementById('defect-pattern-chart').getContext('2d');
 
     new Chart(ctxPattern, {
       type: 'bar',
       data: {
-        labels: reportData.defectAnalysis.patternDistribution.map(item => item.pattern),
-        datasets: [{
-          label: '缺陷数量',
-          data: reportData.defectAnalysis.patternDistribution.map(item => item.count),
-          backgroundColor: '#e74c3c'
-        }]
+        labels: reportData.defectAnalysis.patternDistribution.map((item) => item.pattern),
+        datasets: [
+          {
+            label: '缺陷数量',
+            data: reportData.defectAnalysis.patternDistribution.map((item) => item.count),
+            backgroundColor: '#e74c3c',
+          },
+        ],
       },
       options: {
         responsive: true,
         scales: {
           y: {
-            beginAtZero: true
-          }
+            beginAtZero: true,
+          },
         },
         plugins: {
           legend: {
-            display: false
+            display: false,
           },
           title: {
             display: true,
-            text: '缺陷模式分布'
-          }
-        }
-      }
+            text: '缺陷模式分布',
+          },
+        },
+      },
     });
   }
 }
 
 // 填充性能分析
 function fillPerformanceAnalysis() {
-  if (!reportData.performanceAnalysis) return;
+  if (!reportData.performanceAnalysis) {
+    return;
+  }
 
   const summary = reportData.performanceAnalysis.summary;
 
   // 填充性能摘要
-  document.getElementById('average-duration').textContent = `${summary.averageDuration.toFixed(3)}秒`;
+  document.getElementById('average-duration').textContent =
+    `${summary.averageDuration.toFixed(3)}秒`;
   document.getElementById('median-duration').textContent = `${summary.medianDuration.toFixed(3)}秒`;
   document.getElementById('std-deviation').textContent = `${summary.stdDeviation.toFixed(3)}秒`;
 
@@ -790,68 +816,84 @@ function fillPerformanceAnalysis() {
 
 // 渲染性能分析图表
 function renderPerformanceAnalysisCharts() {
-  if (!reportData.performanceAnalysis) return;
+  if (!reportData.performanceAnalysis) {
+    return;
+  }
 
   // 测试套件性能图
-  if (reportData.performanceAnalysis.suitePerformance && reportData.performanceAnalysis.suitePerformance.length > 0) {
+  if (
+    reportData.performanceAnalysis.suitePerformance &&
+    reportData.performanceAnalysis.suitePerformance.length > 0
+  ) {
     const ctxSuite = document.getElementById('suite-performance-chart').getContext('2d');
 
     new Chart(ctxSuite, {
       type: 'bar',
       data: {
-        labels: reportData.performanceAnalysis.suitePerformance.slice(0, 10).map(suite => suite.suiteName),
-        datasets: [{
-          label: '总耗时 (秒)',
-          data: reportData.performanceAnalysis.suitePerformance.slice(0, 10).map(suite => suite.totalDuration),
-          backgroundColor: '#3498db'
-        }]
+        labels: reportData.performanceAnalysis.suitePerformance
+          .slice(0, 10)
+          .map((suite) => suite.suiteName),
+        datasets: [
+          {
+            label: '总耗时 (秒)',
+            data: reportData.performanceAnalysis.suitePerformance
+              .slice(0, 10)
+              .map((suite) => suite.totalDuration),
+            backgroundColor: '#3498db',
+          },
+        ],
       },
       options: {
         responsive: true,
         scales: {
           y: {
-            beginAtZero: true
-          }
+            beginAtZero: true,
+          },
         },
         plugins: {
           title: {
             display: true,
-            text: '测试套件性能 (Top 10)'
-          }
-        }
-      }
+            text: '测试套件性能 (Top 10)',
+          },
+        },
+      },
     });
   }
 
   // 最慢测试图
-  if (reportData.performanceAnalysis.slowTests && reportData.performanceAnalysis.slowTests.length > 0) {
+  if (
+    reportData.performanceAnalysis.slowTests &&
+    reportData.performanceAnalysis.slowTests.length > 0
+  ) {
     const ctxSlow = document.getElementById('slow-tests-chart').getContext('2d');
 
     new Chart(ctxSlow, {
       type: 'bar',
       data: {
-        labels: reportData.performanceAnalysis.slowTests.map(test => test.testName),
-        datasets: [{
-          label: '耗时 (秒)',
-          data: reportData.performanceAnalysis.slowTests.map(test => test.duration),
-          backgroundColor: '#e74c3c'
-        }]
+        labels: reportData.performanceAnalysis.slowTests.map((test) => test.testName),
+        datasets: [
+          {
+            label: '耗时 (秒)',
+            data: reportData.performanceAnalysis.slowTests.map((test) => test.duration),
+            backgroundColor: '#e74c3c',
+          },
+        ],
       },
       options: {
         indexAxis: 'y',
         responsive: true,
         scales: {
           x: {
-            beginAtZero: true
-          }
+            beginAtZero: true,
+          },
         },
         plugins: {
           title: {
             display: true,
-            text: '最慢测试'
-          }
-        }
-      }
+            text: '最慢测试',
+          },
+        },
+      },
     });
   }
 }
@@ -951,32 +993,34 @@ function renderTestCasesDistributionChart() {
   new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: reportData.testCases.distribution.map(item => item.category),
-      datasets: [{
-        data: reportData.testCases.distribution.map(item => item.count),
-        backgroundColor: [
-          '#3498db',
-          '#2ecc71',
-          '#9b59b6',
-          '#e67e22',
-          '#f1c40f',
-          '#1abc9c',
-          '#34495e'
-        ]
-      }]
+      labels: reportData.testCases.distribution.map((item) => item.category),
+      datasets: [
+        {
+          data: reportData.testCases.distribution.map((item) => item.count),
+          backgroundColor: [
+            '#3498db',
+            '#2ecc71',
+            '#9b59b6',
+            '#e67e22',
+            '#f1c40f',
+            '#1abc9c',
+            '#34495e',
+          ],
+        },
+      ],
     },
     options: {
       responsive: true,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
         },
         title: {
           display: true,
-          text: '测试用例分布'
-        }
-      }
-    }
+          text: '测试用例分布',
+        },
+      },
+    },
   });
 }
 
@@ -993,34 +1037,32 @@ function renderTestCasesPriorityChart() {
     type: 'bar',
     data: {
       labels: ['高', '中', '低'],
-      datasets: [{
-        label: '用例数量',
-        data: [
-          reportData.testCases.priority.high || 0,
-          reportData.testCases.priority.medium || 0,
-          reportData.testCases.priority.low || 0
-        ],
-        backgroundColor: [
-          '#e74c3c',
-          '#f39c12',
-          '#3498db'
-        ]
-      }]
+      datasets: [
+        {
+          label: '用例数量',
+          data: [
+            reportData.testCases.priority.high || 0,
+            reportData.testCases.priority.medium || 0,
+            reportData.testCases.priority.low || 0,
+          ],
+          backgroundColor: ['#e74c3c', '#f39c12', '#3498db'],
+        },
+      ],
     },
     options: {
       responsive: true,
       scales: {
         y: {
-          beginAtZero: true
-        }
+          beginAtZero: true,
+        },
       },
       plugins: {
         title: {
           display: true,
-          text: '测试用例优先级分布'
-        }
-      }
-    }
+          text: '测试用例优先级分布',
+        },
+      },
+    },
   });
 }
 
@@ -1121,7 +1163,7 @@ function renderRiskMatrix() {
     data.push({
       x: item.probability,
       y: item.impact,
-      r: item.count * 5 + 5
+      r: item.count * 5 + 5,
     });
     labels.push(item.title);
 
@@ -1138,11 +1180,13 @@ function renderRiskMatrix() {
   new Chart(ctx, {
     type: 'bubble',
     data: {
-      datasets: [{
-        label: '风险项',
-        data: data,
-        backgroundColor: colors
-      }]
+      datasets: [
+        {
+          label: '风险项',
+          data,
+          backgroundColor: colors,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -1152,44 +1196,44 @@ function renderRiskMatrix() {
           max: 5,
           title: {
             display: true,
-            text: '可能性'
+            text: '可能性',
           },
           ticks: {
-            stepSize: 1
-          }
+            stepSize: 1,
+          },
         },
         y: {
           min: 0,
           max: 5,
           title: {
             display: true,
-            text: '影响'
+            text: '影响',
           },
           ticks: {
-            stepSize: 1
-          }
-        }
+            stepSize: 1,
+          },
+        },
       },
       plugins: {
         tooltip: {
           callbacks: {
-            label: function(context) {
+            label(context) {
               const index = context.dataIndex;
               return [
                 labels[index],
                 `影响: ${context.raw.y}`,
                 `可能性: ${context.raw.x}`,
-                `数量: ${(context.raw.r - 5) / 5}`
+                `数量: ${(context.raw.r - 5) / 5}`,
               ];
-            }
-          }
+            },
+          },
         },
         title: {
           display: true,
-          text: '风险矩阵'
-        }
-      }
-    }
+          text: '风险矩阵',
+        },
+      },
+    },
   });
 }
 
@@ -1223,7 +1267,7 @@ function fillAttachments() {
 
     // 创建附件图标
     const icon = document.createElement('span');
-    icon.className = 'attachment-icon ' + getAttachmentIconClass(attachment.type);
+    icon.className = `attachment-icon ${getAttachmentIconClass(attachment.type)}`;
 
     // 创建附件链接
     const link = document.createElement('a');
@@ -1232,7 +1276,7 @@ function fillAttachments() {
     link.className = 'attachment-link';
 
     // 添加点击事件，预览附件
-    link.addEventListener('click', function(e) {
+    link.addEventListener('click', (e) => {
       e.preventDefault();
       previewAttachment(attachment);
     });
@@ -1244,7 +1288,7 @@ function fillAttachments() {
     downloadBtn.innerHTML = '<i class="download-icon">↓</i>';
 
     // 添加下载事件
-    downloadBtn.addEventListener('click', function(e) {
+    downloadBtn.addEventListener('click', (e) => {
       e.preventDefault();
       downloadAttachment(attachment);
     });
@@ -1260,13 +1304,19 @@ function fillAttachments() {
 
 // 获取附件图标类名
 function getAttachmentIconClass(type) {
-  switch(type) {
-    case 'pdf': return 'icon-pdf';
-    case 'excel': return 'icon-excel';
-    case 'word': return 'icon-word';
-    case 'image': return 'icon-image';
-    case 'text': return 'icon-text';
-    default: return 'icon-file';
+  switch (type) {
+    case 'pdf':
+      return 'icon-pdf';
+    case 'excel':
+      return 'icon-excel';
+    case 'word':
+      return 'icon-word';
+    case 'image':
+      return 'icon-image';
+    case 'text':
+      return 'icon-text';
+    default:
+      return 'icon-file';
   }
 }
 
@@ -1381,7 +1431,7 @@ function previewAttachment(attachment) {
   const downloadBtn = document.createElement('button');
   downloadBtn.className = 'preview-action-btn download-btn';
   downloadBtn.textContent = '下载文件';
-  downloadBtn.addEventListener('click', function() {
+  downloadBtn.addEventListener('click', () => {
     downloadAttachment(attachment);
   });
 
@@ -1399,26 +1449,36 @@ function downloadAttachment(attachment) {
     let filename = attachment.name || 'download';
 
     // 根据文件类型设置MIME类型
-    switch(attachment.type) {
+    switch (attachment.type) {
       case 'pdf':
         mimeType = 'application/pdf';
-        if (!filename.endsWith('.pdf')) filename += '.pdf';
+        if (!filename.endsWith('.pdf')) {
+          filename += '.pdf';
+        }
         break;
       case 'excel':
         mimeType = 'application/vnd.ms-excel';
-        if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) filename += '.xlsx';
+        if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) {
+          filename += '.xlsx';
+        }
         break;
       case 'word':
         mimeType = 'application/msword';
-        if (!filename.endsWith('.docx') && !filename.endsWith('.doc')) filename += '.docx';
+        if (!filename.endsWith('.docx') && !filename.endsWith('.doc')) {
+          filename += '.docx';
+        }
         break;
       case 'image':
         mimeType = 'image/png';
-        if (!filename.endsWith('.png') && !filename.endsWith('.jpg')) filename += '.png';
+        if (!filename.endsWith('.png') && !filename.endsWith('.jpg')) {
+          filename += '.png';
+        }
         break;
       case 'text':
         mimeType = 'text/plain';
-        if (!filename.endsWith('.txt')) filename += '.txt';
+        if (!filename.endsWith('.txt')) {
+          filename += '.txt';
+        }
         content = '这是一个示例文本文件，用于演示下载功能。';
         break;
       default:
@@ -1440,7 +1500,7 @@ function downloadAttachment(attachment) {
     a.click();
 
     // 清理
-    setTimeout(function() {
+    setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
@@ -1454,7 +1514,7 @@ function downloadAttachment(attachment) {
     a.click();
 
     // 清理
-    setTimeout(function() {
+    setTimeout(() => {
       document.body.removeChild(a);
     }, 100);
   }
@@ -1463,9 +1523,11 @@ function downloadAttachment(attachment) {
 // 设置打印按钮
 function setupPrintButton() {
   const printButton = document.getElementById('print-report-button');
-  if (!printButton) return;
+  if (!printButton) {
+    return;
+  }
 
-  printButton.addEventListener('click', function() {
+  printButton.addEventListener('click', () => {
     window.print();
   });
 }
@@ -1484,7 +1546,9 @@ function fillConclusion() {
 // 设置导出PDF按钮
 function setupExportPdfButton() {
   const exportButton = document.getElementById('export-pdf-button');
-  if (!exportButton) return;
+  if (!exportButton) {
+    return;
+  }
 
   // 初始状态设置为禁用，等待库加载完成
   exportButton.disabled = true;
@@ -1492,9 +1556,11 @@ function setupExportPdfButton() {
 
   // 检查库是否已加载
   const checkLibsLoaded = () => {
-    if (typeof html2pdf !== 'undefined' &&
-        typeof html2canvas !== 'undefined' &&
-        typeof window.jspdf !== 'undefined') {
+    if (
+      typeof html2pdf !== 'undefined' &&
+      typeof html2canvas !== 'undefined' &&
+      typeof window.jspdf !== 'undefined'
+    ) {
       // 库已加载，启用按钮
       exportButton.disabled = false;
       exportButton.title = '导出测试报告为PDF';
@@ -1522,7 +1588,7 @@ function setupExportPdfButton() {
     }, 10000);
   }
 
-  exportButton.addEventListener('click', function() {
+  exportButton.addEventListener('click', () => {
     // 再次检查库是否已加载
     if (!checkLibsLoaded()) {
       alert('PDF导出功能尚未加载完成，请稍后再试');
@@ -1532,7 +1598,8 @@ function setupExportPdfButton() {
     // 显示加载提示
     const loadingElement = document.createElement('div');
     loadingElement.className = 'loading-overlay';
-    loadingElement.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">正在生成PDF，请稍候...</div>';
+    loadingElement.innerHTML =
+      '<div class="loading-spinner"></div><div class="loading-text">正在生成PDF，请稍候...</div>';
     document.body.appendChild(loadingElement);
 
     try {
@@ -1547,14 +1614,14 @@ function setupExportPdfButton() {
         html2canvas: {
           scale: 2,
           useCORS: true,
-          logging: false
+          logging: false,
         },
         jsPDF: {
           unit: 'mm',
           format: 'a4',
           orientation: 'portrait',
-          compress: true
-        }
+          compress: true,
+        },
       };
 
       // 使用 Promise 处理导出过程
@@ -1569,25 +1636,25 @@ function setupExportPdfButton() {
           }
           console.log('PDF 导出成功');
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('PDF 导出失败:', error);
           if (document.body.contains(loadingElement)) {
             document.body.removeChild(loadingElement);
           }
-          alert('PDF 导出失败: ' + error.message);
+          alert(`PDF 导出失败: ${error.message}`);
         });
     } catch (error) {
       console.error('PDF 导出初始化失败:', error);
       if (document.body.contains(loadingElement)) {
         document.body.removeChild(loadingElement);
       }
-      alert('PDF 导出初始化失败: ' + error.message);
+      alert(`PDF 导出初始化失败: ${error.message}`);
     }
   });
 }
 
 // 添加右键菜单保存图表功能
-document.addEventListener('contextmenu', function(e) {
+document.addEventListener('contextmenu', (e) => {
   const target = e.target;
   if (target.tagName === 'CANVAS') {
     e.preventDefault();
@@ -1609,7 +1676,7 @@ document.addEventListener('contextmenu', function(e) {
     viewOption.className = 'context-menu-item';
     viewOption.textContent = '查看大图';
 
-    viewOption.addEventListener('click', function() {
+    viewOption.addEventListener('click', () => {
       showImageModal(target);
       document.body.removeChild(menu);
     });
@@ -1619,7 +1686,7 @@ document.addEventListener('contextmenu', function(e) {
     saveOption.className = 'context-menu-item';
     saveOption.textContent = '保存图表';
 
-    saveOption.addEventListener('click', function() {
+    saveOption.addEventListener('click', () => {
       // 获取图表数据URL
       const dataUrl = target.toDataURL('image/png');
 

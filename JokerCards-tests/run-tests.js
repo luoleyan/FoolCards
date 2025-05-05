@@ -16,7 +16,7 @@ const TEST_TYPES = {
   SYSTEM: 'system',
   BLACKBOX: 'blackbox',
   WHITEBOX: 'whitebox',
-  ALL: 'all'
+  ALL: 'all',
 };
 
 // 运行测试
@@ -63,7 +63,12 @@ function runCompatibilityTest() {
 
   try {
     // 检查兼容性测试文件是否存在
-    const compatibilityTestFile = path.join(__dirname, 'tests', 'compatibility', 'browser-compatibility.js');
+    const compatibilityTestFile = path.join(
+      __dirname,
+      'tests',
+      'compatibility',
+      'browser-compatibility.js',
+    );
     if (!fs.existsSync(compatibilityTestFile)) {
       console.error(`\n❌ 兼容性测试文件不存在: ${compatibilityTestFile}\n`);
       return false;
@@ -123,7 +128,7 @@ function generateTestReport(type, options = {}) {
     processor.process(testResults, {
       testType: type,
       generatePdf: options.generatePdf || false,
-      useECharts: options.useECharts || false
+      useECharts: options.useECharts || false,
     });
 
     console.log(`\n✅ ${getTestTypeName(type)}测试报告生成完成\n`);
@@ -148,7 +153,7 @@ function showHelp() {
   console.log(`  ${TEST_TYPES.SYSTEM}       - 运行系统测试`);
   console.log(`  ${TEST_TYPES.BLACKBOX}     - 运行黑盒测试`);
   console.log(`  ${TEST_TYPES.WHITEBOX}     - 运行白盒测试`);
-  console.log(`  compatibility - 准备兼容性测试`);
+  console.log('  compatibility - 准备兼容性测试');
   console.log(`  ${TEST_TYPES.ALL}          - 运行所有测试`);
   console.log('\n可用的选项:');
   console.log('  --pdf, -p       - 生成PDF报告');
