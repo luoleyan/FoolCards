@@ -116,12 +116,85 @@ function generateTestReport(type, options = {}) {
   try {
     // 读取测试结果
     const resultsPath = path.join(__dirname, 'test-results', 'raw-results.json');
-    if (!fs.existsSync(resultsPath)) {
-      console.warn(`测试结果文件不存在: ${resultsPath}`);
-      return;
-    }
+    let testResults;
 
-    const testResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+    if (!fs.existsSync(resultsPath)) {
+      console.warn(`测试结果文件不存在: ${resultsPath}，将创建模拟测试结果`);
+
+      // 创建一个模拟的测试结果
+      testResults = {
+        numFailedTestSuites: 0,
+        numFailedTests: 0,
+        numPassedTestSuites: 0,
+        numPassedTests: 0,
+        numPendingTestSuites: 0,
+        numPendingTests: 0,
+        numRuntimeErrorTestSuites: 0,
+        numTotalTestSuites: 0,
+        numTotalTests: 0,
+        startTime: Date.now() - 1000,
+        endTime: Date.now(),
+        success: false,
+        testResults: [],
+        wasInterrupted: false
+      };
+
+      // 将模拟结果写入文件
+      fs.writeFileSync(resultsPath, JSON.stringify(testResults, null, 2));
+    } else {
+      try {
+        const fileContent = fs.readFileSync(resultsPath, 'utf8');
+        if (!fileContent || fileContent.trim() === '') {
+          console.warn(`测试结果文件为空: ${resultsPath}，将创建模拟测试结果`);
+
+          // 创建一个模拟的测试结果
+          testResults = {
+            numFailedTestSuites: 0,
+            numFailedTests: 0,
+            numPassedTestSuites: 0,
+            numPassedTests: 0,
+            numPendingTestSuites: 0,
+            numPendingTests: 0,
+            numRuntimeErrorTestSuites: 0,
+            numTotalTestSuites: 0,
+            numTotalTests: 0,
+            startTime: Date.now() - 1000,
+            endTime: Date.now(),
+            success: false,
+            testResults: [],
+            wasInterrupted: false
+          };
+
+          // 将模拟结果写入文件
+          fs.writeFileSync(resultsPath, JSON.stringify(testResults, null, 2));
+        } else {
+          testResults = JSON.parse(fileContent);
+        }
+      } catch (error) {
+        console.warn(`解析测试结果文件失败: ${error.message}，将创建模拟测试结果`);
+
+        // 创建一个模拟的测试结果
+        testResults = {
+          numFailedTestSuites: 0,
+          numFailedTests: 0,
+          numPassedTestSuites: 0,
+          numPassedTests: 0,
+          numPendingTestSuites: 0,
+          numPendingTests: 0,
+          numRuntimeErrorTestSuites: 0,
+          numTotalTestSuites: 0,
+          numTotalTests: 0,
+          startTime: Date.now() - 1000,
+          endTime: Date.now(),
+          success: false,
+          testResults: [],
+          wasInterrupted: false
+        };
+
+        // 将模拟结果写入文件
+        fs.writeFileSync(resultsPath, JSON.stringify(testResults, null, 2));
+      }
+    }
 
     // 处理测试结果并生成报告
     const processor = new TestResultsProcessor();

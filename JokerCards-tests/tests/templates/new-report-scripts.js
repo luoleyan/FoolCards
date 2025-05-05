@@ -1781,7 +1781,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!reportData.coverage) {
-        container.innerHTML = '<div class="error-message">没有覆盖率数据</div>';
+        container.innerHTML = '<div class="error-message">没有覆盖率数据。这可能是因为测试执行失败、没有启用覆盖率收集或没有找到测试文件。请检查测试命令输出以获取更多信息。</div>';
         return;
       }
 
@@ -1871,6 +1871,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // 检查是否有覆盖率数据
       if (!reportData.coverage) {
+        console.warn('没有覆盖率数据，无法渲染测试覆盖率雷达图');
         return;
       }
 
@@ -1946,6 +1947,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // 检查是否有缺陷数据
       if (!reportData.defectAnalysis || !reportData.defectAnalysis.patternDistribution) {
+        console.warn('没有缺陷分析数据，无法渲染缺陷热力图');
         return;
       }
 

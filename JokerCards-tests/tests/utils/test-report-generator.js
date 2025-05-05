@@ -110,6 +110,11 @@ class TestReportGenerator {
       };
     }
 
+    // 检查测试结果是否有效
+    if (!testResults.testResults || testResults.testResults.length === 0) {
+      console.warn('警告: 测试结果为空或无效。这可能是因为测试执行失败或没有找到测试文件。');
+    }
+
     // 解析测试结果
     const testSuites = testResults.testResults || [];
     const passedTests = testResults.numPassedTests || 0;
@@ -1799,11 +1804,41 @@ document.addEventListener('contextmenu', function(e) {
       low: Math.floor(totalTests * 0.2),
     };
 
+    // 计算真实的覆盖率（如果有）
+    let coverage = 0;
+    if (results.coverageMap) {
+      try {
+        const coverageData = results.coverageMap.getCoverageSummary();
+        if (coverageData) {
+          // 计算平均覆盖率
+          const statementCoverage = coverageData.statements.pct || 0;
+          const branchCoverage = coverageData.branches.pct || 0;
+          const functionCoverage = coverageData.functions.pct || 0;
+          const lineCoverage = coverageData.lines.pct || 0;
+
+          coverage = Math.round((statementCoverage + branchCoverage + functionCoverage + lineCoverage) / 4);
+        }
+      } catch (error) {
+        console.warn('无法计算覆盖率:', error.message);
+      }
+    }
+
+    // 如果没有测试用例，将分布和优先级设为0
+    if (totalTests === 0) {
+      distribution.forEach(item => {
+        item.count = 0;
+      });
+
+      Object.keys(priority).forEach(key => {
+        priority[key] = 0;
+      });
+    }
+
     return {
       total: totalTests + manualTests,
       automated: automatedTests,
       manual: manualTests,
-      coverage: 85, // 假设测试覆盖率为85%
+      coverage: coverage, // 使用计算的覆盖率
       distribution,
       priority,
     };
@@ -2441,7 +2476,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const total = summary.total || 0;
 
       if (total === 0) {
-        container.innerHTML = '<div class="error-message">没有测试结果数据</div>';
+        container.innerHTML = '<div class="error-message">没有测试结果数据。这可能是因为测试执行失败或没有找到测试文件。请检查测试命令输出以获取更多信息。</div>';
         return;
       }
 
