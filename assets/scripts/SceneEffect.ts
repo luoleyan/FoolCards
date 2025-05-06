@@ -1,8 +1,25 @@
+/**
+ * @file SceneEffect.ts
+ * @description 场景效果类，负责管理游戏中的各种场景效果和公共牌
+ * @author LuoLeYan
+ * @copyright Copyright (c) 2025, LuoLeYan
+ */
+
 import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, resources, Label, tween } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
+/**
+ * 场景效果类型枚举
+ *
+ * 定义游戏中可能出现的各种场景效果：
+ * - 基础效果：影响游戏基本规则
+ * - 牌型相关效果：影响特定牌型的规则和得分
+ * - 花色相关效果：影响特定花色牌的得分
+ * - 连锁效果：影响多个场地区域的得分
+ * - 特殊效果：提供各种独特的游戏机制
+ */
 export enum SceneEffectType {
     // 基础效果
     None = 'none',                      // 无特殊效果
@@ -47,46 +64,97 @@ export enum SceneEffectType {
     SameColorExchange = 'same_color_exchange' // 首次同色获得5次换牌机会
 }
 
+/**
+ * 场景效果类
+ *
+ * 负责管理游戏中的场景效果和公共牌：
+ * - 初始化和管理场景效果
+ * - 生成和管理公共牌
+ * - 处理效果的显示和隐藏
+ * - 应用效果对游戏规则和得分的影响
+ * - 提供效果状态查询接口
+ */
 @ccclass('SceneEffect')
 export class SceneEffect extends Component {
+    /** 公共牌容器节点 */
     @property(Node)
     public publicCardContainer: Node = null;
 
+    /** 关联的场地节点 */
     @property(Node)
-    public playArea: Node = null;  // 关联的场地节点
+    public playArea: Node = null;
 
+    /** 效果隐藏时显示的图像 */
     @property(SpriteFrame)
     public hiddenEffectSprite: SpriteFrame = null;
 
+    /** 卡牌背面精灵组件 */
     @property(Sprite)
-    private cardBack: Sprite = null;  // 卡牌背面
+    private cardBack: Sprite = null;
 
+    /** 效果名称标签 */
     @property(Label)
-    private effectName: Label = null;  // 效果名称
+    private effectName: Label = null;
 
+    /** 效果描述标签 */
     @property(Label)
-    private effectDescription: Label = null;  // 效果描述
+    private effectDescription: Label = null;
 
+    /** 当前效果类型 */
     private _effectType: SceneEffectType = SceneEffectType.None;
-    private _isRevealed: boolean = false;
-    private _publicCards: Card[] = [];
-    private _cardWidth: number = 120;  // 卡牌宽度
-    private _cardSpacing: number = 20;  // 减小卡牌间距
-    private _effectOffsetY: number = 150;  // 效果文本与场地的垂直偏移
-    private _publicCardOffsetY: number = 0;  // 将公共牌位置调整到场地区域中央
 
+    /** 效果是否已揭示 */
+    private _isRevealed: boolean = false;
+
+    /** 公共牌数组 */
+    private _publicCards: Card[] = [];
+
+    /** 卡牌宽度 */
+    private _cardWidth: number = 120;
+
+    /** 卡牌间距 */
+    private _cardSpacing: number = 20;
+
+    /** 效果文本与场地的垂直偏移 */
+    private _effectOffsetY: number = 150;
+
+    /** 公共牌位置调整到场地区域中央的偏移量 */
+    private _publicCardOffsetY: number = 0;
+
+    /**
+     * 获取当前效果类型
+     *
+     * @returns 当前效果类型
+     */
     public get effectType(): SceneEffectType {
         return this._effectType;
     }
 
+    /**
+     * 获取效果是否已揭示
+     *
+     * @returns 效果是否已揭示
+     */
     public get isRevealed(): boolean {
         return this._isRevealed;
     }
 
+    /**
+     * 获取公共牌数组
+     *
+     * @returns 公共牌数组
+     */
     public get publicCards(): Card[] {
         return this._publicCards;
     }
 
+    /**
+     * 组件启动时执行的初始化方法
+     *
+     * 负责初始化场景效果：
+     * - 隐藏效果
+     * - 设置效果文本和公共牌的位置
+     */
     start() {
         // 初始化时隐藏效果
         this.hideEffect();
@@ -94,7 +162,16 @@ export class SceneEffect extends Component {
         this.updatePositions();
     }
 
-    // 更新效果文本和公共牌的位置
+    /**
+     * 更新效果文本和公共牌的位置
+     *
+     * 根据场地区域的大小计算并设置：
+     * - 效果名称的位置（场地内部上方）
+     * - 效果描述的位置（在效果名称下方）
+     * - 公共牌的位置（场地内部中央）
+     *
+     * @private
+     */
     private updatePositions() {
         if (this.playArea) {
             const playAreaTransform = this.playArea.getComponent(UITransform);
@@ -116,7 +193,19 @@ export class SceneEffect extends Component {
         }
     }
 
-    // 揭示效果
+    /**
+     * 揭示效果
+     *
+     * 显示场景效果和公共牌：
+     * - 设置效果为已揭示状态
+     * - 显示公共牌容器
+     * - 显示所有公共牌
+     * - 隐藏卡牌背面
+     * - 显示效果文本
+     * - 播放揭示动画
+     *
+     * @public
+     */
     public reveal() {
         if (this._isRevealed) return;
 
@@ -177,7 +266,16 @@ export class SceneEffect extends Component {
         this.playRevealAnimation();
     }
 
-    // 隐藏效果
+    /**
+     * 隐藏效果
+     *
+     * 隐藏场景效果和公共牌：
+     * - 隐藏效果文本
+     * - 隐藏公共牌容器
+     * - 显示卡牌背面
+     *
+     * @public
+     */
     public hideEffect() {
         // 隐藏效果文本
         if (this.effectDescription) {
@@ -195,7 +293,22 @@ export class SceneEffect extends Component {
         }
     }
 
-    // 初始化场景效果
+    /**
+     * 初始化场景效果
+     *
+     * 设置场景效果的初始状态：
+     * - 设置效果类型
+     * - 重置效果状态
+     * - 清空公共牌
+     * - 设置关联的场地节点
+     * - 隐藏效果信息
+     * - 生成公共牌
+     * - 更新位置
+     *
+     * @param effectType 效果类型
+     * @param playArea 关联的场地节点
+     * @public
+     */
     public init(effectType: SceneEffectType, playArea: Node) {
         this._effectType = effectType;
         this._isRevealed = false;
@@ -221,7 +334,18 @@ export class SceneEffect extends Component {
         this.updatePositions();
     }
 
-    // 生成公共牌
+    /**
+     * 生成公共牌
+     *
+     * 为场景效果生成公共牌：
+     * - 清空现有公共牌
+     * - 生成两张随机公共牌
+     * - 如果是初始大王牌效果，额外添加一张大王牌
+     * - 设置卡牌的位置和缩放
+     * - 初始化卡牌并显示背面
+     *
+     * @private
+     */
     private generatePublicCards() {
         // 清空现有公共牌
         this._publicCards = [];
@@ -339,7 +463,17 @@ export class SceneEffect extends Component {
         }
     }
 
-    // 播放揭示动画
+    /**
+     * 播放揭示动画
+     *
+     * 创建场景效果揭示的动画序列：
+     * - 卡牌翻转动画（卡牌背面缩放到0）
+     * - 显示效果信息
+     * - 效果信息展开动画
+     * - 显示公共牌
+     *
+     * @private
+     */
     private playRevealAnimation() {
         // 1. 卡牌翻转动画
         tween(this.cardBack.node)
@@ -408,7 +542,16 @@ export class SceneEffect extends Component {
             .start();
     }
 
-    // 设置效果信息
+    /**
+     * 设置效果信息
+     *
+     * 设置效果名称和描述标签的文本内容：
+     * - 获取当前效果类型的信息
+     * - 设置效果名称标签
+     * - 设置效果描述标签
+     *
+     * @private
+     */
     private setEffectInfo() {
         // 设置效果名称和描述
         const effectInfo = this.getEffectInfo();
@@ -416,7 +559,16 @@ export class SceneEffect extends Component {
         this.effectDescription.string = effectInfo.description;
     }
 
-    // 获取效果信息
+    /**
+     * 获取效果信息
+     *
+     * 根据当前效果类型返回对应的名称和描述：
+     * - 返回效果的中文名称
+     * - 返回效果的详细描述
+     *
+     * @returns 包含效果名称和描述的对象
+     * @private
+     */
     private getEffectInfo(): { name: string, description: string } {
         switch (this._effectType) {
             case SceneEffectType.JQKBonus:
@@ -482,7 +634,18 @@ export class SceneEffect extends Component {
         }
     }
 
-    // 获取随机花色
+    /**
+     * 获取随机花色
+     *
+     * 从四种基本花色中随机选择一种：
+     * - 黑桃
+     * - 红桃
+     * - 梅花
+     * - 方块
+     *
+     * @returns 随机选择的花色
+     * @private
+     */
     private getRandomSuit(): CardSuit {
         const suits = [
             CardSuit.Spade,
@@ -493,7 +656,15 @@ export class SceneEffect extends Component {
         return suits[Math.floor(Math.random() * suits.length)];
     }
 
-    // 获取随机点数
+    /**
+     * 获取随机点数
+     *
+     * 从13种基本点数中随机选择一种：
+     * - A到K
+     *
+     * @returns 随机选择的点数
+     * @private
+     */
     private getRandomRank(): CardRank {
         const ranks = [
             CardRank.Ace,
@@ -513,7 +684,21 @@ export class SceneEffect extends Component {
         return ranks[Math.floor(Math.random() * ranks.length)];
     }
 
-    // 应用场景效果
+    /**
+     * 应用场景效果
+     *
+     * 根据当前效果类型对游戏规则和得分进行修改：
+     * - 检查效果是否已揭示
+     * - 根据效果类型执行相应的操作
+     * - 修改游戏规则（如牌型要求）
+     * - 增加得分
+     * - 提供额外资源（如换牌次数、出牌次数）
+     * - 执行特殊效果（如抽牌、随机出牌）
+     *
+     * @param gameManager 游戏管理器引用
+     * @param areaIndex 场地区域索引
+     * @public
+     */
     public applyEffect(gameManager: GameManager, areaIndex: number) {
         if (!this._isRevealed) return;
 
@@ -928,7 +1113,22 @@ export class SceneEffect extends Component {
         }
     }
 
-    // 获取卡牌点数
+    /**
+     * 获取卡牌点数值
+     *
+     * 将卡牌点数枚举转换为数值：
+     * - A为1点
+     * - 数字牌为对应数字
+     * - J为11点
+     * - Q为12点
+     * - K为13点
+     *
+     * 主要用于计算点数和、序列等
+     *
+     * @param rank 卡牌点数枚举
+     * @returns 对应的数值
+     * @private
+     */
     private getCardValue(rank: CardRank): number {
         switch (rank) {
             case CardRank.Ace: return 1;

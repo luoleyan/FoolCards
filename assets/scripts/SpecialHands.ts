@@ -1,30 +1,68 @@
+/**
+ * @file SpecialHands.ts
+ * @description 特殊牌型管理类，负责检测和处理游戏中的特殊牌型
+ * @author LuoLeYan
+ * @copyright Copyright (c) 2025, LuoLeYan
+ */
+
 import { _decorator, Component } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 const { ccclass } = _decorator;
 
-// 特殊牌型枚举，按分数从高到低排序
+/**
+ * 特殊牌型枚举
+ *
+ * 定义游戏中可能出现的特殊牌型，按分数从高到低排序：
+ * - 每种牌型对应不同的得分和组合规则
+ * - 牌型检测按照从高到低的顺序进行
+ * - 王牌可以替代任何牌来组成特殊牌型
+ */
 export enum SpecialHandType {
-    NONE = 0,
-    ROYAL_FLUSH = 1,    // 完美同色序列 (150分)
-    PERFECT_STRAIGHT = 2, // 完美序列 (135分)
-    STRAIGHT_FLUSH = 3, // 同色序列 (120分)
-    FOUR_OF_A_KIND = 4, // 四骑士 (80分)
-    FLUSH = 5,          // 同色 (60分)
-    STRAIGHT = 6,       // 序列 (60分)
-    FULL_HOUSE = 7,     // 满座 (55分)
-    THREE_OF_A_KIND = 8,// 三贤者 (30分)
-    TWO_PAIRS = 9,      // 双偶星 (30分)
-    PAIR = 10           // 偶星 (15分)
+    NONE = 0,           // 无特殊牌型 (0分)
+    ROYAL_FLUSH = 1,    // 完美同色序列：10-J-Q-K-A组成的同色序列 (150分)
+    PERFECT_STRAIGHT = 2, // 完美序列：10-J-Q-K-A组成的序列 (135分)
+    STRAIGHT_FLUSH = 3, // 同色序列：五张连续点数且同色的牌 (120分)
+    FOUR_OF_A_KIND = 4, // 四骑士：四张相同点数的牌 (80分)
+    FLUSH = 5,          // 同色：五张相同花色的牌 (60分)
+    STRAIGHT = 6,       // 序列：五张连续点数的牌 (60分)
+    FULL_HOUSE = 7,     // 满座：三贤者加偶星 (55分)
+    THREE_OF_A_KIND = 8,// 三贤者：三张相同点数的牌 (30分)
+    TWO_PAIRS = 9,      // 双偶星：两对不同点数的偶星 (30分)
+    PAIR = 10           // 偶星：两张相同点数的牌 (15分)
 }
 
-// 特殊牌型类
+/**
+ * 特殊牌型类
+ *
+ * 表示一种特殊牌型的实例：
+ * - 存储牌型类型、名称和描述
+ * - 记录组成牌型的卡牌
+ * - 保存牌型的奖励分数
+ */
 export class SpecialHand {
+    /** 牌型类型 */
     public type: SpecialHandType;
+
+    /** 牌型名称 */
     public name: string;
+
+    /** 组成牌型的卡牌 */
     public cards: Card[];
+
+    /** 牌型奖励分数 */
     public bonusPoints: number;
+
+    /** 牌型描述 */
     public description: string;
 
+    /**
+     * 创建特殊牌型实例
+     *
+     * @param type 牌型类型
+     * @param cards 组成牌型的卡牌
+     * @param bonusPoints 牌型奖励分数
+     * @param description 牌型描述
+     */
     constructor(type: SpecialHandType, cards: Card[], bonusPoints: number, description: string) {
         this.type = type;
         this.cards = cards;
@@ -34,16 +72,37 @@ export class SpecialHand {
     }
 }
 
-// 特殊牌型管理器
+/**
+ * 特殊牌型管理器
+ *
+ * 负责管理和检测游戏中的特殊牌型：
+ * - 使用单例模式确保全局唯一实例
+ * - 初始化和存储所有特殊牌型定义
+ * - 提供牌型检测和评分功能
+ * - 处理王牌替代规则
+ */
 export class SpecialHandsManager {
+    /** 单例实例 */
     private static instance: SpecialHandsManager;
+
+    /** 存储所有特殊牌型的映射表 */
     private specialHands: Map<SpecialHandType, SpecialHand>;
 
+    /**
+     * 私有构造函数，防止外部直接创建实例
+     * 初始化特殊牌型映射表
+     */
     private constructor() {
         this.specialHands = new Map();
         this.initializeSpecialHands();
     }
 
+    /**
+     * 获取特殊牌型管理器的单例实例
+     *
+     * @returns 特殊牌型管理器实例
+     * @static
+     */
     public static getInstance(): SpecialHandsManager {
         if (!SpecialHandsManager.instance) {
             SpecialHandsManager.instance = new SpecialHandsManager();
@@ -51,12 +110,28 @@ export class SpecialHandsManager {
         return SpecialHandsManager.instance;
     }
 
-    // 获取所有特殊牌型
+    /**
+     * 获取所有特殊牌型
+     *
+     * 返回所有已定义的特殊牌型列表
+     *
+     * @returns 特殊牌型数组
+     * @public
+     */
     public getSpecialHands(): SpecialHand[] {
         return Array.from(this.specialHands.values());
     }
 
-    // 初始化所有特殊牌型及其得分
+    /**
+     * 初始化所有特殊牌型及其得分
+     *
+     * 创建并存储所有特殊牌型的定义：
+     * - 设置牌型类型
+     * - 设置牌型奖励分数
+     * - 设置牌型描述
+     *
+     * @private
+     */
     private initializeSpecialHands() {
         // 按分数从高到低初始化
         this.specialHands.set(SpecialHandType.ROYAL_FLUSH, new SpecialHand(
@@ -130,7 +205,19 @@ export class SpecialHandsManager {
         ));
     }
 
-    // 检查一组牌是否构成特殊牌型
+    /**
+     * 检查一组牌是否构成特殊牌型
+     *
+     * 分析给定的卡牌组合，确定是否构成特殊牌型：
+     * - 过滤无效卡牌
+     * - 分离普通牌和王牌
+     * - 根据是否有王牌选择不同的检测策略
+     * - 返回检测到的最高分牌型
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 检测到的特殊牌型，如果没有则返回null
+     * @public
+     */
     public checkSpecialHand(cards: Card[]): SpecialHand | null {
         // 过滤掉无效的卡牌
         const validCards = cards.filter(card => card != null);
@@ -150,7 +237,18 @@ export class SpecialHandsManager {
         return this.checkNormalHand(sortedCards);
     }
 
-    // 检查普通牌型（无王牌）
+    /**
+     * 检查普通牌型（无王牌）
+     *
+     * 检查不包含王牌的卡牌组合是否构成特殊牌型：
+     * - 创建可能的牌型列表
+     * - 检查并添加所有可能的牌型
+     * - 返回得分最高的牌型
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 检测到的特殊牌型，如果没有则返回null
+     * @private
+     */
     private checkNormalHand(cards: Card[]): SpecialHand | null {
         const possibleHands: SpecialHand[] = [];
         this.checkAndAddPossibleHand(cards, possibleHands);
@@ -161,7 +259,21 @@ export class SpecialHandsManager {
         return null;
     }
 
-    // 使用王牌获取最佳牌型组合
+    /**
+     * 使用王牌获取最佳牌型组合
+     *
+     * 尝试使用王牌组成各种可能的牌型组合：
+     * - 过滤无效的卡牌
+     * - 根据王牌数量尝试不同的组合策略
+     * - 按得分从高到低排序可能的牌型
+     * - 返回得分最高的牌型
+     * - 添加王牌额外分数
+     *
+     * @param normalCards 普通卡牌数组
+     * @param jokers 王牌数组
+     * @returns 最佳特殊牌型
+     * @private
+     */
     private getBestHandWithJokers(normalCards: Card[], jokers: Card[]): SpecialHand {
         const possibleHands: SpecialHand[] = [];
 
@@ -203,7 +315,18 @@ export class SpecialHandsManager {
         return bestHand;
     }
 
-    // 添加王牌额外分数
+    /**
+     * 添加王牌额外分数
+     *
+     * 根据王牌类型和数量为牌型添加额外分数：
+     * - 一张小王额外加10分
+     * - 一张大王额外加15分
+     * - 两张王牌额外加30分
+     *
+     * @param hand 要添加分数的特殊牌型
+     * @param jokers 王牌数组
+     * @private
+     */
     private addJokerBonusPoints(hand: SpecialHand, jokers: Card[]): void {
         // 过滤掉无效的卡牌
         const validJokers = jokers.filter(card => card != null);
@@ -232,8 +355,6 @@ export class SpecialHandsManager {
 
         // 预计算一些常用值
         const sortedNormalCards = [...validNormalCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
-        const normalRanks = sortedNormalCards.map(card => card.getRank());
-        const normalSuits = sortedNormalCards.map(card => card.getSuit());
 
         // 获取王牌
         const joker = validNormalCards.find(card => card.getSuit() === CardSuit.Joker);
@@ -451,7 +572,7 @@ export class SpecialHandsManager {
         }
 
         // 检查每种花色
-        for (const [suit, count] of suitCounts.entries()) {
+        for (const [_, count] of suitCounts.entries()) {
             if (count >= 3) {
                 // 检查这些牌中有多少是10, J, Q, K, A
                 const royalRanks = [CardRank.Ten, CardRank.Jack, CardRank.Queen, CardRank.King, CardRank.Ace];
@@ -489,7 +610,7 @@ export class SpecialHandsManager {
         }
 
         // 检查每种花色
-        for (const [suit, count] of suitCounts.entries()) {
+        for (const [_, count] of suitCounts.entries()) {
             if (count >= 3) {
                 // 检查这些牌是否可以形成序列
                 const sortedRanks = [...ranks].sort((a, b) => Number(a) - Number(b));
@@ -623,13 +744,36 @@ export class SpecialHandsManager {
         return false;
     }
 
-    // 检查两张王牌是否可以组成偶星
-    private checkPairWithTwoJokers(cards: Card[], ranks: CardRank[]): boolean {
+    /**
+     * 检查两张王牌是否可以组成偶星
+     *
+     * 两张王牌可以组成任意偶星：
+     * - 只要有普通牌，两张王牌就可以组成偶星
+     *
+     * @param cards 普通卡牌数组
+     * @param _ 未使用的参数
+     * @returns 是否可以组成偶星
+     * @private
+     */
+    private checkPairWithTwoJokers(cards: Card[], _: CardRank[]): boolean {
         // 只要有普通牌，两张王牌就可以组成偶星
         return cards.length > 0;
     }
 
-    // 检查并添加可能的牌型到列表
+    /**
+     * 检查并添加可能的牌型到列表
+     *
+     * 按照分数从高到低的顺序检查所有可能的牌型：
+     * - 过滤无效卡牌
+     * - 按点数排序卡牌
+     * - 依次检查各种牌型
+     * - 将检测到的牌型添加到列表
+     * - 按分数从高到低排序牌型列表
+     *
+     * @param cards 要检查的卡牌数组
+     * @param possibleHands 存储可能牌型的列表
+     * @private
+     */
     private checkAndAddPossibleHand(cards: Card[], possibleHands: SpecialHand[]) {
         // 过滤掉无效的卡牌
         const validCards = cards.filter(card => card != null);
@@ -637,8 +781,6 @@ export class SpecialHandsManager {
 
         // 预计算一些常用值
         const sortedCards = [...validCards].sort((a, b) => Number(a.getRank()) - Number(b.getRank()));
-        const ranks = sortedCards.map(card => card.getRank());
-        const suits = sortedCards.map(card => card.getSuit());
 
         // 按分数从高到低检查各种牌型
         const checkOrder = [

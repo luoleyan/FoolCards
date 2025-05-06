@@ -1,27 +1,71 @@
+/**
+ * @file AIOpponent.ts
+ * @description AI对手类，负责AI对手的行为和卡牌管理
+ * @author LuoLeYan
+ * @copyright Copyright (c) 2025, LuoLeYan
+ */
+
 import { _decorator, Component, Node, UITransform, Sprite, Vec3, tween } from 'cc';
 import { Card } from './Card';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
+/**
+ * AI对手类
+ *
+ * 负责AI对手的行为和卡牌管理：
+ * - 管理AI对手的手牌和出牌
+ * - 实现AI对手的决策逻辑
+ * - 在场地区域上方显示AI出的牌
+ * - 记录AI对手的出牌信息
+ * - 提供AI对手状态查询接口
+ */
 @ccclass('AIOpponent')
 export class AIOpponent extends Component {
+    /** 对手手牌区域节点 */
     @property(Node)
-    private opponentHand: Node = null;  // 对手手牌区域
+    private opponentHand: Node = null;
 
+    /** 场地区域节点数组 */
     @property([Node])
-    private playAreas: Node[] = [];  // 场地区域
+    private playAreas: Node[] = [];
 
-    // AI机器人相关属性
-    private aiPlayedCards: Map<number, Card[]> = new Map(); // 记录AI在每个场地区域打出的牌
-    private aiCardContainers: Map<number, Node[]> = new Map(); // 记录AI在每个场地区域的卡牌容器
+    /**
+     * 记录AI在每个场地区域打出的牌
+     * 键为场地索引，值为该场地的卡牌数组
+     */
+    private aiPlayedCards: Map<number, Card[]> = new Map();
 
-    // 标记正在处理中的卡牌，防止重复操作或过早销毁
-    private processingCards: Set<string> = new Set(); // 使用卡牌ID（节点uuid）作为标识
+    /**
+     * 记录AI在每个场地区域的卡牌容器
+     * 键为场地索引，值为该场地的卡牌容器节点数组
+     */
+    private aiCardContainers: Map<number, Node[]> = new Map();
 
-    // 游戏管理器引用
+    /**
+     * 标记正在处理中的卡牌，防止重复操作或过早销毁
+     * 使用卡牌ID（节点uuid）作为标识
+     */
+    private processingCards: Set<string> = new Set();
+
+    /** 游戏管理器引用 */
     private gameManager: GameManager = null;
 
-    // 初始化
+    /**
+     * 初始化AI对手
+     *
+     * 设置AI对手的必要引用和初始状态：
+     * - 检查参数有效性
+     * - 设置游戏管理器引用
+     * - 设置对手手牌区域
+     * - 设置场地区域
+     * - 清空AI出牌记录
+     *
+     * @param gameManager 游戏管理器引用
+     * @param opponentHand 对手手牌区域节点
+     * @param playAreas 场地区域节点数组
+     * @public
+     */
     public init(gameManager: GameManager, opponentHand: Node, playAreas: Node[]) {
         console.log("初始化AI对手组件");
 
@@ -52,7 +96,22 @@ export class AIOpponent extends Component {
         this.aiCardContainers.clear();
     }
 
-    // AI机器人出牌逻辑
+    /**
+     * AI机器人出牌逻辑
+     *
+     * 实现AI对手的出牌决策和执行：
+     * - 检查对手手牌和场地区域
+     * - 获取对手手牌
+     * - 决定出牌数量
+     * - 随机选择要出的牌
+     * - 随机选择出牌的场地区域
+     * - 记录AI出牌信息
+     * - 显示AI出的牌
+     * - 重新排列对手手牌
+     *
+     * @param maxCardsPerTurn 每回合最大出牌数量
+     * @public
+     */
     public playCards(maxCardsPerTurn: number) {
         console.log("AI机器人开始出牌");
 
@@ -167,7 +226,22 @@ export class AIOpponent extends Component {
         console.log("AI机器人出牌完成");
     }
 
-    // 记录AI出的牌并在场地上方显示（常驻显示）
+    /**
+     * 记录AI出的牌并在场地上方显示
+     *
+     * 创建并显示AI出牌的可视化表示：
+     * - 检查场地区域有效性
+     * - 创建卡牌容器节点
+     * - 设置容器位置在场地区域上方
+     * - 创建卡牌克隆并添加组件
+     * - 初始化卡牌并显示正面
+     * - 添加动画效果
+     * - 记录卡牌容器
+     *
+     * @param card 要显示的卡牌
+     * @param areaIndex 场地区域索引
+     * @private
+     */
     private showCardInPlayArea(card: Card, areaIndex: number) {
         console.log(`记录AI卡牌: ${card.getFullName()} 在场地区域 ${areaIndex}`);
 
@@ -292,7 +366,20 @@ export class AIOpponent extends Component {
         console.log(`AI卡牌 ${card.getFullName()} 显示过程开始`);
     }
 
-    // 重新排列场地区域中的AI卡牌
+    /**
+     * 重新排列场地区域中的AI卡牌
+     *
+     * 调整指定场地区域中AI卡牌的位置和布局：
+     * - 检查组件和场地区域有效性
+     * - 获取该区域的所有AI卡牌容器
+     * - 计算卡牌在场地上方的位置
+     * - 计算卡牌之间的间距
+     * - 设置每个卡牌容器的位置
+     * - 确保卡牌排列整齐且可见
+     *
+     * @param areaIndex 场地区域索引
+     * @private
+     */
     private arrangeAICardsInPlayArea(areaIndex: number) {
         // 检查组件是否有效
         if (!this.node || !this.isValid) {
@@ -355,7 +442,19 @@ export class AIOpponent extends Component {
         }
     }
 
-    // 移除所有AI卡牌信息和容器
+    /**
+     * 移除所有AI卡牌信息和容器
+     *
+     * 清理所有场地区域中的AI卡牌显示：
+     * - 遍历所有场地区域
+     * - 获取每个区域的AI卡牌容器
+     * - 检查卡牌是否正在处理中
+     * - 销毁非处理中的卡牌容器
+     * - 清空容器记录和出牌记录
+     * - 清空处理中的卡牌记录
+     *
+     * @public
+     */
     public removeAllCardContainers() {
         // 遍历所有场地区域
         for (let areaIndex = 0; areaIndex < this.playAreas.length; areaIndex++) {
@@ -390,7 +489,21 @@ export class AIOpponent extends Component {
         this.processingCards.clear();
     }
 
-    // 只清除内部记录，不清除显示的标签
+    /**
+     * 清除内部卡牌记录但保留显示
+     *
+     * 更新AI出牌记录，保留当前显示的卡牌信息：
+     * - 创建新的卡牌记录Map
+     * - 遍历所有场地区域
+     * - 获取每个区域的AI卡牌容器
+     * - 从容器中提取卡牌信息
+     * - 更新内部卡牌记录
+     * - 保留卡牌的可视化显示
+     *
+     * 主要用于回合切换时，保留AI出牌的显示但更新内部记录
+     *
+     * @public
+     */
     public clearPlayedCardsRecord() {
         // 创建一个新的Map来保存当前回合的卡牌记录
         const currentRoundCards = new Map<number, Card[]>();
@@ -433,7 +546,18 @@ export class AIOpponent extends Component {
 
 
 
-    // 重新排列对手手牌
+    /**
+     * 重新排列对手手牌
+     *
+     * 调整AI对手手牌的位置和布局：
+     * - 获取所有卡牌并保持原有顺序
+     * - 计算卡牌间距和位置
+     * - 设置每张卡牌的位置
+     * - 确保卡牌显示背面
+     * - 确保手牌区域可见
+     *
+     * @private
+     */
     private arrangeOpponentHand() {
         if (!this.opponentHand) return;
 
@@ -463,7 +587,19 @@ export class AIOpponent extends Component {
         this.opponentHand.active = true;
     }
 
-    // 清理资源
+    /**
+     * 清理资源
+     *
+     * 完全清理AI对手的所有资源和记录：
+     * - 移除所有卡牌容器
+     * - 清空出牌记录
+     * - 清空容器记录
+     * - 清空处理中的卡牌记录
+     *
+     * 主要用于游戏结束或重新开始时的完全清理
+     *
+     * @public
+     */
     public clear() {
         this.removeAllCardContainers();
         this.aiPlayedCards.clear();
@@ -471,10 +607,17 @@ export class AIOpponent extends Component {
         this.processingCards.clear();
     }
 
-    // 获取AI出牌信息
+    /**
+     * 获取AI出牌信息
+     *
+     * 返回AI对手在各场地区域打出的卡牌记录
+     *
+     * @returns 包含AI出牌信息的Map，键为场地索引，值为该场地的卡牌数组
+     * @public
+     */
     public getPlayedCards(): Map<number, Card[]> {
         return this.aiPlayedCards;
     }
 
-    // 这里曾经有获取花色和点数名称的方法，但现在直接使用卡牌的getFullName方法
+    // 注释：这里曾经有获取花色和点数名称的方法，但现在直接使用卡牌的getFullName方法
 }

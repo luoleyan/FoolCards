@@ -1,3 +1,10 @@
+/**
+ * @file GameManager.ts
+ * @description 游戏管理器，负责游戏核心逻辑、回合管理、分数计算等功能
+ * @author LuoLeYan
+ * @copyright Copyright (c) 2025, LuoLeYan
+ */
+
 import { _decorator, Component, Node, director, instantiate, Prefab, resources, SpriteFrame, Sprite, UITransform, Vec3, Label, Button, Layout, Color, Graphics } from 'cc';
 import { Card, CardSuit, CardRank } from './Card';
 import { tween } from 'cc';
@@ -9,6 +16,19 @@ import { GameOverPopup } from './GameOverPopup';
 import { AIOpponent } from './AIOpponent';
 const { ccclass, property } = _decorator;
 
+/**
+ * 游戏管理器类
+ *
+ * 负责整个游戏的核心逻辑，包括：
+ * - 游戏初始化与配置
+ * - 回合管理与计时
+ * - 卡牌创建、发放与管理
+ * - 玩家与AI对手交互
+ * - 场地区域管理
+ * - 分数计算与显示
+ * - 特殊效果应用
+ * - 游戏结束判定
+ */
 @ccclass('GameManager')
 export class GameManager extends Component {
     @property(Node)
@@ -102,6 +122,17 @@ export class GameManager extends Component {
 
     private _exchangeCount: number = 12;  // 换牌次数
 
+    /**
+     * 组件启动时执行的初始化方法
+     *
+     * 负责初始化游戏的各个组件和状态，包括：
+     * - 初始化场地区域状态
+     * - 设置特殊牌型管理器
+     * - 加载游戏背景
+     * - 设置UI元素和事件监听
+     * - 启动游戏计时器
+     * - 初始化游戏场景布局
+     */
     start() {
         // 初始化已翻开的场地区域数组
         this.revealedAreas = new Array(this.playAreas.length).fill(false);
@@ -214,6 +245,18 @@ export class GameManager extends Component {
         });
     }
 
+    /**
+     * 初始化游戏
+     *
+     * 负责游戏开始时的初始化工作：
+     * - 重置换牌次数
+     * - 预加载卡牌资源
+     * - 创建并洗牌
+     * - 发放初始手牌
+     * - 设置初始回合
+     * - 揭示第一个场景效果
+     * @private
+     */
     private initGame() {
         // 重置换牌次数
         this._exchangeCount = this.maxExchangeCount;
@@ -235,7 +278,16 @@ export class GameManager extends Component {
         this.revealNextSceneEffect();
     }
 
-    // 创建牌堆
+    /**
+     * 创建游戏牌堆
+     *
+     * 创建包含所有花色和点数的卡牌，以及大小王：
+     * - 4种花色（黑桃、红桃、梅花、方块）
+     * - 13种点数（A-K）
+     * - 2张王牌（大王、小王）
+     *
+     * @private
+     */
     private createDeck() {
         this.deck = [];
 
@@ -296,7 +348,13 @@ export class GameManager extends Component {
         console.log(`Deck created with ${this.deck.length} cards`);
     }
 
-    // 洗牌
+    /**
+     * 洗牌方法
+     *
+     * 使用Fisher-Yates洗牌算法随机打乱牌堆中的卡牌顺序
+     *
+     * @private
+     */
     private shuffleDeck() {
         for (let i = this.deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -305,7 +363,17 @@ export class GameManager extends Component {
         console.log("Deck shuffled");
     }
 
-    // 发初始手牌
+    /**
+     * 发放初始手牌
+     *
+     * 负责游戏开始时向玩家和AI对手发放初始手牌：
+     * - 计算卡牌尺寸和间距
+     * - 设置手牌区域位置和大小
+     * - 使用动画效果发牌
+     * - 确保玩家和对手手牌正确显示
+     *
+     * @private
+     */
     private dealInitialCards() {
         // 卡牌宽度（实际宽度乘以缩放比例）
         const cardWidth = 120 * 0.25;
@@ -405,7 +473,21 @@ export class GameManager extends Component {
         });
     }
 
-    // 带动画的发牌
+    /**
+     * 带动画效果的发牌方法
+     *
+     * 使用动画效果向玩家和AI对手交替发牌：
+     * - 从牌堆中取出卡牌
+     * - 设置卡牌初始位置和动画
+     * - 交替给玩家和对手发牌
+     * - 发牌完成后执行回调函数
+     *
+     * @param cardCount 每位玩家发牌数量
+     * @param cardSpacing 卡牌间距
+     * @param deckPosition 牌堆位置
+     * @param onComplete 发牌完成后的回调函数
+     * @private
+     */
     private dealCardsWithAnimation(cardCount: number, cardSpacing: number, deckPosition: Vec3, onComplete?: () => void) {
         let dealIndex = 0;
         let playerCardCount = 0;
@@ -455,7 +537,20 @@ export class GameManager extends Component {
         }, 0.3, cardCount * 2 - 1); // 每0.3秒发一张牌，总共发 cardCount*2 张牌
     }
 
-    // 给玩家发牌的动画（自下而上）
+    /**
+     * 给玩家发牌的动画
+     *
+     * 创建从牌堆到玩家手牌区的动画效果：
+     * - 设置卡牌父节点为玩家手牌区
+     * - 计算卡牌最终位置
+     * - 创建自下而上的移动动画
+     * - 动画完成后显示卡牌正面
+     *
+     * @param card 要发给玩家的卡牌
+     * @param index 卡牌在手牌中的索引位置
+     * @param cardSpacing 卡牌间距
+     * @private
+     */
     private animateCardToPlayer(card: Card, index: number, cardSpacing: number) {
         // 设置卡牌父节点为玩家手牌区
         card.node.setParent(this.playerHand);
@@ -486,7 +581,19 @@ export class GameManager extends Component {
             .start();
     }
 
-    // 给对手发牌的动画（自上而下）
+    /**
+     * 给AI对手发牌的动画
+     *
+     * 创建从牌堆到对手手牌区的动画效果：
+     * - 设置卡牌父节点为对手手牌区
+     * - 设置卡牌尺寸和位置
+     * - 创建自上而下的移动动画
+     * - 动画完成后显示卡牌背面
+     *
+     * @param card 要发给对手的卡牌
+     * @param index 卡牌在手牌中的索引位置
+     * @private
+     */
     private animateCardToOpponent(card: Card, index: number) {
         console.log(`Animating card to opponent, index: ${index}`);
 
@@ -552,7 +659,18 @@ export class GameManager extends Component {
             .start();
     }
 
-    // 执行理牌动画
+    /**
+     * 执行理牌动画
+     *
+     * 创建卡牌收拢和展开的动画效果：
+     * - 获取玩家和对手的所有卡牌
+     * - 记录卡牌原始位置
+     * - 执行卡牌收拢到中心的动画
+     * - 执行卡牌展开到原位的动画
+     *
+     * @param _cardSpacing 卡牌间距（未使用）
+     * @private
+     */
     private performShuffleAnimation(_cardSpacing: number) {
         console.log("Starting shuffle animation");
 
@@ -580,7 +698,21 @@ export class GameManager extends Component {
         });
     }
 
-    // 卡牌收拢动画
+    /**
+     * 卡牌收拢动画
+     *
+     * 创建所有卡牌向中心收拢的动画效果：
+     * - 计算动画完成计数
+     * - 设置中心位置
+     * - 为玩家和对手的卡牌创建向中心移动的动画
+     * - 所有卡牌动画完成后执行回调
+     *
+     * @param playerCards 玩家卡牌节点数组
+     * @param opponentCards 对手卡牌节点数组
+     * @param duration 动画持续时间
+     * @param onComplete 动画完成后的回调函数
+     * @private
+     */
     private animateCardGathering(playerCards: Node[], opponentCards: Node[], duration: number, onComplete?: () => void) {
         let completedCount = 0;
         const totalCount = playerCards.length + opponentCards.length;
@@ -615,7 +747,20 @@ export class GameManager extends Component {
         });
     }
 
-    // 卡牌展开动画
+    /**
+     * 卡牌展开动画
+     *
+     * 创建所有卡牌从中心展开到原始位置的动画效果：
+     * - 为玩家卡牌创建展开动画
+     * - 为对手卡牌创建展开动画
+     * - 使用弹性缓动效果增强视觉效果
+     *
+     * @param playerCards 玩家卡牌节点数组
+     * @param opponentCards 对手卡牌节点数组
+     * @param originalPositions 卡牌原始位置的Map
+     * @param duration 动画持续时间
+     * @private
+     */
     private animateCardSpreading(playerCards: Node[], opponentCards: Node[], originalPositions: Map<Node, Vec3>, duration: number) {
         // 玩家卡牌展开动画
         playerCards.forEach(card => {
@@ -634,7 +779,18 @@ export class GameManager extends Component {
         });
     }
 
-    // 检查并处理特殊牌型
+    /**
+     * 检查并处理特殊牌型
+     *
+     * 检查玩家和对手的卡牌是否构成特殊牌型，并计算相应分数：
+     * - 使用特殊牌型管理器检查玩家卡牌
+     * - 使用特殊牌型管理器检查对手卡牌
+     * - 为特殊牌型添加相应分数
+     *
+     * @param playerCards 玩家卡牌数组
+     * @param opponentCards 对手卡牌数组
+     * @private
+     */
     private checkAndProcessSpecialHands(playerCards: Card[], opponentCards: Card[]) {
         // 检查玩家的特殊牌型
         const playerSpecialHand = this.specialHandsManager.checkSpecialHand(playerCards);
@@ -651,7 +807,17 @@ export class GameManager extends Component {
         }
     }
 
-    // 初始化场地高亮边框
+    /**
+     * 初始化场地高亮边框
+     *
+     * 为所有场地区域初始化高亮效果的基础设置：
+     * - 遍历所有场地区域
+     * - 确保场地区域可见
+     * - 保存场地区域的原始颜色
+     * - 为后续高亮效果做准备
+     *
+     * @private
+     */
     private initPlayAreaHighlights() {
         console.log("初始化场地高亮边框 - 直接使用场地区域");
 
@@ -676,7 +842,16 @@ export class GameManager extends Component {
         }
     }
 
-    // 重置所有场地的高亮效果
+    /**
+     * 重置所有场地的高亮效果
+     *
+     * 移除所有场地区域的高亮效果：
+     * - 遍历所有场地区域
+     * - 调用移除高亮方法
+     * - 恢复场地区域的原始外观
+     *
+     * @private
+     */
     private resetAllPlayAreaHighlights() {
         console.log("重置所有场地的高亮效果");
         // 遍历所有场地区域
@@ -685,7 +860,20 @@ export class GameManager extends Component {
         }
     }
 
-    // 开始新回合
+    /**
+     * 开始新回合
+     *
+     * 处理游戏新回合的开始逻辑：
+     * - 检查是否达到最大回合数
+     * - 更新回合计数
+     * - 揭示新的场景效果
+     * - 补充换牌次数
+     * - 清除AI上一回合的内部记录
+     * - 重置场地高亮效果
+     * - 发放新回合的卡牌
+     *
+     * @public
+     */
     public startNewRound() {
         // 检查是否达到最大回合数
         if (this._currentRound >= this.maxRounds) {
@@ -735,7 +923,21 @@ export class GameManager extends Component {
         this.dealNewRoundCardsWithAnimation(playerCardCount, opponentCardCount, cardSpacing, deckPosition);
     }
 
-    // 新回合带动画发牌
+    /**
+     * 新回合带动画发牌
+     *
+     * 在新回合开始时向玩家和AI对手发放卡牌：
+     * - 交替给玩家和对手发牌
+     * - 考虑已有卡牌的位置
+     * - 使用动画效果
+     * - 发牌完成后检查特殊牌型
+     *
+     * @param playerStartIndex 玩家手牌起始索引
+     * @param opponentStartIndex 对手手牌起始索引
+     * @param cardSpacing 卡牌间距
+     * @param deckPosition 牌堆位置
+     * @private
+     */
     private dealNewRoundCardsWithAnimation(playerStartIndex: number, opponentStartIndex: number, cardSpacing: number, deckPosition: Vec3) {
         let dealIndex = 0;
 
@@ -780,7 +982,20 @@ export class GameManager extends Component {
         }, 0.3, 4 - 1); // 每0.3秒发一张牌，总共发4张牌（每人2张）
     }
 
-    // 换牌方法
+    /**
+     * 换牌方法
+     *
+     * 处理玩家换牌的逻辑：
+     * - 检查是否还有换牌次数
+     * - 减少换牌次数
+     * - 从牌堆中随机抽取新牌
+     * - 将旧牌放回牌堆
+     * - 播放换牌动画
+     * - 重新排列手牌
+     *
+     * @param card 要换掉的卡牌
+     * @public
+     */
     public exchangeCard(card: Card) {
         // 检查是否还有换牌次数
         if (this._exchangeCount <= 0) {
@@ -833,7 +1048,18 @@ export class GameManager extends Component {
         }
     }
 
-    // 播放换牌动画
+    /**
+     * 播放换牌动画
+     *
+     * 创建新卡牌从牌堆到玩家手牌的动画效果：
+     * - 设置卡牌初始位置
+     * - 计算最终位置
+     * - 创建移动动画
+     *
+     * @param newCard 新抽取的卡牌
+     * @param index 卡牌在手牌中的索引位置
+     * @private
+     */
     private playExchangeAnimation(newCard: Card, index: number) {
         // 设置卡牌初始位置（在牌堆位置）
         newCard.node.setPosition(0, 0, 0);
@@ -854,12 +1080,28 @@ export class GameManager extends Component {
             .start();
     }
 
-    // 返回主菜单
+    /**
+     * 返回主菜单
+     *
+     * 加载主菜单场景，退出当前游戏
+     *
+     * @public
+     */
     public returnToMainMenu() {
         director.loadScene('MainMenu');
     }
 
-    // 初始化场景效果
+    /**
+     * 初始化场景效果
+     *
+     * 为游戏场地区域随机选择并初始化场景效果：
+     * - 定义所有可用的场景效果类型
+     * - 随机选择三个不同的效果
+     * - 清空现有的场景效果
+     * - 为每个场地区域创建场景效果
+     *
+     * @private
+     */
     private initSceneEffects() {
         // 获取所有可用的场景效果类型
         const allEffects = [
@@ -929,7 +1171,17 @@ export class GameManager extends Component {
         }
     }
 
-    // 揭示下一个场景效果
+    /**
+     * 揭示下一个场景效果
+     *
+     * 揭示并应用下一个场景效果：
+     * - 检查是否已揭示所有效果
+     * - 获取下一个要揭示的效果
+     * - 调用效果的揭示方法
+     * - 应用场景效果
+     *
+     * @private
+     */
     private revealNextSceneEffect() {
         // 检查是否已经揭示了所有效果
         if (this._revealedEffects >= this.sceneEffects.length) {
@@ -959,24 +1211,62 @@ export class GameManager extends Component {
         }
     }
 
-    // 获取当前生效的场景效果
+    /**
+     * 获取当前生效的场景效果
+     *
+     * 返回所有已揭示的场景效果
+     *
+     * @returns 已揭示的场景效果数组
+     * @public
+     */
     public getActiveSceneEffects(): SceneEffect[] {
         return this.sceneEffects.filter(effect => effect.isRevealed);
     }
 
-    // 牌型相关方法
+    /**
+     * 设置同色牌型所需卡牌数量
+     *
+     * @param count 所需卡牌数量
+     * @public
+     */
     public setSameColorRequirement(count: number) {
         this.sameColorRequirement = count;
     }
 
+    /**
+     * 设置顺子牌型所需卡牌数量
+     *
+     * @param count 所需卡牌数量
+     * @public
+     */
     public setSequenceRequirement(count: number) {
         this.sequenceRequirement = count;
     }
 
+    /**
+     * 启用或禁用跳点顺子
+     *
+     * @param enabled 是否启用跳点顺子
+     * @public
+     */
     public enableSkipSequence(enabled: boolean) {
         this.skipSequenceEnabled = enabled;
     }
 
+    /**
+     * 检查卡牌是否构成顺子
+     *
+     * 根据当前游戏规则检查卡牌是否构成顺子：
+     * - 检查卡牌数量是否满足要求
+     * - 将卡牌按点数排序
+     * - 根据是否允许跳顺进行不同的检查
+     * - 普通顺子要求完全连续
+     * - 跳顺允许最多跳过一个点数
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 是否构成顺子
+     * @public
+     */
     public isSequence(cards: Card[]): boolean {
         if (cards.length < this.sequenceRequirement) return false;
 
@@ -986,8 +1276,8 @@ export class GameManager extends Component {
         // 如果允许跳顺（间隔为2）
         if (this.skipSequenceEnabled) {
             let totalGap = 0;
-        for (let i = 1; i < sortedCards.length; i++) {
-            const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
+            for (let i = 1; i < sortedCards.length; i++) {
+                const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
                 if (gap > 2) return false;  // 如果任何间隔大于2，不是顺子
                 totalGap += gap - 1;  // 累计额外间隔
             }
@@ -999,10 +1289,23 @@ export class GameManager extends Component {
                 const gap = Number(sortedCards[i].rank) - Number(sortedCards[i - 1].rank);
                 if (gap !== 1) return false;
             }
-        return true;
+            return true;
         }
     }
 
+    /**
+     * 检查卡牌是否构成同花
+     *
+     * 检查卡牌是否都是同一花色：
+     * - 检查卡牌数组是否有效
+     * - 过滤掉无效的卡牌
+     * - 检查有效卡牌数量是否满足要求
+     * - 检查所有卡牌是否都是同一花色
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 是否构成同花
+     * @public
+     */
     public isSameColor(cards: Card[]): boolean {
         if (!cards || cards.length === 0) return false;  // 添加空数组检查
 
@@ -1014,23 +1317,64 @@ export class GameManager extends Component {
         return validCards.every(card => card.suit === firstSuit);
     }
 
+    /**
+     * 检查卡牌是否构成有效牌型
+     *
+     * 检查卡牌是否构成顺子或同花
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 是否构成有效牌型
+     * @public
+     */
     public hasValidType(cards: Card[]): boolean {
         return this.isSequence(cards) || this.isSameColor(cards);
     }
 
+    /**
+     * 检查是否是首次构成顺子
+     *
+     * 检查卡牌是否构成顺子且之前未使用过顺子牌型
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 是否是首次构成顺子
+     * @public
+     */
     public isFirstSequence(cards: Card[]): boolean {
         return this.isSequence(cards) && !this.hasSequenceBeenUsed;
     }
 
+    /**
+     * 检查是否是首次构成同花
+     *
+     * 检查卡牌是否构成同花且之前未使用过同花牌型
+     *
+     * @param cards 要检查的卡牌数组
+     * @returns 是否是首次构成同花
+     * @public
+     */
     public isFirstSameColor(cards: Card[]): boolean {
         return this.isSameColor(cards) && !this.hasSameColorBeenUsed;
     }
 
-    // 游戏机制相关方法
+    /**
+     * 检查玩家是否领先
+     *
+     * 比较玩家和对手的分数，判断玩家是否领先
+     *
+     * @returns 玩家是否领先
+     * @public
+     */
     public isPlayerLeading(): boolean {
         return this.playerScore > this.opponentScore;
     }
 
+    /**
+     * 为玩家抽取额外卡牌
+     *
+     * 从牌堆中抽取一张卡牌并添加到玩家手牌
+     *
+     * @public
+     */
     public drawExtraCard() {
         if (this.deck.length > 0) {
             const card = this.deck.pop();
@@ -1039,15 +1383,46 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * 增加换牌次数
+     *
+     * 增加玩家的换牌次数，但不超过最大换牌次数
+     *
+     * @param count 要增加的换牌次数
+     * @public
+     */
     public addExchangeCount(count: number) {
         this._exchangeCount = Math.min(this._exchangeCount + count, this.maxExchangeCount);
         this.updateExchangeCountLabel();
     }
 
+    /**
+     * 获取玩家手牌
+     *
+     * 返回玩家手牌区域中的所有卡牌
+     *
+     * @returns 玩家手牌数组
+     * @public
+     */
     public getPlayerHandCards(): Card[] {
         return this.playerHand.children.map(node => node.getComponent(Card));
     }
 
+    /**
+     * 玩家出牌方法
+     *
+     * 处理玩家出牌的核心逻辑：
+     * - 检查卡牌和场地是否有效
+     * - 获取场地效果和公共牌信息
+     * - 创建卡牌容器并设置位置
+     * - 记录出牌信息
+     * - 计算场地分数
+     * - 重新排列场地卡牌
+     *
+     * @param card 要打出的卡牌
+     * @param areaIndex 目标场地索引
+     * @public
+     */
     public playCard(card: Card, areaIndex: number) {
         console.log('=================== 出牌日志开始 ===================');
         console.log('playCard 方法被调用');
@@ -1208,10 +1583,25 @@ export class GameManager extends Component {
         console.log('=================== 出牌日志结束 ===================');
     }
 
+    /**
+     * 增加额外出牌次数
+     *
+     * 增加玩家在当前回合的额外出牌次数
+     *
+     * @param count 要增加的出牌次数
+     * @public
+     */
     public addExtraPlayCount(count: number) {
         this.extraPlayCount += count;
     }
 
+    /**
+     * 玩家抽牌
+     *
+     * 从牌堆中抽取一张卡牌并添加到玩家手牌
+     *
+     * @public
+     */
     public drawCard() {
         if (this.deck.length > 0) {
             const card = this.deck.pop();
@@ -1220,13 +1610,30 @@ export class GameManager extends Component {
         }
     }
 
+    /**
+     * 更新换牌次数显示
+     *
+     * 更新UI上的换牌次数标签
+     *
+     * @private
+     */
     private updateExchangeCountLabel() {
         if (this.exchangeCountLabel) {
             this.exchangeCountLabel.string = `换牌次数: ${this._exchangeCount}`;
         }
     }
 
-    // 重新排列玩家手牌
+    /**
+     * 重新排列玩家手牌
+     *
+     * 调整玩家手牌的位置和显示：
+     * - 获取所有卡牌并保持原有顺序
+     * - 计算卡牌间距和位置
+     * - 设置每张卡牌的位置
+     * - 确保卡牌显示正面
+     *
+     * @public
+     */
     public arrangePlayerHand() {
         const playerHand = this.playerHand;
         if (!playerHand) return;
@@ -1260,7 +1667,18 @@ export class GameManager extends Component {
         playerHand.active = true;
     }
 
-    // 修改arrangePlayArea方法以区分公共牌和玩家打出的牌
+    /**
+     * 重新排列场地区域的卡牌
+     *
+     * 调整场地区域中公共牌和玩家打出的牌的位置：
+     * - 分别获取公共牌和玩家打出的牌
+     * - 计算卡牌间距和位置
+     * - 公共牌放在中间位置
+     * - 玩家打出的牌放在底部
+     *
+     * @param playArea 要排列的场地区域节点
+     * @public
+     */
     public arrangePlayArea(playArea: Node) {
         // 分别获取公共牌和玩家打出的牌
         const publicCards = playArea.children.filter(child => child.name === 'PublicCard');
@@ -1298,6 +1716,18 @@ export class GameManager extends Component {
         });
     }
 
+    /**
+     * 适配不同平台
+     *
+     * 根据平台调整游戏UI元素的大小和位置：
+     * - 获取平台适配器实例
+     * - 获取屏幕缩放比例
+     * - 调整卡牌大小
+     * - 调整出牌区域
+     * - 调整交换区域
+     *
+     * @private
+     */
     private adaptToPlatform() {
         const platformAdapter = PlatformAdapter.getInstance();
         if (!platformAdapter) {
@@ -1360,7 +1790,17 @@ export class GameManager extends Component {
         this.setupExchangeAreaPosition();
     }
 
-    // 设置换牌区域位置
+    /**
+     * 设置换牌区域位置
+     *
+     * 计算并设置换牌区域的位置：
+     * - 获取背景和换牌区域的尺寸
+     * - 计算屏幕尺寸
+     * - 设置换牌区域的缩放和位置
+     * - 确保换牌区域可见
+     *
+     * @private
+     */
     private setupExchangeAreaPosition() {
         if (!this.exchangeArea || !this.background) {
             console.error("ExchangeArea or Background not found");
@@ -1399,7 +1839,17 @@ export class GameManager extends Component {
         console.log('Exchange area position set to:', this.exchangeArea.position.toString());
     }
 
-    // 设置UI元素位置（结束回合按钮和计时器）
+    /**
+     * 设置UI元素位置
+     *
+     * 计算并设置结束回合按钮和计时器的位置：
+     * - 获取背景尺寸
+     * - 设置结束回合按钮位置
+     * - 设置计时器位置
+     * - 确保UI元素可见
+     *
+     * @private
+     */
     private setupUIElementsPosition() {
         if (!this.background) {
             console.error("Background not found");
@@ -1472,7 +1922,17 @@ export class GameManager extends Component {
         }
     }
 
-    // 设置场地区域位置
+    /**
+     * 设置场地区域位置
+     *
+     * 计算并设置三个场地区域的位置：
+     * - 检查场地区域数量
+     * - 获取屏幕缩放比例
+     * - 计算场地区域间距和位置
+     * - 设置场地区域位置和可见性
+     *
+     * @private
+     */
     private setupPlayAreasPosition() {
         if (this.playAreas.length !== 3) {
             console.error("需要设置3个出牌区域");
@@ -1515,7 +1975,21 @@ export class GameManager extends Component {
         });
     }
 
-    // 计算并更新指定场地的分数
+    /**
+     * 计算并更新指定场地的分数
+     *
+     * 计算玩家在指定场地的分数：
+     * - 检查场地索引是否有效
+     * - 检查玩家是否在该区域出过牌
+     * - 获取场地中的所有卡牌
+     * - 计算基础点数分数
+     * - 计算牌型分数
+     * - 应用场景效果加分
+     * - 更新分数显示
+     *
+     * @param areaIndex 要计算分数的场地索引
+     * @public
+     */
     public calculateAreaScore(areaIndex: number) {
         if (areaIndex < 0 || areaIndex >= this.playAreas.length) return;
 
@@ -1627,7 +2101,19 @@ export class GameManager extends Component {
     }
     */
 
-    // 更新指定场地的分数显示
+    /**
+     * 更新指定场地的分数显示
+     *
+     * 创建和更新场地分数显示UI：
+     * - 检查场地索引是否有效
+     * - 获取或创建分数显示容器
+     * - 设置容器大小和位置
+     * - 解析分数详情
+     * - 创建分数项显示
+     *
+     * @param areaIndex 要更新分数显示的场地索引
+     * @private
+     */
     private updateAreaScoreLabel(areaIndex: number) {
         if (areaIndex >= 0 && areaIndex < this.areaScoreLabels.length) {
             const playArea = this.playAreas[areaIndex];
@@ -1770,7 +2256,19 @@ export class GameManager extends Component {
         }
     }
 
-    // 添加分数到指定场地
+    /**
+     * 添加分数到指定场地
+     *
+     * 增加指定场地的分数并记录分数来源：
+     * - 检查场地索引是否有效
+     * - 增加场地分数
+     * - 添加分数详情记录
+     *
+     * @param areaIndex 要添加分数的场地索引
+     * @param score 要添加的分数
+     * @param reason 分数来源原因
+     * @public
+     */
     public addScoreToArea(areaIndex: number, score: number, reason: string) {
         if (areaIndex >= 0 && areaIndex < this.areaScores.length) {
             this.areaScores[areaIndex] += score;
@@ -1779,7 +2277,20 @@ export class GameManager extends Component {
         }
     }
 
-    // 获取卡牌点数
+    /**
+     * 获取卡牌点数
+     *
+     * 根据卡牌等级返回对应的点数值：
+     * - A返回1点
+     * - 数字牌返回对应数字
+     * - J返回11点
+     * - Q返回12点
+     * - K返回13点
+     *
+     * @param rank 卡牌等级
+     * @returns 卡牌点数值
+     * @private
+     */
     private getCardValue(rank: CardRank): number {
         switch (rank) {
             case CardRank.Ace: return 1;
@@ -1799,21 +2310,49 @@ export class GameManager extends Component {
         }
     }
 
-    // 分数相关方法
+    /**
+     * 增加玩家总分
+     *
+     * 增加玩家的总分数
+     *
+     * @param score 要增加的分数
+     * @public
+     */
     public addScore(score: number) {
         this.playerScore += score;
     }
 
+    /**
+     * 增加对手总分
+     *
+     * 增加AI对手的总分数
+     *
+     * @param score 要增加的分数
+     * @public
+     */
     public addScoreToOtherAreas(score: number) {
         this.opponentScore += score;
     }
 
-    // 返回主界面按钮点击事件处理
+    /**
+     * 返回主界面按钮点击事件处理
+     *
+     * 处理返回按钮点击事件，加载主菜单场景
+     *
+     * @private
+     */
     private onBackButtonClicked() {
         // 切换到主菜单场景
         director.loadScene('MainMenu');
     }
 
+    /**
+     * 显示特殊牌型说明弹窗
+     *
+     * 显示特殊牌型说明弹窗，介绍游戏中的特殊牌型规则
+     *
+     * @private
+     */
     private showSpecialHandsPopup() {
         if (this.specialHandsPopup) {
             const popup = this.specialHandsPopup.getComponent(SpecialHandsPopup);
@@ -1823,12 +2362,30 @@ export class GameManager extends Component {
         }
     }
 
-    // 检查场地区域是否已经翻开
+    /**
+     * 检查场地区域是否已经翻开
+     *
+     * 检查指定场地区域是否已经被翻开
+     *
+     * @param areaIndex 要检查的场地索引
+     * @returns 场地是否已翻开
+     * @public
+     */
     public isPlayAreaRevealed(areaIndex: number): boolean {
         return this.revealedAreas[areaIndex] === true;
     }
 
-    // 标记场地区域为已翻开
+    /**
+     * 标记场地区域为已翻开
+     *
+     * 将指定场地区域标记为已翻开状态：
+     * - 检查场地索引是否有效
+     * - 更新场地翻开状态
+     * - 更新UI显示
+     *
+     * @param areaIndex 要标记的场地索引
+     * @public
+     */
     public markPlayAreaRevealed(areaIndex: number): void {
         if (areaIndex >= 0 && areaIndex < this.revealedAreas.length) {
             this.revealedAreas[areaIndex] = true;
@@ -1849,7 +2406,14 @@ export class GameManager extends Component {
         }
     }
 
-    // 检查是否可以放置卡牌到未翻开的区域
+    /**
+     * 检查是否可以放置卡牌到未翻开的区域
+     *
+     * 根据游戏规则检查是否允许玩家将卡牌放置到未翻开的场地区域
+     *
+     * @returns 是否允许放置到未翻开区域
+     * @public
+     */
     public canPlayToUnrevealedArea(): boolean {
         // 这里可以实现游戏规则，比如：
         // 1. 第一张卡牌可以放在任何区域
@@ -1857,7 +2421,16 @@ export class GameManager extends Component {
         return true; // 默认允许
     }
 
-    // 检查是否还能出牌
+    /**
+     * 检查是否还能出牌
+     *
+     * 检查玩家在当前回合是否还能出牌：
+     * - 如果有额外出牌次数，可以出牌
+     * - 否则检查是否达到每回合出牌限制
+     *
+     * @returns 是否还能出牌
+     * @public
+     */
     public canPlayCard(): boolean {
         // 如果有额外出牌次数，返回true
         if (this.extraPlayCount > 0) {
@@ -1867,7 +2440,19 @@ export class GameManager extends Component {
         return this.cardsPlayedThisTurn < this.maxCardsPerTurn;
     }
 
-    // 记录出牌
+    /**
+     * 记录出牌
+     *
+     * 记录玩家打出的卡牌信息：
+     * - 更新出牌次数计数
+     * - 记录当前回合打出的牌
+     * - 标记玩家已在该区域出牌
+     * - 添加卡牌点击事件监听器
+     *
+     * @param card 打出的卡牌
+     * @param areaIndex 打出到的场地索引
+     * @public
+     */
     public recordCardPlayed(card: Card, areaIndex: number): void {
         // 如果有额外出牌次数，优先使用
         if (this.extraPlayCount > 0) {
@@ -1891,7 +2476,17 @@ export class GameManager extends Component {
         });
     }
 
-    // 处理卡牌点击事件
+    /**
+     * 处理卡牌点击事件
+     *
+     * 处理玩家点击已打出卡牌的事件：
+     * - 检查是否是当前回合打出的牌
+     * - 如果是，则回收卡牌
+     *
+     * @param card 被点击的卡牌
+     * @param areaIndex 卡牌所在的场地索引
+     * @private
+     */
     private onCardClicked(card: Card, areaIndex: number) {
         // 检查是否是当前回合打出的牌
         const playedCards = this.currentTurnPlayedCards.get(areaIndex);
@@ -1900,7 +2495,22 @@ export class GameManager extends Component {
         }
     }
 
-    // 回收卡牌
+    /**
+     * 回收卡牌
+     *
+     * 将已打出的卡牌回收到玩家手牌：
+     * - 获取卡牌容器节点
+     * - 重置卡牌变换
+     * - 从场地区域移除卡牌
+     * - 删除空的容器节点
+     * - 更新出牌记录
+     * - 将卡牌添加回玩家手牌
+     * - 重新计算场地分数
+     *
+     * @param card 要回收的卡牌
+     * @param areaIndex 卡牌所在的场地索引
+     * @private
+     */
     private retrieveCard(card: Card, areaIndex: number) {
         // 获取卡牌的容器节点
         const cardContainer = card.node.parent;
@@ -1956,7 +2566,17 @@ export class GameManager extends Component {
         this.cardsPlayedThisTurn--;
     }
 
-    // 重置回合状态
+    /**
+     * 重置回合状态
+     *
+     * 重置玩家在当前回合的出牌状态：
+     * - 重置已出牌数量
+     * - 重置额外出牌次数
+     * - 清空当前回合打出的牌记录
+     * - 保留AI出牌记录以便展示
+     *
+     * @public
+     */
     public resetCardPlayCount(): void {
         this.cardsPlayedThisTurn = 0;
         this.extraPlayCount = 0;
@@ -1966,7 +2586,16 @@ export class GameManager extends Component {
         // 在startNewRound方法中会清除AI出牌记录
     }
 
-    // 更新计时器显示
+    /**
+     * 更新计时器显示
+     *
+     * 根据剩余时间更新UI上的计时器显示：
+     * - 计算分钟和秒数
+     * - 格式化时间字符串
+     * - 更新计时器标签
+     *
+     * @private
+     */
     private updateTimerDisplay() {
         if (this.timerLabel) {
             const minutes = Math.floor(this.remainingTime / 60);
@@ -1977,19 +2606,46 @@ export class GameManager extends Component {
         }
     }
 
-    // 开始回合计时器
+    /**
+     * 开始回合计时器
+     *
+     * 启动回合计时器，每秒更新一次：
+     * - 设置计时器状态为运行中
+     * - 每秒调用一次updateTimer方法
+     *
+     * @private
+     */
     private startTurnTimer() {
         this.isTimerRunning = true;
         this.schedule(this.updateTimer, 1);
     }
 
-    // 停止回合计时器
+    /**
+     * 停止回合计时器
+     *
+     * 停止回合计时器：
+     * - 设置计时器状态为停止
+     * - 取消计时器回调
+     *
+     * @private
+     */
     private stopTurnTimer() {
         this.isTimerRunning = false;
         this.unschedule(this.updateTimer);
     }
 
-    // 更新计时器
+    /**
+     * 更新计时器
+     *
+     * 每秒更新回合计时器：
+     * - 减少剩余时间
+     * - 确保时间不为负数
+     * - 更新计时器显示
+     * - 检查是否时间归零
+     * - 时间归零时自动结束回合
+     *
+     * @private
+     */
     private updateTimer() {
         if (!this.isTimerRunning) return;
 
@@ -2011,7 +2667,17 @@ export class GameManager extends Component {
         }
     }
 
-    // 初始化AI对手
+    /**
+     * 初始化AI对手
+     *
+     * 初始化游戏的AI对手组件：
+     * - 检查是否已有AI对手组件
+     * - 如果没有则添加AI对手组件
+     * - 检查必要的节点引用
+     * - 初始化AI对手的游戏环境
+     *
+     * @private
+     */
     private initAIOpponent() {
         console.log("开始初始化AI对手");
 
@@ -2041,7 +2707,20 @@ export class GameManager extends Component {
         console.log("AI对手初始化完成");
     }
 
-    // 计算AI对手在指定场地的分数
+    /**
+     * 计算AI对手在指定场地的分数
+     *
+     * 计算AI对手在指定场地的分数：
+     * - 获取AI在该区域出的牌
+     * - 获取场地中的公共牌
+     * - 计算基础点数分数
+     * - 检查特殊牌型并计算分数
+     * - 应用场景效果加分
+     *
+     * @param areaIndex 要计算分数的场地索引
+     * @returns 计算得到的分数
+     * @private
+     */
     private calculateAIAreaScore(areaIndex: number): number {
         if (!this.aiOpponent) return 0;
 
@@ -2187,7 +2866,17 @@ export class GameManager extends Component {
         return areaScore;
     }
 
-    // 比较场地分数并添加高亮效果
+    /**
+     * 比较场地分数并添加高亮效果
+     *
+     * 比较玩家和AI在各场地的分数，为玩家得分高的场地添加高亮效果：
+     * - 遍历所有已揭示效果的场地
+     * - 获取玩家和AI在该场地的分数
+     * - 比较分数并决定是否添加高亮
+     * - 记录需要高亮的场地
+     *
+     * @private
+     */
     private compareAreaScoresAndHighlight() {
         console.log("=================== 回合结束场地分数比较 ===================");
         console.log("比较场地分数并添加高亮效果");
@@ -2232,7 +2921,19 @@ export class GameManager extends Component {
         console.log("=================== 回合结束场地分数比较 ===================");
     }
 
-    // 为场地添加高亮边框和阴影
+    /**
+     * 为场地添加高亮边框和阴影
+     *
+     * 为指定场地添加高亮效果：
+     * - 检查场地是否存在
+     * - 保存场地原始颜色
+     * - 设置高亮颜色（青绿色 #39C5BB）
+     * - 如果没有Sprite组件，创建边框
+     * - 添加脉动动画效果
+     *
+     * @param areaIndex 要添加高亮的场地索引
+     * @private
+     */
     private addHighlightToPlayArea(areaIndex: number) {
         const playArea = this.playAreas[areaIndex];
         if (!playArea) return;
@@ -2311,7 +3012,17 @@ export class GameManager extends Component {
         this.addPulsingAnimation(playArea);
     }
 
-    // 添加脉动动画
+    /**
+     * 添加脉动动画
+     *
+     * 为节点添加缩放脉动动画效果：
+     * - 停止可能已存在的动画
+     * - 重置节点缩放
+     * - 创建循环的缩放动画
+     *
+     * @param node 要添加动画的节点
+     * @private
+     */
     private addPulsingAnimation(node: Node) {
         // 停止可能已经存在的动画
         tween(node).stop();
@@ -2328,7 +3039,18 @@ export class GameManager extends Component {
             .start();
     }
 
-    // 移除场地的高亮效果
+    /**
+     * 移除场地的高亮效果
+     *
+     * 移除指定场地的高亮效果：
+     * - 停止动画
+     * - 恢复原始颜色
+     * - 移除边框
+     * - 重置缩放
+     *
+     * @param areaIndex 要移除高亮的场地索引
+     * @private
+     */
     private removeHighlightFromPlayArea(areaIndex: number) {
         const playArea = this.playAreas[areaIndex];
         if (!playArea) return;
@@ -2353,7 +3075,20 @@ export class GameManager extends Component {
         playArea.scale = new Vec3(1, 1, 1);
     }
 
-    // 结束当前回合
+    /**
+     * 结束当前回合
+     *
+     * 处理回合结束的逻辑：
+     * - 停止计时器
+     * - 重置回合状态
+     * - 记录玩家出牌情况
+     * - 让AI对手出牌
+     * - 计算所有场地的分数
+     * - 比较场地分数并添加高亮
+     * - 开始新回合
+     *
+     * @public
+     */
     public endTurn() {
         console.log("=================== 回合结束处理开始 ===================");
         console.log(`当前回合: ${this._currentRound}/${this.maxRounds}`);
@@ -2410,7 +3145,16 @@ export class GameManager extends Component {
 
     // 注意：displayAIPlayedCards方法已被移除，AI出牌信息现在直接由AIOpponent类显示
 
-    // 清除所有场地区域中的AI出牌信息（仅在游戏结束时使用）
+    /**
+     * 清除所有场地区域中的AI出牌信息
+     *
+     * 在游戏结束时处理AI卡牌显示：
+     * - 保留AI卡牌显示，不再清除
+     * - 让玩家可以看到所有回合AI打出的牌
+     * - 原清除代码已注释保留
+     *
+     * @private
+     */
     private clearAllAICards() {
         console.log("游戏结束时不再清除AI卡牌，保留显示");
         // 注释掉清除AI卡牌的代码，让AI卡牌在游戏结束时保持显示
@@ -2424,7 +3168,16 @@ export class GameManager extends Component {
         // }
     }
 
-    // 结束回合按钮点击事件处理
+    /**
+     * 结束回合按钮点击事件处理
+     *
+     * 处理玩家点击结束回合按钮的事件：
+     * - 停止计时器
+     * - 调用结束回合方法
+     * - 输出调试信息
+     *
+     * @public
+     */
     public onEndTurnButtonClicked() {
         console.log("结束回合按钮被点击");
 
@@ -2438,7 +3191,18 @@ export class GameManager extends Component {
         console.log("回合已结束，新回合开始");
     }
 
-    // 开始新回合
+    /**
+     * 开始新回合
+     *
+     * 初始化新回合的状态：
+     * - 重置计时器
+     * - 更新计时器显示
+     * - 重置回合状态
+     * - 保留AI出牌信息
+     * - 开始计时
+     *
+     * @private
+     */
     private startNewTurn() {
         // 重置计时器
         this.remainingTime = this.turnTimeLimit;
@@ -2454,7 +3218,17 @@ export class GameManager extends Component {
         this.startTurnTimer();
     }
 
-    // 获取场地效果信息
+    /**
+     * 获取场地效果信息
+     *
+     * 根据场地效果类型返回对应的名称和描述：
+     * - 返回效果的中文名称
+     * - 返回效果的详细描述
+     *
+     * @param effectType 场地效果类型
+     * @returns 包含效果名称和描述的对象
+     * @private
+     */
     private getEffectInfo(effectType: SceneEffectType): { name: string, description: string } {
         switch (effectType) {
             case SceneEffectType.JQKBonus:
@@ -2520,13 +3294,30 @@ export class GameManager extends Component {
         }
     }
 
-    // 获取剩余换牌次数
+    /**
+     * 获取剩余换牌次数
+     *
+     * 返回玩家当前剩余的换牌次数
+     *
+     * @returns 剩余换牌次数
+     * @public
+     */
     public getExchangeCount(): number {
         return this._exchangeCount;
     }
 
     /**
      * 显示游戏结束弹窗
+     *
+     * 处理游戏结束时的逻辑：
+     * - 计算玩家和AI对手的最终分数
+     * - 详细记录每个场地的得分情况
+     * - 输出详细的得分明细
+     * - 确定游戏结果（胜利、失败或平局）
+     * - 显示游戏结束弹窗
+     * - 清理游戏资源
+     *
+     * @private
      */
     private showGameOver() {
         console.log("=================== 游戏结束分数计算 ===================");

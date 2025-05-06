@@ -1,9 +1,24 @@
-import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, input, Input, director, resources, Camera, Rect } from 'cc';
+/**
+ * @file Card.ts
+ * @description 卡牌类，负责卡牌的显示、交互和状态管理
+ * @author LuoLeYan
+ * @copyright Copyright (c) 2025, LuoLeYan
+ */
+
+import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3, EventTouch, director, resources, Camera, Rect } from 'cc';
 import { GameManager } from './GameManager';
-import { SceneEffect } from './SceneEffect';
 const { ccclass, property } = _decorator;
 
-// 定义花色枚举
+/**
+ * 卡牌花色枚举
+ *
+ * 定义游戏中使用的卡牌花色：
+ * - Spade: 黑桃
+ * - Heart: 红桃
+ * - Club: 梅花
+ * - Diamond: 方块
+ * - Joker: 王牌
+ */
 export enum CardSuit {
     Spade = 'Spade',
     Heart = 'Heart',
@@ -12,7 +27,13 @@ export enum CardSuit {
     Joker = 'Joker'
 }
 
-// 定义点数枚举
+/**
+ * 卡牌点数枚举
+ *
+ * 定义游戏中使用的卡牌点数：
+ * - Ace到King: 普通牌的点数
+ * - JokerA和JokerB: 小王和大王
+ */
 export enum CardRank {
     Ace = 'A',
     Two = '2',
@@ -31,29 +52,69 @@ export enum CardRank {
     JokerB = 'B'
 }
 
+/**
+ * 卡牌类
+ *
+ * 负责卡牌的显示、交互和状态管理：
+ * - 初始化卡牌花色和点数
+ * - 加载和显示卡牌图像
+ * - 处理卡牌的拖放交互
+ * - 管理卡牌的正反面显示
+ * - 提供卡牌信息查询接口
+ */
 @ccclass('Card')
 export class Card extends Component {
+    /** 卡牌精灵组件，用于显示卡牌图像 */
     @property(Sprite)
     public cardSprite: Sprite = null;
 
+    /** 卡牌背面图像 */
     @property(SpriteFrame)
     public cardBack: SpriteFrame = null;
 
+    /** 卡牌花色 */
     private _suit: CardSuit;
+
+    /** 卡牌点数 */
     private _rank: CardRank;
+
+    /** 卡牌是否正面朝上 */
     private _isFaceUp: boolean = false;
+
+    /** 卡牌原始位置，用于拖拽后返回 */
     private _originalPosition: Vec3 = new Vec3();
+
+    /** 卡牌是否正在拖拽中 */
     private _isDragging: boolean = false;
+
+    /** 拖拽偏移量 */
     private _dragOffset: Vec3 = new Vec3();
+
+    /** 卡牌原始索引，用于拖拽后恢复顺序 */
     private _originalIndex: number;
 
-    // 添加状态标志，用于跟踪卡牌是否正在进行异步操作
+    /**
+     * 状态标志，用于跟踪卡牌是否正在进行异步操作
+     * 防止在异步加载过程中对卡牌进行操作导致错误
+     */
     private _isProcessing: boolean = false;
 
-    // 静态变量，存储预加载的卡牌背面图像
+    /**
+     * 静态变量，存储预加载的卡牌背面图像
+     * 所有卡牌共享同一个背面图像，提高性能
+     */
     private static cardBackSprite: SpriteFrame = null;
 
-    // 预加载卡牌背面图像
+    /**
+     * 预加载卡牌背面图像
+     *
+     * 静态方法，用于预加载所有卡牌共用的背面图像：
+     * - 检查是否已经预加载
+     * - 从资源中加载卡牌背面图像
+     * - 存储到静态变量中供所有卡牌使用
+     *
+     * @static
+     */
     public static preloadCardBack() {
         if (!Card.cardBackSprite) {
             console.log('Starting to preload card back sprite');
@@ -70,18 +131,40 @@ export class Card extends Component {
         }
     }
 
+    /**
+     * 获取卡牌花色
+     *
+     * @returns 卡牌花色
+     */
     public get suit(): CardSuit {
         return this._suit;
     }
 
+    /**
+     * 获取卡牌点数
+     *
+     * @returns 卡牌点数
+     */
     public get rank(): CardRank {
         return this._rank;
     }
 
+    /**
+     * 获取卡牌是否正面朝上
+     *
+     * @returns 卡牌是否正面朝上
+     */
     public get isFaceUp(): boolean {
         return this._isFaceUp;
     }
 
+    /**
+     * 组件启动时执行的初始化方法
+     *
+     * 负责初始化卡牌组件：
+     * - 预加载卡牌背面图片
+     * - 添加触摸事件监听
+     */
     start() {
         // 在组件启动时就预加载背面图片
         Card.preloadCardBack();
@@ -95,6 +178,13 @@ export class Card extends Component {
         console.log('Card touch events registered');
     }
 
+    /**
+     * 组件销毁时执行的清理方法
+     *
+     * 负责清理卡牌组件：
+     * - 移除触摸事件监听
+     * - 防止内存泄漏
+     */
     onDestroy() {
         // 移除触摸事件监听
         this.node.off(Node.EventType.TOUCH_START, this.onTouchStart, this);
@@ -103,7 +193,19 @@ export class Card extends Component {
         this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
     }
 
-    // 添加新方法：更改卡牌的花色和点数（仅用于万能牌转换）
+    /**
+     * 更改卡牌的花色和点数（仅用于万能牌转换）
+     *
+     * 允许将万能牌（大小王）转换为指定的普通牌：
+     * - 检查是否为万能牌
+     * - 记录原始万能牌信息
+     * - 更新卡牌信息
+     * - 记录转换日志
+     *
+     * @param suit 目标花色
+     * @param rank 目标点数
+     * @public
+     */
     public changeCardInfo(suit: CardSuit, rank: CardRank) {
         // 只允许万能牌进行转换
         if (this._suit !== CardSuit.Joker) {
@@ -126,12 +228,30 @@ export class Card extends Component {
         console.log('==================');
     }
 
-    // 获取万能牌描述
+    /**
+     * 获取万能牌描述
+     *
+     * 根据花色和点数生成万能牌的中文描述
+     *
+     * @param suit 万能牌花色
+     * @param rank 万能牌点数
+     * @returns 万能牌的中文描述
+     * @private
+     */
     private getJokerDescription(suit: CardSuit, rank: CardRank): string {
         return `${suit === CardSuit.Joker ? '小王' : '大王'} (${suit}-${rank})`;
     }
 
-    // 获取普通牌描述
+    /**
+     * 获取普通牌描述
+     *
+     * 根据花色和点数生成普通牌的中文描述
+     *
+     * @param suit 卡牌花色
+     * @param rank 卡牌点数
+     * @returns 卡牌的中文描述
+     * @private
+     */
     private getCardDescription(suit: CardSuit, rank: CardRank): string {
         const suitNames = {
             [CardSuit.Spade]: '黑桃',
@@ -165,7 +285,20 @@ export class Card extends Component {
         return `${suitNames[suit]}${rankNames[rank]} (${suit}-${rank})`;
     }
 
-    // 修改初始化方法
+    /**
+     * 初始化卡牌
+     *
+     * 设置卡牌的花色和点数，并加载对应的图像：
+     * - 验证参数有效性
+     * - 设置卡牌花色和点数
+     * - 确保卡牌精灵组件存在
+     * - 加载对应的卡牌图像
+     *
+     * @param suit 卡牌花色
+     * @param rank 卡牌点数
+     * @returns 初始化完成的Promise
+     * @public
+     */
     public init(suit: CardSuit, rank: CardRank) {
         console.log(`Initializing card: ${suit} ${rank}`);
         if (!suit || !rank) {
@@ -225,7 +358,18 @@ export class Card extends Component {
         });
     }
 
-    // 修改更新卡牌图片方法
+    /**
+     * 更新卡牌图片
+     *
+     * 根据卡牌的花色、点数和正反面状态加载对应的图像：
+     * - 检查节点和组件有效性
+     * - 根据卡牌正反面状态加载不同图像
+     * - 处理万能牌的特殊图像加载
+     * - 处理卡牌背面图像的加载和缓存
+     *
+     * @returns 图像加载完成的Promise
+     * @private
+     */
     private updateCardSprite(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             // 首先检查节点是否有效
@@ -411,7 +555,19 @@ export class Card extends Component {
         });
     }
 
-    // 显示卡牌正面
+    /**
+     * 显示卡牌正面
+     *
+     * 将卡牌翻转为正面朝上状态，并加载对应的图像：
+     * - 检查节点有效性
+     * - 处理异步操作冲突
+     * - 确保卡牌精灵组件存在
+     * - 设置卡牌为正面朝上
+     * - 加载对应的卡牌图像
+     *
+     * @returns 操作完成的Promise
+     * @public
+     */
     public showCardFace(): Promise<void> {
         // 检查节点是否有效
         if (!this.node || !this.isValid) {
@@ -497,7 +653,19 @@ export class Card extends Component {
             });
     }
 
-    // 显示卡牌背面
+    /**
+     * 显示卡牌背面
+     *
+     * 将卡牌翻转为背面朝上状态，并加载背面图像：
+     * - 检查节点有效性
+     * - 处理异步操作冲突
+     * - 确保卡牌精灵组件存在
+     * - 设置卡牌为背面朝上
+     * - 加载卡牌背面图像
+     *
+     * @returns 操作完成的Promise
+     * @public
+     */
     public showCardBack(): Promise<void> {
         // 检查节点是否有效
         if (!this.node || !this.isValid) {
@@ -564,7 +732,21 @@ export class Card extends Component {
             });
     }
 
-    // 同步显示卡牌背面
+    /**
+     * 同步显示卡牌背面
+     *
+     * 立即将卡牌设置为背面朝上状态，不使用异步操作：
+     * - 检查节点有效性
+     * - 处理异步操作冲突
+     * - 确保卡牌精灵组件存在
+     * - 设置卡牌为背面朝上
+     * - 设置卡牌尺寸和缩放
+     * - 使用预加载的背面图像
+     *
+     * 主要用于对手卡牌的显示，不需要等待异步操作完成
+     *
+     * @public
+     */
     public showCardBackSync() {
         // 检查节点是否有效
         if (!this.node || !this.isValid) {
@@ -660,7 +842,19 @@ export class Card extends Component {
         }
     }
 
-    // 触摸开始事件
+    /**
+     * 触摸开始事件处理
+     *
+     * 处理卡牌被触摸开始的事件：
+     * - 检查卡牌所在的区域（玩家手牌或对手手牌）
+     * - 对手手牌只显示背面
+     * - 玩家手牌开始拖拽操作
+     * - 记录原始位置和索引
+     * - 计算拖拽偏移量
+     *
+     * @param event 触摸事件对象
+     * @private
+     */
     private onTouchStart(event: EventTouch) {
         console.log('Touch start event triggered');
 
@@ -708,7 +902,19 @@ export class Card extends Component {
         }
     }
 
-    // 触摸移动事件
+    /**
+     * 触摸移动事件处理
+     *
+     * 处理卡牌被拖拽移动的事件：
+     * - 检查是否处于拖拽状态
+     * - 获取触摸位置
+     * - 将触摸位置转换为节点坐标
+     * - 应用拖拽偏移量
+     * - 更新卡牌位置
+     *
+     * @param event 触摸事件对象
+     * @private
+     */
     private onTouchMove(event: EventTouch) {
         if (!this._isDragging) {
             return;
@@ -739,7 +945,20 @@ export class Card extends Component {
         }
     }
 
-    // 触摸结束事件
+    /**
+     * 触摸结束事件处理
+     *
+     * 处理卡牌拖拽结束的事件：
+     * - 检查是否处于拖拽状态
+     * - 获取游戏管理器
+     * - 检查是否与换牌区域重叠
+     * - 检查是否与场地区域重叠
+     * - 根据重叠情况执行相应操作（换牌、出牌）
+     * - 如果没有有效操作，返回原位
+     *
+     * @param event 触摸事件对象
+     * @private
+     */
     private onTouchEnd(event: EventTouch) {
         console.log('Touch ended');
 
@@ -848,7 +1067,15 @@ export class Card extends Component {
         this.returnToOriginalPosition();
     }
 
-    // 返回原始位置的辅助方法
+    /**
+     * 返回原始位置的辅助方法
+     *
+     * 将卡牌返回到拖拽前的原始位置：
+     * - 恢复卡牌的原始位置
+     * - 恢复卡牌在父节点中的原始索引
+     *
+     * @private
+     */
     private returnToOriginalPosition() {
         this.node.setPosition(this._originalPosition);
         this.node.setSiblingIndex(this._originalIndex);
@@ -969,7 +1196,17 @@ export class Card extends Component {
         });
     }
 
-    // 触摸取消事件
+    /**
+     * 触摸取消事件处理
+     *
+     * 处理卡牌拖拽被取消的事件：
+     * - 检查是否处于拖拽状态
+     * - 重置拖拽状态
+     * - 将卡牌返回原始位置
+     *
+     * @param event 触摸事件对象
+     * @private
+     */
     private onTouchCancel(event: EventTouch) {
         if (!this._isDragging) {
             return;
@@ -979,7 +1216,16 @@ export class Card extends Component {
         this.node.setPosition(this._originalPosition);
     }
 
-    // 获取卡牌完整名称
+    /**
+     * 获取卡牌完整名称
+     *
+     * 返回卡牌的完整名称，用于标识和调试：
+     * - 万能牌返回格式为"Joker-A"或"Joker-B"
+     * - 普通牌返回格式为"Spade2"、"HeartA"等
+     *
+     * @returns 卡牌完整名称
+     * @public
+     */
     public getFullName(): string {
         if (this._suit === CardSuit.Joker) {
             return `${this._suit}-${this._rank}`;
@@ -987,15 +1233,37 @@ export class Card extends Component {
         return `${this._suit}${this._rank}`;
     }
 
+    /**
+     * 获取卡牌花色
+     *
+     * @returns 卡牌花色
+     * @public
+     */
     public getSuit(): CardSuit {
         return this._suit;
     }
 
+    /**
+     * 获取卡牌点数
+     *
+     * @returns 卡牌点数
+     * @public
+     */
     public getRank(): CardRank {
         return this._rank;
     }
 
-    // 检查两个矩形是否重叠
+    /**
+     * 检查两个矩形是否重叠
+     *
+     * 用于检测卡牌与场地区域或换牌区域的重叠：
+     * - 检查两个矩形在x轴和y轴上的投影是否重叠
+     *
+     * @param rect1 第一个矩形
+     * @param rect2 第二个矩形
+     * @returns 是否重叠
+     * @private
+     */
     private isOverlapping(rect1: Rect, rect2: Rect): boolean {
         return !(rect1.x + rect1.width < rect2.x ||
                 rect2.x + rect2.width < rect1.x ||
